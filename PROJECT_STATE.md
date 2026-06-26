@@ -33,21 +33,26 @@ O projeto está sendo construído em entregas pequenas e sequenciais, com foco e
 * Pytest
 * Git/GitHub
 
-## Entrega atual
+## Controle das conversas
 
-Conversa 2 — Upload inicial de arquivos CSV e Excel
+| Conversa | Entrega                                  | Status    |
+| -------- | ---------------------------------------- | --------- |
+| 01       | Base inicial Flask                       | Concluída |
+| 02       | Upload inicial de arquivos CSV e Excel   | Concluída |
+| 03       | Leitura inicial de arquivos com Pandas   | Próxima   |
+| 04       | Prévia dos dados carregados na interface | Planejada |
+| 05       | Análise automática dos dados             | Planejada |
+| 06       | Dashboard inicial                        | Planejada |
+| 07       | Gráficos com Plotly                      | Planejada |
+| 08       | Histórico de uploads                     | Planejada |
+| 09       | Exportação de PDF                        | Planejada |
+| 10       | Banco de dados com SQLite/SQLAlchemy     | Planejada |
+| 11       | Docker e ajustes finais                  | Planejada |
 
-## Checklist de Entregas
-
-### 01 — Base inicial Flask
-
-Status: OK
-
-O que foi concluído:
+## O que foi feito na Conversa 1
 
 * Estrutura inicial de pastas criada.
-* Aplicação Flask criada.
-* Application factory criada.
+* Aplicação Flask criada com application factory.
 * Página inicial criada.
 * Template base criado.
 * CSS inicial criado.
@@ -63,316 +68,39 @@ O que foi concluído:
 * Pastas uploads, reports e sample_data criadas.
 * Arquivo conftest.py criado para corrigir importações no Pytest.
 * Testes iniciais criados.
-* Servidor Flask rodando em http://127.0.0.1:5000.
-* Pytest executado com sucesso.
-* Resultado dos testes: 3 passed.
-
-### 02 — Upload inicial de arquivos CSV e Excel
-
-Status: Próximo
-
-Objetivo:
-
-* Criar rota GET /upload.
-* Criar rota POST /upload.
-* Ativar o link Upload no menu.
-* Criar tela de upload.
-* Criar formulário HTML com enctype="multipart/form-data".
-* Permitir somente arquivos .csv, .xlsx e .xls.
-* Validar extensão do arquivo antes de salvar.
-* Usar secure_filename do Werkzeug para tratar o nome do arquivo.
-* Salvar arquivos enviados em app/uploads.
-* Exibir mensagens de sucesso e erro usando flash messages do Flask.
-* Criar testes para validação de extensão.
-* Criar teste para rota GET /upload.
-* Atualizar README.md.
-* Atualizar PROJECT_STATE.md ao final da conversa.
-
-### 03 — Leitura inicial de arquivos com Pandas
-
-Status: Em breve
-
-Objetivo previsto:
-
-* Ler arquivos CSV.
-* Ler arquivos Excel.
-* Criar funções em app/services/data_loader.py.
-* Validar se o arquivo possui dados.
-* Exibir uma prévia simples da planilha.
-* Criar testes para leitura de CSV e Excel.
-
-### 04 — Análise automática inicial
-
-Status: Em breve
-
-Objetivo previsto:
-
-* Identificar colunas numéricas.
-* Identificar colunas categóricas.
-* Calcular total de linhas.
-* Calcular total de colunas.
-* Gerar indicadores simples.
-* Preparar os dados para o futuro dashboard.
-
-### 05 — Dashboard inicial
-
-Status: Em breve
-
-Objetivo previsto:
-
-* Criar rota /dashboard.
-* Exibir indicadores básicos.
-* Criar primeiros gráficos com Plotly.
-* Organizar visualmente os dados processados.
-
-### 06 — Histórico de uploads
-
-Status: Em breve
-
-Objetivo previsto:
-
-* Implementar SQLite.
-* Criar modelos com SQLAlchemy.
-* Registrar arquivos enviados.
-* Exibir histórico em /history.
-
-### 07 — Exportação de relatório PDF
-
-Status: Em breve
-
-Objetivo previsto:
-
-* Gerar relatórios em PDF com ReportLab.
-* Exportar resumo da análise.
-* Salvar relatórios em app/reports.
-* Criar botão de download.
-
-### 08 — Docker, documentação e portfólio
-
-Status: Em breve
-
-Objetivo previsto:
-
-* Revisar Dockerfile.
-* Revisar docker-compose.yml.
-* Melhorar README.md.
-* Adicionar prints do projeto.
-* Preparar o repositório para GitHub.
-* Preparar conteúdo para divulgação no LinkedIn.
-
-## O que foi implementado na Conversa 1
-
-* Estrutura inicial de pastas.
-* Application factory do Flask.
-* Página inicial.
-* Template base.
-* CSS inicial.
-* Arquivo de configuração centralizado.
-* Arquivo requirements.txt.
-* Arquivo .gitignore.
-* Arquivo .env.example.
-* Dockerfile inicial.
-* docker-compose.yml inicial.
-* README.md inicial.
-* PROJECT_STATE.md inicial.
-* Arquivos placeholder para futuras camadas de serviço.
-* Testes mínimos de importação para os módulos de serviço.
-* Teste básico da rota inicial.
-* Arquivo conftest.py para corrigir importações no Pytest.
-* Pastas uploads, reports e sample_data versionadas com .gitkeep.
-
-## Status técnico validado na Conversa 1
-
-A aplicação foi executada com sucesso usando:
-
-```bash
-python run.py
-```
-
-A aplicação abriu corretamente em:
-
-```text
-http://127.0.0.1:5000
-```
-
-Os testes foram executados com sucesso usando:
-
-```bash
-python -m pytest
-```
-
-Resultado final:
-
-```text
-3 passed
-```
-
-## Funcionalidades ainda não implementadas
-
-* Upload de arquivos.
-* Leitura de CSV.
-* Leitura de Excel.
-* Validação real de planilhas.
-* Banco de dados.
-* Modelos SQLAlchemy.
-* Gráficos com Plotly.
-* Dashboard dinâmico.
-* Histórico de arquivos processados.
-* Exportação de relatórios em PDF.
-* Autenticação.
-* Deploy em nuvem.
-* Pipeline CI/CD.
-
-## Arquitetura atual
-
-A aplicação usa o padrão application factory do Flask.
-
-Arquivo principal:
-
-* run.py
-
-Pacote principal:
-
-* app/
-
-Arquivos centrais:
-
-* app/**init**.py
-* app/config.py
-* app/routes.py
-* app/models.py
-
-Templates:
-
-* app/templates/base.html
-* app/templates/index.html
-* app/templates/upload.html
-* app/templates/dashboard.html
-* app/templates/history.html
-
-Arquivos estáticos:
-
-* app/static/css/style.css
-
-Camada de serviços preparada:
-
-* app/services/data_loader.py
-* app/services/analyzer.py
-* app/services/charts.py
-* app/services/reports.py
-
-Pastas preparadas para arquivos futuros:
-
-* app/uploads/
-* app/reports/
-* sample_data/
-
-Testes atuais:
-
-* tests/test_analyzer.py
-* tests/test_data_loader.py
-* tests/test_routes.py
-
-Arquivo auxiliar de testes:
-
-* conftest.py
-
-## Rotas existentes
-
-### GET /
-
-Renderiza a página inicial da aplicação.
-
-Função responsável:
-
-* index()
-
-Arquivo:
-
-* app/routes.py
-
-## Decisões técnicas tomadas
-
-* O projeto usará Flask com application factory para facilitar testes, organização e evolução.
-* A configuração foi centralizada em app/config.py.
-* As funcionalidades futuras foram separadas em uma camada de services.
-* Uploads e relatórios gerados terão pastas próprias.
-* Banco de dados ainda não foi implementado para manter a primeira entrega simples.
-* Os templates de upload, dashboard e histórico foram criados inicialmente como placeholders.
-* O menu exibe funcionalidades futuras como itens desabilitados.
-* Bootstrap foi usado via CDN para acelerar a criação visual inicial.
-* CSS customizado foi criado em app/static/css/style.css.
-* Dockerfile e docker-compose.yml foram adicionados de forma inicial, sem configurações avançadas.
-* conftest.py foi adicionado para garantir que o Pytest consiga importar o pacote app.
-* Os testes iniciais validam a importação dos serviços e a rota principal.
-
-## Como rodar localmente
-
-Criar ambiente virtual:
-
-```bash
-python -m venv venv
-```
-
-Ativar no Windows:
-
-```bash
-venv\Scripts\activate
-```
-
-Ativar no Linux/macOS:
-
-```bash
-source venv/bin/activate
-```
-
-Instalar dependências:
-
-```bash
-pip install -r requirements.txt
-```
-
-Rodar aplicação:
-
-```bash
-python run.py
-```
-
-Acessar no navegador:
-
-```text
-http://127.0.0.1:5000
-```
-
-## Como rodar com Docker
-
-```bash
-docker compose up --build
-```
-
-Acessar no navegador:
-
-```text
-http://127.0.0.1:5000
-```
-
-## Como rodar testes
-
-Com o ambiente virtual ativado:
-
-```bash
-python -m pytest
-```
-
-Resultado atual esperado:
-
-```text
-3 passed
-```
-
-## Estrutura atual do projeto
-
-```text
+* O comando `python run.py` funcionou.
+* A aplicação abriu corretamente em `http://127.0.0.1:5000`.
+* O comando `python -m pytest` retornou testes passando.
+
+## O que foi feito na Conversa 2
+
+* Rota `GET /upload` criada.
+* Rota `POST /upload` criada.
+* Link Upload ativado no menu do `base.html`.
+* Tela profissional de upload criada em `upload.html`.
+* Formulário HTML criado com `enctype="multipart/form-data"`.
+* Validação de extensões permitidas criada.
+* Extensões permitidas nesta etapa:
+
+  * `.csv`
+  * `.xlsx`
+  * `.xls`
+* Arquivos inválidos são recusados antes do salvamento.
+* Função `secure_filename` do Werkzeug aplicada ao nome do arquivo.
+* Arquivos enviados são salvos em `app/uploads/`.
+* Mensagens de sucesso e erro foram implementadas com `flash`.
+* CSS da tela de upload foi ajustado para uma identidade visual mais dark/profissional.
+* Testes básicos para extensões permitidas foram criados.
+* Teste básico para `GET /upload` com status 200 foi criado.
+* Teste de upload válido `.csv` criado.
+* Teste de bloqueio para arquivo inválido `.pdf` criado.
+* O comando `python -m pytest` retornou `13 passed`.
+* README.md atualizado.
+* PROJECT_STATE.md atualizado.
+
+## Estrutura atual esperada
+
+```txt
 spreadsheet-dashboard-platform/
 │
 ├── app/
@@ -408,7 +136,8 @@ spreadsheet-dashboard-platform/
 ├── tests/
 │   ├── test_analyzer.py
 │   ├── test_data_loader.py
-│   └── test_routes.py
+│   ├── test_routes.py
+│   └── test_upload.py
 │
 ├── sample_data/
 │   └── .gitkeep
@@ -424,139 +153,174 @@ spreadsheet-dashboard-platform/
 └── run.py
 ```
 
-## Objetivo da Conversa 2
+## Arquivos alterados na Conversa 2
 
-Implementar a funcionalidade inicial de upload de arquivos CSV e Excel.
+* `app/routes.py`
+* `app/templates/base.html`
+* `app/templates/upload.html`
+* `app/static/css/style.css`
+* `tests/test_routes.py`
+* `README.md`
+* `PROJECT_STATE.md`
 
-## Escopo da Conversa 2
+## Arquivo criado na Conversa 2
 
-Nesta entrega, implementar:
+* `tests/test_upload.py`
 
-* Rota GET /upload.
-* Rota POST /upload.
-* Link Upload ativo no menu do base.html.
-* Tela profissional de upload em upload.html.
-* Formulário HTML com enctype="multipart/form-data".
-* Validação de extensão para .csv, .xlsx e .xls.
-* Uso de secure_filename do Werkzeug.
-* Salvamento dos arquivos dentro de app/uploads.
-* Flash messages para sucesso e erro.
-* CSS complementar para a tela de upload, se necessário.
-* Testes básicos para validação de extensão.
-* Teste básico para verificar se GET /upload retorna status 200.
-* Atualização do README.md.
-* Atualização deste PROJECT_STATE.md ao final da conversa.
+## Funcionalidade atual
 
-## Regras da Conversa 2
+A aplicação permite acessar:
 
-* Não implementar leitura dos dados com Pandas ainda.
-* Não implementar dashboard ainda.
-* Não implementar gráficos ainda.
-* Não implementar banco de dados ainda.
-* Não implementar SQLAlchemy ainda.
-* Não implementar histórico ainda.
-* Não implementar geração de PDF ainda.
-* Não implementar autenticação ainda.
-* Não aumentar o escopo da entrega.
-* Manter o código simples, limpo e profissional.
-
-## Arquivos que provavelmente serão alterados na Conversa 2
-
-* app/routes.py
-* app/templates/base.html
-* app/templates/upload.html
-* app/static/css/style.css
-* tests/test_routes.py
-* README.md
-* PROJECT_STATE.md
-
-## Arquivos que talvez sejam criados na Conversa 2
-
-* tests/test_upload.py
-
-## Resultado esperado no navegador para a Conversa 2
-
-Ao acessar:
-
-```text
+```txt
 http://127.0.0.1:5000/upload
 ```
 
-Deve aparecer uma página de upload.
+Na página de upload, o usuário pode enviar arquivos:
 
-Ao enviar um arquivo válido, como:
+* CSV
+* Excel `.xlsx`
+* Excel `.xls`
 
-* .csv
-* .xlsx
-* .xls
+Quando o arquivo é válido:
 
-O sistema deve salvar o arquivo em:
+* O nome é tratado com `secure_filename`.
+* O arquivo é salvo em `app/uploads/`.
+* Uma mensagem de sucesso é exibida.
 
-```text
-app/uploads/
-```
+Quando o arquivo é inválido:
 
-E mostrar uma mensagem de sucesso.
+* O arquivo não é salvo.
+* Uma mensagem de erro é exibida.
 
-Ao enviar um arquivo inválido, como:
+## Testes atuais
 
-* .txt
-* .pdf
-* .png
-
-O sistema não deve salvar o arquivo e deve mostrar uma mensagem de erro.
-
-## Resultado esperado nos testes após a Conversa 2
-
-Ao rodar:
+O comando:
 
 ```bash
 python -m pytest
 ```
 
-Todos os testes devem passar.
+retornou:
 
-## Commit da Conversa 1
+```txt
+13 passed
+```
 
-Commit sugerido ou realizado:
+Os testes atuais validam:
+
+* Página inicial respondendo com status 200.
+* Página `/upload` respondendo com status 200.
+* Extensões permitidas:
+
+  * `.csv`
+  * `.xlsx`
+  * `.xls`
+* Extensões recusadas:
+
+  * `.txt`
+  * `.pdf`
+  * `.png`
+* Arquivo sem extensão recusado.
+* Upload válido `.csv` retornando mensagem de sucesso.
+* Upload inválido `.pdf` retornando mensagem de erro.
+* Testes placeholder das camadas `analyzer` e `data_loader`.
+
+## Importante
+
+Nesta entrega ainda não foi implementado:
+
+* Leitura dos arquivos com Pandas.
+* Prévia dos dados na interface.
+* Dashboard.
+* Gráficos.
+* Banco de dados.
+* SQLAlchemy.
+* Histórico.
+* PDF.
+* Autenticação.
+
+Esses pontos fazem parte das próximas conversas.
+
+## Como rodar o projeto
+
+Na raiz do projeto:
 
 ```bash
-git commit -m "chore: create initial Flask project structure"
+python run.py
+```
+
+Acessar:
+
+```txt
+http://127.0.0.1:5000
+```
+
+Página de upload:
+
+```txt
+http://127.0.0.1:5000/upload
+```
+
+## Como rodar os testes
+
+Na raiz do projeto:
+
+```bash
+python -m pytest
+```
+
+Resultado esperado:
+
+```txt
+13 passed
 ```
 
 ## Commit sugerido para a Conversa 2
 
 ```bash
+git add .
 git commit -m "feat: add spreadsheet upload page"
 ```
 
-## Prompt recomendado para iniciar a Conversa 2
+## Próxima conversa
 
-Vamos iniciar a Conversa 2 do projeto DataBoard Reports.
+Conversa 3 — Leitura inicial de arquivos com Pandas.
 
-Use como base o PROJECT_STATE.md atualizado.
+## Objetivo da Conversa 3
 
-Agora quero implementar apenas a funcionalidade inicial de upload de arquivos CSV e Excel.
+Implementar apenas a leitura inicial dos arquivos CSV e Excel enviados ou armazenados em `app/uploads/`.
 
-Regras:
+## Escopo provável da Conversa 3
 
-* Não implemente leitura dos dados com Pandas ainda.
-* Não implemente dashboard ainda.
-* Não implemente banco de dados ainda.
-* Não implemente gráficos ainda.
-* Não implemente relatório PDF ainda.
-* Mantenha a entrega pequena e profissional.
-* Crie rota GET /upload.
-* Crie rota POST /upload.
-* Ative o link Upload no menu.
-* Crie formulário HTML para upload.
-* Valide extensões permitidas: .csv, .xlsx e .xls.
-* Use secure_filename do Werkzeug.
-* Salve arquivos em app/uploads.
-* Mostre mensagens de sucesso e erro usando flash messages do Flask.
-* Crie testes básicos para validação de extensão.
-* Crie teste para GET /upload retornar status 200.
-* Atualize o README.md.
-* Atualize o PROJECT_STATE.md ao final.
+* Criar ou atualizar funções em `app/services/data_loader.py`.
+* Ler arquivos `.csv`, `.xlsx` e `.xls` com Pandas.
+* Validar se o arquivo existe antes de tentar ler.
+* Validar se a extensão é suportada.
+* Retornar informações básicas:
 
-Entregue os arquivos completos e explique onde cada um deve ficar.
+  * quantidade de linhas;
+  * quantidade de colunas;
+  * nomes das colunas;
+  * primeiras linhas.
+* Criar testes para leitura de CSV.
+* Criar testes para leitura de Excel.
+* Criar testes para arquivo inexistente.
+* Criar testes para extensão não suportada.
+* Atualizar README.md.
+* Atualizar PROJECT_STATE.md.
+
+## Regras para a Conversa 3
+
+* Não implementar dashboard ainda.
+* Não implementar gráficos ainda.
+* Não implementar banco de dados ainda.
+* Não implementar SQLAlchemy ainda.
+* Não implementar histórico ainda.
+* Não implementar PDF ainda.
+* Não implementar autenticação ainda.
+* Não aumentar o escopo da entrega.
+* Manter o código simples, limpo e profissional.
+
+## Próxima entrega após a Conversa 3
+
+Conversa 4 — Exibir uma prévia dos dados carregados na interface web.
