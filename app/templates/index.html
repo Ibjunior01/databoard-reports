@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}Início | DataBoard Reports{% endblock %}
+
+{% block content %}
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-7">
+                <span class="hero-badge">Projeto profissional em Python + Flask</span>
+
+                <h1 class="hero-title mt-3">
+                    Transforme planilhas em dashboards e relatórios profissionais.
+                </h1>
+
+                <p class="hero-text mt-3">
+                    O DataBoard Reports será uma plataforma web para empresas enviarem
+                    arquivos CSV ou Excel, visualizarem análises automáticas, gráficos
+                    interativos e exportarem relatórios em PDF.
+                </p>
+
+                <div class="mt-4">
+                    <button class="btn btn-primary btn-lg" disabled>
+                        Upload em breve
+                    </button>
+
+                    <a href="#features" class="btn btn-outline-light btn-lg ms-2">
+                        Ver recursos
+                    </a>
+                </div>
+            </div>
+
+            <div class="col-lg-5">
+                <div class="hero-card">
+                    <p class="hero-card-label">Status da entrega atual</p>
+
+                    <h2>Base Flask criada</h2>
+
+                    <ul>
+                        <li>Estrutura inicial do projeto</li>
+                        <li>Application factory</li>
+                        <li>Template base reutilizável</li>
+                        <li>CSS inicial</li>
+                        <li>Configuração centralizada</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="features" class="features-section">
+    <div class="container">
+        <div class="section-header text-center mb-5">
+            <span class="section-label">Roadmap do produto</span>
+            <h2>Funcionalidades planejadas</h2>
+            <p>
+                Esta primeira versão ainda não executa upload, análise ou geração de PDF.
+                A estrutura foi preparada para receber essas funcionalidades nas próximas entregas.
+            </p>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-3">
+                <div class="feature-card">
+                    <h3>Upload</h3>
+                    <p>
+                        Envio de arquivos CSV e Excel para processamento com Pandas.
+                    </p>
+                    <span class="status-pill">Próxima etapa</span>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-lg-3">
+                <div class="feature-card">
+                    <h3>Análise</h3>
+                    <p>
+                        Identificação automática de métricas, colunas e indicadores.
+                    </p>
+                    <span class="status-pill">Planejado</span>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-lg-3">
+                <div class="feature-card">
+                    <h3>Dashboard</h3>
+                    <p>
+                        Gráficos interativos com Plotly para exploração dos dados.
+                    </p>
+                    <span class="status-pill">Planejado</span>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-lg-3">
+                <div class="feature-card">
+                    <h3>PDF</h3>
+                    <p>
+                        Exportação de relatórios profissionais usando ReportLab.
+                    </p>
+                    <span class="status-pill">Planejado</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

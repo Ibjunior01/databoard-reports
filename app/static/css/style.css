@@ -1,0 +1,147 @@
+:root {
+    --color-bg: #0f172a;
+    --color-bg-soft: #111827;
+    --color-card: #ffffff;
+    --color-primary: #2563eb;
+    --color-primary-dark: #1d4ed8;
+    --color-text: #0f172a;
+    --color-muted: #64748b;
+    --color-border: #e5e7eb;
+    --color-white: #ffffff;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    color: var(--color-text);
+    background-color: #f8fafc;
+}
+
+.app-navbar {
+    background-color: var(--color-bg);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.hero-section {
+    min-height: 680px;
+    display: flex;
+    align-items: center;
+    color: var(--color-white);
+    background:
+        radial-gradient(circle at top right, rgba(37, 99, 235, 0.35), transparent 35%),
+        linear-gradient(135deg, #0f172a 0%, #111827 60%, #020617 100%);
+    padding: 96px 0;
+}
+
+.hero-badge,
+.section-label {
+    display: inline-block;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #93c5fd;
+}
+
+.hero-title {
+    max-width: 760px;
+    font-size: clamp(2.4rem, 5vw, 4.5rem);
+    line-height: 1.05;
+    font-weight: 800;
+}
+
+.hero-text {
+    max-width: 680px;
+    font-size: 1.15rem;
+    line-height: 1.8;
+    color: #cbd5e1;
+}
+
+.hero-card {
+    background-color: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 24px;
+    padding: 32px;
+    backdrop-filter: blur(12px);
+}
+
+.hero-card-label {
+    color: #93c5fd;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: 700;
+}
+
+.hero-card h2 {
+    margin-bottom: 24px;
+    font-weight: 800;
+}
+
+.hero-card ul {
+    margin: 0;
+    padding-left: 20px;
+    color: #e5e7eb;
+    line-height: 2;
+}
+
+.features-section {
+    padding: 88px 0;
+}
+
+.section-header h2 {
+    font-size: 2.2rem;
+    font-weight: 800;
+}
+
+.section-header p {
+    max-width: 760px;
+    margin: 16px auto 0;
+    color: var(--color-muted);
+    line-height: 1.7;
+}
+
+.feature-card {
+    height: 100%;
+    padding: 28px;
+    border-radius: 20px;
+    background-color: var(--color-card);
+    border: 1px solid var(--color-border);
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+}
+
+.feature-card h3 {
+    font-size: 1.25rem;
+    font-weight: 800;
+}
+
+.feature-card p {
+    color: var(--color-muted);
+    line-height: 1.7;
+}
+
+.status-pill {
+    display: inline-block;
+    margin-top: 12px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    color: var(--color-primary-dark);
+    background-color: #dbeafe;
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.page-section {
+    min-height: 70vh;
+    padding: 96px 0;
+}
+
+.app-footer {
+    padding: 24px 0;
+    color: #cbd5e1;
+    background-color: var(--color-bg);
+}
