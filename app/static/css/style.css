@@ -1,13 +1,17 @@
 :root {
     --color-bg: #0f172a;
     --color-bg-soft: #111827;
-    --color-card: #ffffff;
-    --color-primary: #2563eb;
-    --color-primary-dark: #1d4ed8;
-    --color-text: #0f172a;
-    --color-muted: #64748b;
-    --color-border: #e5e7eb;
-    --color-white: #ffffff;
+    --color-surface: #1e293b;
+    --color-surface-light: #263449;
+    --color-primary: #38bdf8;
+    --color-primary-dark: #0284c7;
+    --color-accent: #22c55e;
+    --color-text: #f8fafc;
+    --color-muted: #cbd5e1;
+    --color-muted-dark: #94a3b8;
+    --color-border: rgba(148, 163, 184, 0.22);
+    --color-navbar: #020617;
+    --shadow-soft: 0 24px 60px rgba(2, 6, 23, 0.45);
 }
 
 * {
@@ -15,133 +19,250 @@
 }
 
 body {
+    min-height: 100vh;
     margin: 0;
-    font-family: Arial, Helvetica, sans-serif;
+    background:
+        radial-gradient(circle at top left, rgba(56, 189, 248, 0.16), transparent 32%),
+        radial-gradient(circle at top right, rgba(34, 197, 94, 0.1), transparent 28%),
+        var(--color-bg);
     color: var(--color-text);
-    background-color: #f8fafc;
+    font-family: Arial, Helvetica, sans-serif;
 }
 
 .app-navbar {
-    background-color: var(--color-bg);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(2, 6, 23, 0.92);
+    border-bottom: 1px solid var(--color-border);
+    box-shadow: 0 8px 30px rgba(2, 6, 23, 0.38);
+    backdrop-filter: blur(14px);
 }
 
-.hero-section {
-    min-height: 680px;
-    display: flex;
-    align-items: center;
-    color: var(--color-white);
-    background:
-        radial-gradient(circle at top right, rgba(37, 99, 235, 0.35), transparent 35%),
-        linear-gradient(135deg, #0f172a 0%, #111827 60%, #020617 100%);
-    padding: 96px 0;
+.navbar-brand {
+    color: #ffffff !important;
+    letter-spacing: -0.03em;
 }
 
-.hero-badge,
-.section-label {
-    display: inline-block;
-    font-size: 0.85rem;
-    font-weight: 700;
-    letter-spacing: 0.04em;
+.nav-link {
+    color: var(--color-muted) !important;
+    font-weight: 500;
+}
+
+.nav-link:hover,
+.nav-link.active {
+    color: #ffffff !important;
+}
+
+.nav-link.disabled {
+    color: var(--color-muted-dark) !important;
+    opacity: 0.42;
+    cursor: not-allowed;
+}
+
+main.container {
+    min-height: calc(100vh - 160px);
+}
+
+.flash-wrapper {
+    max-width: 920px;
+    margin: 0 auto 1.5rem auto;
+}
+
+.alert {
+    border-radius: 14px;
+    border: none;
+    box-shadow: 0 14px 34px rgba(2, 6, 23, 0.22);
+}
+
+.page-header {
+    max-width: 920px;
+    margin: 1.5rem auto 2rem auto;
+}
+
+.eyebrow {
+    margin-bottom: 0.5rem;
+    color: var(--color-primary);
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: #93c5fd;
 }
 
-.hero-title {
-    max-width: 760px;
-    font-size: clamp(2.4rem, 5vw, 4.5rem);
-    line-height: 1.05;
+.page-header h1 {
+    margin-bottom: 0.75rem;
+    color: #ffffff;
+    font-size: clamp(2rem, 5vw, 3.25rem);
     font-weight: 800;
+    letter-spacing: -0.05em;
 }
 
-.hero-text {
-    max-width: 680px;
-    font-size: 1.15rem;
-    line-height: 1.8;
-    color: #cbd5e1;
-}
-
-.hero-card {
-    background-color: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    border-radius: 24px;
-    padding: 32px;
-    backdrop-filter: blur(12px);
-}
-
-.hero-card-label {
-    color: #93c5fd;
-    font-size: 0.85rem;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    font-weight: 700;
-}
-
-.hero-card h2 {
-    margin-bottom: 24px;
-    font-weight: 800;
-}
-
-.hero-card ul {
-    margin: 0;
-    padding-left: 20px;
-    color: #e5e7eb;
-    line-height: 2;
-}
-
-.features-section {
-    padding: 88px 0;
-}
-
-.section-header h2 {
-    font-size: 2.2rem;
-    font-weight: 800;
-}
-
-.section-header p {
-    max-width: 760px;
-    margin: 16px auto 0;
+.page-description {
+    max-width: 700px;
     color: var(--color-muted);
+    font-size: 1.08rem;
     line-height: 1.7;
 }
 
-.feature-card {
-    height: 100%;
-    padding: 28px;
-    border-radius: 20px;
-    background-color: var(--color-card);
+.upload-section {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.6fr);
+    gap: 1.5rem;
+    max-width: 920px;
+    margin: 0 auto;
+}
+
+.upload-card,
+.upload-info-card {
+    background: linear-gradient(180deg, rgba(30, 41, 59, 0.96), rgba(15, 23, 42, 0.96));
     border: 1px solid var(--color-border);
-    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+    border-radius: 20px;
+    box-shadow: var(--shadow-soft);
 }
 
-.feature-card h3 {
-    font-size: 1.25rem;
+.upload-card {
+    padding: 2rem;
+}
+
+.upload-card-header {
+    margin-bottom: 1.5rem;
+}
+
+.upload-card-header h2 {
+    margin-bottom: 0.5rem;
+    color: #ffffff;
+    font-size: 1.45rem;
     font-weight: 800;
+    letter-spacing: -0.03em;
 }
 
-.feature-card p {
+.upload-card-header p {
+    margin-bottom: 0;
     color: var(--color-muted);
-    line-height: 1.7;
 }
 
-.status-pill {
-    display: inline-block;
-    margin-top: 12px;
-    padding: 6px 12px;
-    border-radius: 999px;
-    color: var(--color-primary-dark);
-    background-color: #dbeafe;
-    font-size: 0.85rem;
+.upload-form .form-label {
+    color: #ffffff;
     font-weight: 700;
 }
 
-.page-section {
-    min-height: 70vh;
-    padding: 96px 0;
+.upload-form .form-control {
+    padding: 0.85rem 0.95rem;
+    color: #ffffff;
+    background-color: rgba(15, 23, 42, 0.92);
+    border: 1px solid var(--color-border);
+    border-radius: 14px;
+}
+
+.upload-form .form-control::file-selector-button {
+    margin-right: 1rem;
+    padding: 0.55rem 0.9rem;
+    color: #020617;
+    background: var(--color-primary);
+    border: none;
+    border-radius: 10px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.upload-form .form-control:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 0.22rem rgba(56, 189, 248, 0.18);
+}
+
+.upload-form .form-text {
+    color: var(--color-muted-dark);
+    line-height: 1.6;
+}
+
+.upload-button {
+    padding: 0.85rem 1.25rem;
+    border: none;
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+    color: #020617;
+    font-weight: 800;
+    box-shadow: 0 16px 34px rgba(56, 189, 248, 0.18);
+}
+
+.upload-button:hover {
+    background: linear-gradient(135deg, #7dd3fc, var(--color-primary));
+    color: #020617;
+}
+
+.upload-info-card {
+    padding: 1.5rem;
+}
+
+.upload-info-card h3 {
+    margin-bottom: 1rem;
+    color: #ffffff;
+    font-size: 1.1rem;
+    font-weight: 800;
+}
+
+.upload-info-card ul {
+    margin: 0;
+    padding-left: 1.2rem;
+    color: var(--color-muted);
+    line-height: 1.8;
+}
+
+.upload-info-card li::marker {
+    color: var(--color-primary);
+}
+
+.upload-info-card code {
+    padding: 0.15rem 0.35rem;
+    color: #bae6fd;
+    background: rgba(56, 189, 248, 0.12);
+    border: 1px solid rgba(56, 189, 248, 0.2);
+    border-radius: 6px;
+    font-weight: 700;
 }
 
 .app-footer {
-    padding: 24px 0;
-    color: #cbd5e1;
-    background-color: var(--color-bg);
+    margin-top: 4rem;
+    padding: 1.5rem 0;
+    color: var(--color-muted-dark);
+    font-size: 0.9rem;
+    text-align: center;
+    border-top: 1px solid var(--color-border);
+}
+
+/* Suporte para cards e blocos da página inicial, caso existam */
+.card,
+.hero-card,
+.feature-card,
+.content-card {
+    background: linear-gradient(180deg, rgba(30, 41, 59, 0.96), rgba(15, 23, 42, 0.96));
+    border: 1px solid var(--color-border);
+    color: var(--color-text);
+    box-shadow: var(--shadow-soft);
+}
+
+.card p,
+.hero-card p,
+.feature-card p,
+.content-card p {
+    color: var(--color-muted);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+    border: none;
+    color: #020617;
+    font-weight: 800;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #7dd3fc, var(--color-primary));
+    color: #020617;
+}
+
+@media (max-width: 768px) {
+    .upload-section {
+        grid-template-columns: 1fr;
+    }
+
+    .upload-card {
+        padding: 1.5rem;
+    }
 }
