@@ -1,62 +1,64 @@
 # DataBoard Reports
 
-DataBoard Reports é uma plataforma web desenvolvida em Python com Flask para permitir que empresas façam upload de planilhas CSV ou Excel, visualizem dashboards automáticos, gerem gráficos interativos e exportem relatórios em PDF.
+DataBoard Reports é uma plataforma web desenvolvida em Python com Flask para upload de planilhas CSV ou Excel, leitura inicial dos dados com Pandas e futura geração de dashboards automáticos, gráficos interativos e relatórios em PDF.
 
-O projeto está sendo desenvolvido em entregas pequenas e sequenciais, com foco em portfólio profissional para GitHub e divulgação no LinkedIn.
+O projeto está sendo desenvolvido em entregas pequenas e sequenciais, com foco em boas práticas de engenharia de software, testes automatizados, organização profissional de repositório e apresentação em portfólio no GitHub e LinkedIn.
 
-## Status do projeto
+## Objetivo do projeto
 
-Entrega atual:
+Criar uma aplicação web profissional onde empresas possam:
 
-**Conversa 2 — Upload inicial de arquivos CSV e Excel**
-
-Funcionalidades já implementadas:
-
-- Estrutura inicial de aplicação Flask.
-- Application factory.
-- Página inicial.
-- Template base.
-- CSS inicial.
-- Configuração centralizada.
-- Dockerfile inicial.
-- docker-compose.yml inicial.
-- Testes iniciais com Pytest.
-- Página de upload.
-- Rota GET `/upload`.
-- Rota POST `/upload`.
-- Validação de extensões permitidas.
-- Upload de arquivos `.csv`, `.xlsx` e `.xls`.
-- Salvamento dos arquivos em `app/uploads/`.
-- Mensagens de sucesso e erro com `flash`.
-
-Ainda não implementado:
-
-- Leitura dos dados com Pandas.
-- Dashboard.
-- Gráficos com Plotly.
-- Banco de dados.
-- Histórico de uploads.
-- Exportação de PDF.
-- Autenticação.
+* enviar planilhas CSV ou Excel;
+* visualizar uma prévia dos dados carregados;
+* gerar dashboards automáticos;
+* visualizar gráficos interativos;
+* exportar relatórios em PDF;
+* consultar histórico de uploads e relatórios gerados.
 
 ## Stack planejada
 
-- Python
-- Flask
-- Pandas
-- Plotly
-- SQLite
-- SQLAlchemy
-- ReportLab
-- HTML/CSS
-- Bootstrap
-- Docker
-- Pytest
-- Git/GitHub
+* Python
+* Flask
+* Pandas
+* Plotly
+* SQLite
+* SQLAlchemy
+* ReportLab
+* HTML/CSS
+* Bootstrap
+* Docker
+* Pytest
+* Git/GitHub
+
+## Status atual
+
+Entrega atual:
+
+**Conversa 3 — Leitura inicial de arquivos com Pandas**
+
+Funcionalidades implementadas até agora:
+
+* Base inicial Flask com application factory.
+* Página inicial.
+* Template base.
+* CSS inicial.
+* Configuração centralizada.
+* Upload de arquivos CSV e Excel.
+* Validação de extensões permitidas.
+* Salvamento seguro dos arquivos enviados.
+* Mensagens de sucesso e erro com flash.
+* Leitura inicial de arquivos `.csv`, `.xlsx` e `.xls` com Pandas.
+* Extração de metadados básicos da planilha:
+
+  * quantidade de linhas;
+  * quantidade de colunas;
+  * nomes das colunas;
+  * primeiras linhas.
+* Testes automatizados com Pytest.
 
 ## Estrutura do projeto
 
-```txt
+```text
 spreadsheet-dashboard-platform/
 │
 ├── app/
@@ -107,3 +109,129 @@ spreadsheet-dashboard-platform/
 ├── README.md
 ├── PROJECT_STATE.md
 └── run.py
+```
+
+## Como executar localmente
+
+Crie e ative o ambiente virtual:
+
+```bash
+python -m venv venv
+```
+
+No Windows PowerShell:
+
+```bash
+venv\Scripts\Activate.ps1
+```
+
+Instale as dependências:
+
+```bash
+pip install -r requirements.txt
+```
+
+Execute a aplicação:
+
+```bash
+python run.py
+```
+
+Acesse no navegador:
+
+```text
+http://127.0.0.1:5000
+```
+
+## Como rodar os testes
+
+Execute:
+
+```bash
+python -m pytest
+```
+
+Resultado esperado:
+
+```text
+Todos os testes devem passar.
+```
+
+## Funcionalidades da Conversa 3
+
+Nesta entrega foi criada a camada inicial de leitura de planilhas usando Pandas.
+
+O arquivo principal é:
+
+```text
+app/services/data_loader.py
+```
+
+Ele possui funções para:
+
+* validar se o arquivo existe;
+* validar se a extensão é suportada;
+* ler arquivos `.csv`;
+* ler arquivos `.xlsx`;
+* ler arquivos `.xls`;
+* retornar um DataFrame Pandas;
+* gerar metadados básicos da planilha;
+* retornar uma prévia das primeiras linhas.
+
+Extensões suportadas nesta fase:
+
+```text
+.csv
+.xlsx
+.xls
+```
+
+## Exemplo de metadados retornados
+
+```python
+{
+    "file_name": "sales.csv",
+    "file_extension": ".csv",
+    "rows": 100,
+    "columns": 5,
+    "column_names": ["product", "quantity", "revenue", "date", "category"],
+    "preview": [
+        {
+            "product": "Notebook",
+            "quantity": 2,
+            "revenue": 7000.0,
+            "date": "2026-01-01",
+            "category": "Electronics"
+        }
+    ]
+}
+```
+
+## Testes adicionados nesta entrega
+
+Foram adicionados testes para:
+
+* validação de extensões suportadas;
+* rejeição de extensões não suportadas;
+* leitura de arquivo CSV;
+* leitura de arquivo Excel;
+* geração de metadados a partir de CSV;
+* geração de metadados a partir de Excel;
+* erro para arquivo inexistente;
+* erro para extensão não suportada;
+* controle da quantidade de linhas exibidas na prévia.
+
+## Próximas entregas planejadas
+
+A próxima entrega provavelmente será:
+
+**Conversa 4 — Exibir uma prévia dos dados carregados na interface web**
+
+Escopo provável:
+
+* integrar a leitura da planilha ao fluxo de upload;
+* após upload válido, carregar metadados;
+* exibir quantidade de linhas e colunas;
+* exibir nomes das colunas;
+* exibir uma tabela simples com as primeiras linhas;
+* manter sem dashboard, sem gráficos e sem banco de dados.
