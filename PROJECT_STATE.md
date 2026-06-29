@@ -196,6 +196,27 @@ Integrar a camada de leitura de planilhas com o fluxo de upload, permitindo que 
 - Testes ajustados para o novo fluxo de upload.
 - O comando python -m pytest retornou 15 passed.
 
+### Conversa 5 — Análise automática inicial dos dados carregados
+
+* Arquivo app/services/analyzer.py atualizado.
+* Criada estrutura DataAnalysisResult usando dataclass.
+* Criada função analyze_dataframe.
+* Implementada identificação de colunas numéricas.
+* Implementada identificação de colunas categóricas/texto.
+* Implementada contagem de valores ausentes por coluna.
+* Implementado cálculo percentual de valores ausentes por coluna.
+* Implementada contagem de valores únicos por coluna.
+* Implementado cálculo de estatísticas básicas para colunas numéricas:
+  * média;
+  * mínimo;
+  * máximo;
+  * mediana.
+* Implementado tratamento para DataFrame vazio.
+* Implementada validação para rejeitar entradas que não sejam pandas.DataFrame.
+* Arquivo tests/test_analyzer.py atualizado.
+* Criados testes unitários para a camada de análise.
+* O comando python -m pytest retornou 23 passed.
+
 ## Estrutura atual esperada
 
 ```text
@@ -251,13 +272,12 @@ spreadsheet-dashboard-platform/
 └── run.py
 ```
 
-## Arquivos modificados na Conversa 3
+## Arquivos modificados na Conversa 5
 
-* app/services/data_loader.py
-* tests/test_data_loader.py
-* README.md
-* PROJECT_STATE.md
-* requirements.txt
+app/services/analyzer.py
+tests/test_analyzer.py
+README.md
+PROJECT_STATE.md
 
 ## Comando para executar a aplicação
 
@@ -273,14 +293,15 @@ python -m pytest
 
 ## Resultado esperado dos testes
 
-Todos os testes devem passar.
+O comando abaixo deve retornar todos os testes passando:
+python -m pytest
+Resultado validado na Conversa 5:
+23 passed
 
 ## O que ainda não foi implementado
 
-* Dashboard.
+* Exibição da análise automática no dashboard.
 * Gráficos interativos.
-* Integração da leitura da planilha com a interface web.
-* Exibição da prévia dos dados no navegador.
 * Banco de dados.
 * SQLAlchemy.
 * Histórico de uploads.
@@ -291,33 +312,58 @@ Todos os testes devem passar.
 
 ## Próxima entrega sugerida
 
-Conversa 5 — Análise automática inicial dos dados carregados.
+Conversa 6 — Exibição da análise automática no dashboard.
 
-## Objetivo provável da Conversa 5
+## Objetivo provável da Conversa 6
 
-Criar uma camada de análise em app/services/analyzer.py para receber um DataFrame carregado pelo Pandas e retornar informações úteis sobre a estrutura dos dados, preparando o projeto para a futura geração de dashboards automáticos.
+Integrar a camada de análise automática com o fluxo de upload, permitindo que o sistema exiba no dashboard web informações estruturadas sobre os dados carregados.
 
-## Escopo recomendado para a Conversa 5
+## Escopo recomendado para a Conversa 6
 
-Atualizar o arquivo app/services/analyzer.py.
-Criar uma estrutura de resultado para análise dos dados.
-Detectar colunas numéricas.
-Detectar colunas categóricas/texto.
-Contar valores ausentes por coluna.
-Calcular percentual de valores ausentes.
-Calcular estatísticas básicas para colunas numéricas:
+Integrar a função analyze_dataframe() na rota de upload.
+
+Enviar o resultado da análise para o template dashboard.html.
+
+Exibir cards com informações gerais:
+
+total de linhas;
+total de colunas;
+quantidade de colunas numéricas;
+quantidade de colunas categóricas.
+
+Exibir lista de colunas numéricas.
+
+Exibir lista de colunas categóricas/texto.
+
+Exibir tabela de valores ausentes por coluna:
+
+nome da coluna;
+quantidade de valores ausentes;
+percentual de valores ausentes.
+
+Exibir estatísticas básicas das colunas numéricas:
+
 média;
 mínimo;
 máximo;
 mediana.
-Identificar quantidade de valores únicos por coluna.
-Criar testes unitários para a camada de análise.
-Manter a análise desacoplada da interface web.
-Não implementar gráficos ainda.
-Não implementar Plotly ainda.
-Não implementar banco de dados ainda.
-Não implementar histórico ainda.
-Não implementar PDF ainda.
+
+Ajustar o layout do dashboard.html seguindo a identidade visual dark/profissional definida para o DataBoard Reports.
+
+Adicionar ou ajustar testes para garantir que o dashboard exibe os dados da análise automática.
+
+Manter fora do escopo nesta etapa:
+
+gráficos interativos;
+Plotly;
+banco de dados;
+histórico de uploads;
+geração de PDF;
+autenticação;
+deploy.
+
 Observação de continuidade
 
-A Conversa 4 concluiu a integração entre upload, leitura com Pandas e exibição da prévia na interface web. A partir da Conversa 5, o projeto deve evoluir da simples prévia dos dados para uma análise automática inicial, mantendo a identidade visual dark/profissional definida para o DataBoard Reports.
+A Conversa 5 concluiu a criação da camada de análise automática dos dados carregados. O projeto agora possui uma função desacoplada da interface web capaz de analisar um DataFrame e retornar informações estruturadas sobre colunas, valores ausentes, valores únicos e estatísticas numéricas.
+
+A partir da Conversa 6, o projeto deve evoluir para exibir essa análise diretamente no dashboard, mantendo a identidade visual dark/profissional definida para o DataBoard Reports.
