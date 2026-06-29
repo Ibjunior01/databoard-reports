@@ -3,17 +3,13 @@ from pathlib import Path
 from flask import Blueprint, current_app, flash, redirect, render_template, request, url_for
 from werkzeug.utils import secure_filename
 
+from app.services.data_loader import (
+    UnsupportedFileTypeError,
+    allowed_file,
+    load_spreadsheet_metadata,
+)
 
 main_bp = Blueprint("main", __name__)
-
-ALLOWED_EXTENSIONS = {"csv", "xlsx", "xls"}
-
-
-def allowed_file(filename: str) -> bool:
-    """
-    Validate if the uploaded file has an allowed spreadsheet extension.
-    """
-    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 @main_bp.route("/")
@@ -26,37 +22,49 @@ def upload_file():
     if request.method == "GET":
         return render_template("upload.html")
 
-    if "file" not in request.files:
-        flash("Nenhum arquivo foi enviado.", "danger")
+    uploaded_file = request.files.get("file")
+
+    if not uploaded_file or uploaded_file.filename == "":
+        flash("Nenhum arquivo foi selecionado.", "error")
         return redirect(url_for("main.upload_file"))
 
-    file = request.files["file"]
-
-    if file.filename == "":
-        flash("Selecione um arquivo antes de enviar.", "warning")
+    if not allowed_file(uploaded_file.filename):
+        flash("Tipo de arquivo não permitido. Envie arquivos CSV, XLSX ou XLS.", "error")
         return redirect(url_for("main.upload_file"))
 
-    if not allowed_file(file.filename):
-        flash("Formato inválido. Envie apenas arquivos .csv, .xlsx ou .xls.", "danger")
-        return redirect(url_for("main.upload_file"))
+    filename = secure_filename(uploaded_file.filename)
 
-    filename = secure_filename(file.filename)
-
-    if not filename:
-        flash("Nome de arquivo inválido.", "danger")
-        return redirect(url_for("main.upload_file"))
-
-    upload_folder = Path(
-        current_app.config.get(
-            "UPLOAD_FOLDER",
-            Path(current_app.root_path) / "uploads",
-        )
-    )
-
+    upload_folder = Path(current_app.config.get("UPLOAD_FOLDER", "app/uploads"))
     upload_folder.mkdir(parents=True, exist_ok=True)
 
     file_path = upload_folder / filename
-    file.save(file_path)
+    uploaded_file.save(file_path)
 
-    flash(f"Arquivo '{filename}' enviado com sucesso.", "success")
-    return redirect(url_for("main.upload_file"))
+    try:
+        metadata = load_spreadsheet_metadata(file_path)
+    except UnsupportedFileTypeError:
+        flash("Tipo de arquivo não suportado.", "error")
+        return redirect(url_for("main.uploa_filed"))
+    except FileNotFoundError:
+        flash("Arquivo enviado não foi encontrado no servidor.", "error")
+        return redirect(url_for("main.upload_file"))
+    except Exception:
+        flash("Não foi possível ler a planilha enviada. Verifique o formato do arquivo.", "error")
+        return redirect(url_for("main.upload_file"))
+
+    flash("Arquivo carregado com sucesso.", "success")
+
+    return render_template(
+        "dashboard.html",
+        metadata=metadata,
+    )
+
+
+@main_bp.route("/dashboard")
+def dashboard():
+    return render_template("dashboard.html", metadata=None)
+
+
+@main_bp.route("/history")
+def history():
+    return render_template("history.html")

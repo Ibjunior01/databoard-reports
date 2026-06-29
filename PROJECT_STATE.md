@@ -33,13 +33,41 @@ O projeto está sendo construído em entregas pequenas e sequenciais, com foco e
 * Pytest
 * Git/GitHub
 
+## Identidade visual definida
+
+O projeto seguirá uma identidade visual dark/profissional, inspirada em dashboards SaaS modernos.
+
+### Direção visual
+
+- Fundo principal em azul muito escuro/preto técnico.
+- Cards em tons de slate/navy.
+- Azul claro como cor primária de ação.
+- Bordas discretas.
+- Sombras suaves para profundidade.
+- Layout limpo, profissional e adequado para portfólio.
+
+### Paleta base
+
+- Background principal: `#020617`
+- Superfície/card: `#0f172a`
+- Superfície secundária: `#111827`
+- Bordas: `#1e293b`
+- Texto principal: `#f8fafc`
+- Texto secundário: `#94a3b8`
+- Azul primário: `#38bdf8`
+- Azul hover: `#0ea5e9`
+
+### Regra de design
+
+Todas as próximas telas devem seguir a paleta dark definida, evitando páginas com fundo branco puro. A interface deve manter aparência de produto SaaS profissional voltado para análise de dados e dashboards empresariais.
+
 ## Entrega atual
 
-Conversa 3 — Leitura inicial de arquivos com Pandas
+Conversa 4 — Exibição da prévia dos dados na interface web
 
 ## Objetivo da entrega atual
 
-Implementar a leitura inicial de arquivos CSV e Excel usando Pandas, criando uma camada de serviço simples e testável para carregar planilhas e retornar metadados básicos.
+Integrar a camada de leitura de planilhas com o fluxo de upload, permitindo que o sistema exiba no navegador os metadados e uma prévia dos dados carregados.
 
 ## O que já foi implementado
 
@@ -143,6 +171,31 @@ Implementar a leitura inicial de arquivos CSV e Excel usando Pandas, criando uma
   * openpyxl
   * xlrd
 
+### Conversa 4 — Exibição da prévia dos dados na interface web
+
+- Rota POST /upload integrada com a leitura de planilhas.
+- Arquivo enviado é salvo e imediatamente carregado com Pandas.
+- Função load_spreadsheet_metadata utilizada no fluxo web.
+- Template dashboard.html atualizado para exibir metadados.
+- Exibição do nome do arquivo.
+- Exibição da extensão do arquivo.
+- Exibição da quantidade de linhas.
+- Exibição da quantidade de colunas.
+- Exibição dos nomes das colunas.
+- Exibição das primeiras linhas da planilha.
+- Ajuste dos nomes dos campos conforme a dataclass SpreadsheetMetadata:
+  - file_name
+  - file_extension
+  - rows
+  - columns
+  - column_names
+  - preview
+- Correção das rotas para usar main.upload_file.
+- Fixture global client configurada no conftest.py.
+- Teste de upload com exibição de metadados criado.
+- Testes ajustados para o novo fluxo de upload.
+- O comando python -m pytest retornou 15 passed.
+
 ## Estrutura atual esperada
 
 ```text
@@ -238,28 +291,33 @@ Todos os testes devem passar.
 
 ## Próxima entrega sugerida
 
-Conversa 4 — Exibir uma prévia dos dados carregados na interface web.
+Conversa 5 — Análise automática inicial dos dados carregados.
 
-## Objetivo provável da Conversa 4
+## Objetivo provável da Conversa 5
 
-Integrar a camada de leitura criada na Conversa 3 com o fluxo de upload criado na Conversa 2, permitindo que, após o envio de um arquivo válido, o sistema exiba uma página simples com os metadados e uma prévia dos dados carregados.
+Criar uma camada de análise em app/services/analyzer.py para receber um DataFrame carregado pelo Pandas e retornar informações úteis sobre a estrutura dos dados, preparando o projeto para a futura geração de dashboards automáticos.
 
-## Escopo recomendado para a Conversa 4
+## Escopo recomendado para a Conversa 5
 
-* Atualizar a rota POST /upload para carregar a planilha após salvar o arquivo.
-* Usar load_spreadsheet_metadata para extrair os metadados.
-* Criar ou atualizar dashboard.html apenas como tela de prévia simples.
-* Exibir:
+Atualizar o arquivo app/services/analyzer.py.
+Criar uma estrutura de resultado para análise dos dados.
+Detectar colunas numéricas.
+Detectar colunas categóricas/texto.
+Contar valores ausentes por coluna.
+Calcular percentual de valores ausentes.
+Calcular estatísticas básicas para colunas numéricas:
+média;
+mínimo;
+máximo;
+mediana.
+Identificar quantidade de valores únicos por coluna.
+Criar testes unitários para a camada de análise.
+Manter a análise desacoplada da interface web.
+Não implementar gráficos ainda.
+Não implementar Plotly ainda.
+Não implementar banco de dados ainda.
+Não implementar histórico ainda.
+Não implementar PDF ainda.
+Observação de continuidade
 
-  * nome do arquivo;
-  * quantidade de linhas;
-  * quantidade de colunas;
-  * nomes das colunas;
-  * primeiras linhas.
-* Manter o escopo limitado à prévia dos dados.
-* Não implementar gráficos ainda.
-* Não implementar Plotly ainda.
-* Não implementar banco de dados ainda.
-* Não implementar histórico ainda.
-* Não implementar PDF ainda.
-* Criar testes para o fluxo básico de upload com leitura de metadados.
+A Conversa 4 concluiu a integração entre upload, leitura com Pandas e exibição da prévia na interface web. A partir da Conversa 5, o projeto deve evoluir da simples prévia dos dados para uma análise automática inicial, mantendo a identidade visual dark/profissional definida para o DataBoard Reports.

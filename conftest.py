@@ -1,8 +1,21 @@
 import sys
 from pathlib import Path
 
+import pytest
 
-ROOT_DIR = Path(__file__).resolve().parent
+from app import create_app
 
-if str(ROOT_DIR) not in sys.path:
-    sys.path.insert(0, str(ROOT_DIR))
+
+@pytest.fixture
+def app(tmp_path):
+    app = create_app()
+    app.config.update(
+        TESTING=True,
+        UPLOAD_FOLDER=tmp_path,
+    )
+    return app
+
+
+@pytest.fixture
+def client(app):
+    return app.test_client()

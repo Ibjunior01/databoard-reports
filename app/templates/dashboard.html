@@ -1,14 +1,100 @@
 {% extends "base.html" %}
 
-{% block title %}Dashboard | DataBoard Reports{% endblock %}
+{% block title %}Dashboard - DataBoard Reports{% endblock %}
 
 {% block content %}
-<section class="page-section">
-    <div class="container">
-        <h1>Dashboard</h1>
-        <p>
-            Esta página será implementada em uma próxima entrega.
-        </p>
+<section class="dashboard-section">
+    <div class="dashboard-header">
+        <div>
+            <p class="section-label">Prévia da Planilha</p>
+            <h1>Dados carregados com sucesso</h1>
+            <p class="section-description">
+                Confira abaixo os metadados básicos e uma amostra das primeiras linhas do arquivo enviado.
+            </p>
+        </div>
+
+        <a href="{{ url_for('main.upload_file') }}" class="btn-secondary">
+            Enviar outro arquivo
+        </a>
     </div>
+
+    {% if metadata %}
+        <div class="metadata-grid">
+            <div class="metadata-card">
+                <span>Arquivo</span>
+                <strong>{{ metadata.file_name }}</strong>
+            </div>
+
+            <div class="metadata-card">
+                <span>Extensão</span>
+                <strong>{{ metadata.file_extension }}</strong>
+            </div>
+
+            <div class="metadata-card">
+                <span>Linhas</span>
+                <strong>{{ metadata.rows }}</strong>
+            </div>
+
+            <div class="metadata-card">
+                <span>Colunas</span>
+                <strong>{{ metadata.columns }}</strong>
+            </div>
+        </div>
+
+        <div class="columns-card">
+            <h2>Colunas identificadas</h2>
+
+            <div class="columns-list">
+                {% for column in metadata.column_names %}
+                    <span>{{ column }}</span>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="preview-card">
+            <div class="preview-header">
+                <h2>Prévia dos dados</h2>
+                <p>Exibindo as primeiras linhas da planilha.</p>
+            </div>
+
+            {% if metadata.preview %}
+                <div class="table-wrapper">
+                    <table class="preview-table">
+                        <thead>
+                            <tr>
+                                {% for column in metadata.column_names %}
+                                    <th>{{ column }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for row in metadata.preview %}
+                                <tr>
+                                    {% for column in metadata.column_names %}
+                                        <td>{{ row.get(column, "") }}</td>
+                                    {% endfor %}
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="empty-message">
+                    A planilha foi carregada, mas não há linhas disponíveis para prévia.
+                </p>
+            {% endif %}
+        </div>
+    {% else %}
+        <div class="empty-dashboard">
+            <h2>Nenhum arquivo carregado ainda</h2>
+            <p>
+                Envie uma planilha CSV ou Excel para visualizar a prévia dos dados.
+            </p>
+            <a href="{{ url_for('main.upload_file') }}" class="btn-primary">
+                Enviar planilha
+            </a>
+        </div>
+    {% endif %}
 </section>
 {% endblock %}

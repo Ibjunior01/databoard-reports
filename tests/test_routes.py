@@ -42,13 +42,18 @@ def test_upload_valid_csv_returns_success_message(client):
         follow_redirects=True,
     )
 
+    page_content = response.data.decode("utf-8")
+
     assert response.status_code == 200
-    assert "enviado com sucesso" in response.get_data(as_text=True)
+    assert "Arquivo carregado com sucesso" in page_content
+    assert "vendas.csv" in page_content
+    assert "produto" in page_content
+    assert "Cafe" in page_content
 
 
 def test_upload_invalid_pdf_returns_error_message(client):
     data = {
-        "file": (BytesIO(b"fake pdf content"), "arquivo.pdf")
+        "file": (BytesIO(b"conteudo fake"), "arquivo.pdf")
     }
 
     response = client.post(
@@ -58,5 +63,7 @@ def test_upload_invalid_pdf_returns_error_message(client):
         follow_redirects=True,
     )
 
+    page_content = response.data.decode("utf-8")
+
     assert response.status_code == 200
-    assert "Formato inválido" in response.get_data(as_text=True)
+    assert "Tipo de arquivo não permitido" in page_content
