@@ -417,3 +417,37 @@ textarea:focus {
 .table-wrapper::-webkit-scrollbar-thumb:hover {
     background: #94a3b8;
 }
+
+/* Automatic analysis section */
+
+.columns-card h3 {
+    color: var(--color-text);
+    margin-top: 1.5rem;
+    margin-bottom: 0.8rem;
+    font-size: 1rem;
+}
+
+.columns-card h3:first-of-type {
+    margin-top: 0.5rem;
+}
+
+.columns-card .metadata-grid {
+    margin-top: 1rem;
+    margin-bottom: 0;
+}
+
+.preview-card + .columns-card,
+.columns-card + .preview-card,
+.columns-card + .columns-card,
+.preview-card + .preview-card {
+    margin-top: 1.5rem;
+}
+
+.preview-table td:first-child,
+.preview-table th:first-child {
+    font-weight: 700;
+}
+
+.empty-message {
+    line-height: 1.6;
+}

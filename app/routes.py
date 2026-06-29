@@ -1,15 +1,49 @@
+from dataclasses import asdict, is_dataclass
 from pathlib import Path
 
 from flask import Blueprint, current_app, flash, redirect, render_template, request, url_for
 from werkzeug.utils import secure_filename
 
+from app.services.analyzer import analyze_dataframe
 from app.services.data_loader import (
     UnsupportedFileTypeError,
     allowed_file,
+    load_spreadsheet,
     load_spreadsheet_metadata,
 )
 
+
 main_bp = Blueprint("main", __name__)
+
+def build_dashboard_analysis(analysis_result, dataframe):
+    if is_dataclass(analysis_result):
+        analysis_data = asdict(analysis_result)
+    elif isinstance(analysis_result, dict):
+        analysis_data = analysis_result
+    else:
+        analysis_data = vars(analysis_result)
+
+    total_rows = len(dataframe)
+
+    missing_values = dataframe.isna().sum().to_dict()
+
+    missing_percentage = {
+        column: (missing_count / total_rows * 100) if total_rows > 0 else 0
+        for column, missing_count in missing_values.items()
+    }
+
+    return {
+        "numeric_columns": analysis_data.get("numeric_columns", []),
+        "categorical_columns": analysis_data.get("categorical_columns", []),
+        "missing_values": missing_values,
+        "missing_percentage": missing_percentage,
+        "numeric_statistics": (
+            analysis_data.get("numeric_statistics")
+            or analysis_data.get("numeric_statistics_by_column")
+            or analysis_data.get("summary_statistics")
+            or {}
+        ),
+    }
 
 
 @main_bp.route("/")
@@ -41,10 +75,13 @@ def upload_file():
     uploaded_file.save(file_path)
 
     try:
+        dataframe = load_spreadsheet(file_path)
         metadata = load_spreadsheet_metadata(file_path)
+        analysis_result = analyze_dataframe(dataframe)
+        analysis = build_dashboard_analysis(analysis_result, dataframe)
     except UnsupportedFileTypeError:
         flash("Tipo de arquivo não suportado.", "error")
-        return redirect(url_for("main.uploa_filed"))
+        return redirect(url_for("main.upload_file"))
     except FileNotFoundError:
         flash("Arquivo enviado não foi encontrado no servidor.", "error")
         return redirect(url_for("main.upload_file"))
@@ -57,12 +94,13 @@ def upload_file():
     return render_template(
         "dashboard.html",
         metadata=metadata,
+        analysis=analysis,
     )
 
 
 @main_bp.route("/dashboard")
 def dashboard():
-    return render_template("dashboard.html", metadata=None)
+    return render_template("dashboard.html", metadata=None, analysis=None)
 
 
 @main_bp.route("/history")

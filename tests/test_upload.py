@@ -31,25 +31,22 @@
 from io import BytesIO
 
 
-def test_upload_valid_csv_displays_metadata_preview(client):
-    data = {
-        "file": (
-            BytesIO(b"produto,quantidade,valor\nNotebook,2,3500\nMouse,10,80\n"),
-            "sales.csv",
-        )
-    }
+def test_upload_displays_automatic_analysis(client):
+    csv_content = b"produto,categoria,valor\nNotebook,Eletronicos,3500\nMouse,Eletronicos,120\nCadeira,Moveis,800\n"
 
     response = client.post(
         "/upload",
-        data=data,
+        data={
+            "file": (BytesIO(csv_content), "analysis_test.csv"),
+        },
         content_type="multipart/form-data",
+        follow_redirects=True,
     )
 
     assert response.status_code == 200
-    assert b"sales.csv" in response.data
-    assert b"Linhas" in response.data
-    assert b"Colunas" in response.data
+    assert b"An\xc3\xa1lise autom\xc3\xa1tica" in response.data
+    assert b"Colunas num\xc3\xa9ricas" in response.data
+    assert b"Colunas categ\xc3\xb3ricas" in response.data
+    assert b"Estat\xc3\xadsticas num\xc3\xa9ricas" in response.data
+    assert b"valor" in response.data
     assert b"produto" in response.data
-    assert b"quantidade" in response.data
-    assert b"Notebook" in response.data
-    assert b"Mouse" in response.data
