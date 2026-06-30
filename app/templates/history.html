@@ -1,14 +1,55 @@
 {% extends "base.html" %}
 
-{% block title %}Histórico | DataBoard Reports{% endblock %}
+{% block title %}Histórico de uploads{% endblock %}
 
 {% block content %}
-<section class="page-section">
-    <div class="container">
-        <h1>Histórico de relatórios</h1>
+<section class="dashboard-section">
+    <div class="section-header">
+        <p class="section-eyebrow">Persistência inicial</p>
+        <h1>Histórico de uploads</h1>
         <p>
-            Esta página será implementada em uma próxima entrega.
+            Consulte os arquivos enviados anteriormente e acompanhe os principais
+            metadados registrados pelo sistema.
         </p>
     </div>
+
+    {% if records %}
+    <div class="history-table-wrapper">
+        <table class="history-table">
+            <thead>
+                <tr>
+                    <th>Data/Hora</th>
+                    <th>Arquivo</th>
+                    <th>Extensão</th>
+                    <th>Linhas</th>
+                    <th>Colunas</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for record in records %}
+                <tr>
+                    <td>
+                        {{ record.created_at.strftime("%d/%m/%Y %H:%M") if record.created_at else "-" }}
+                    </td>
+                    <td>{{ record.file_name }}</td>
+                    <td>{{ record.file_extension|upper }}</td>
+                    <td>{{ record.row_count }}</td>
+                    <td>{{ record.column_count }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <h2>Nenhum upload registrado</h2>
+        <p>
+            Quando uma planilha for enviada, o registro aparecerá automaticamente aqui.
+        </p>
+        <a class="button-primary" href="{{ url_for('main.upload_file') }}">
+            Enviar primeira planilha
+        </a>
+    </div>
+    {% endif %}
 </section>
 {% endblock %}

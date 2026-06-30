@@ -43,3 +43,9 @@ Thumbs.db
 
 # Docker
 *.log
+
+#instance/
+instance/
+*.db
+*.sqlite
+*.sqlite3

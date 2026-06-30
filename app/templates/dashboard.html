@@ -225,4 +225,45 @@
         </div>
     {% endif %}
 </section>
+
+{% if charts %}
+<section class="dashboard-section">
+    <div class="section-header">
+        <p class="section-eyebrow">Visualização automática</p>
+        <h2>Gráficos automáticos</h2>
+        <p>
+            O sistema identificou colunas compatíveis e gerou visualizações iniciais
+            para apoiar a leitura dos dados carregados.
+        </p>
+    </div>
+
+    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+
+    <div class="charts-grid">
+        {% for chart in charts %}
+        <article class="chart-card">
+            <div class="chart-card-header">
+                <span class="chart-badge">{{ chart.chart_type }}</span>
+                <h3>{{ chart.title }}</h3>
+                <p>Coluna analisada: {{ chart.column_name }}</p>
+            </div>
+
+            <div class="chart-container">
+                {{ chart.html|safe }}
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+</section>
+{% else %}
+<section class="dashboard-section">
+    <div class="empty-state">
+        <h2>Gráficos automáticos indisponíveis</h2>
+        <p>
+            Não foram encontradas colunas numéricas ou categóricas suficientes
+            para gerar gráficos nesta planilha.
+        </p>
+    </div>
+</section>
+{% endif %}
 {% endblock %}

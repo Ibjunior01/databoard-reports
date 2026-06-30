@@ -451,3 +451,102 @@ textarea:focus {
 .empty-message {
     line-height: 1.6;
 }
+
+.charts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+.chart-card {
+    background: #0f172a;
+    border: 1px solid #1e293b;
+    border-radius: 18px;
+    padding: 1.25rem;
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.25);
+}
+
+.chart-card-header {
+    margin-bottom: 1rem;
+}
+
+.chart-card-header h3 {
+    margin: 0.5rem 0 0.35rem;
+    color: #f8fafc;
+    font-size: 1.05rem;
+}
+
+.chart-card-header p {
+    margin: 0;
+    color: #94a3b8;
+    font-size: 0.9rem;
+}
+
+.chart-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.25rem 0.65rem;
+    border-radius: 999px;
+    background: rgba(56, 189, 248, 0.12);
+    color: #38bdf8;
+    border: 1px solid rgba(56, 189, 248, 0.28);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.chart-container {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.chart-container .plotly-graph-div {
+    width: 100% !important;
+}
+
+
+.history-table-wrapper {
+    margin-top: 1.5rem;
+    overflow-x: auto;
+    border: 1px solid #1e293b;
+    border-radius: 18px;
+    background: #0f172a;
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.25);
+}
+
+.history-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 720px;
+}
+
+.history-table th,
+.history-table td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid #1e293b;
+}
+
+.history-table th {
+    color: #f8fafc;
+    background: rgba(15, 23, 42, 0.95);
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.history-table td {
+    color: #cbd5e1;
+    font-size: 0.95rem;
+}
+
+.history-table tbody tr:hover {
+    background: rgba(56, 189, 248, 0.06);
+}
+
+.history-table tbody tr:last-child td {
+    border-bottom: none;
+}

@@ -63,11 +63,11 @@ Todas as próximas telas devem seguir a paleta dark definida, evitando páginas 
 
 ## Entrega atual
 
-Conversa 06 — Exibição da análise automática no dashboard
+Conversa 07 — Gráficos automáticos com Plotly
 
 ## Objetivo da entrega atual
 
-Integrar a camada de análise automática com o fluxo de upload, permitindo que o sistema exiba no dashboard web informações estruturadas sobre os dados carregados.
+Adicionar ao DataBoard Reports a primeira camada de visualização automática de dados, gerando gráficos interativos com Plotly a partir da planilha enviada e exibindo-os no dashboard web.
 
 ## O que já foi implementado
 
@@ -338,6 +338,76 @@ Integrar a camada de análise automática com o fluxo de upload, permitindo que 
 
 * O comando `python -m pytest` retornou `23 passed`.
 
+### Conversa 07 — Gráficos automáticos com Plotly
+
+* Arquivo `requirements.txt` atualizado com a dependência `plotly`.
+
+* Arquivo `app/services/charts.py` implementado.
+
+* Criada estrutura `ChartResult` usando dataclass.
+
+* Criada constante `PLOTLY_CONFIG` para padronizar a configuração dos gráficos.
+
+* Criada função `_validate_dataframe()` para validar entradas da camada de gráficos.
+
+* Criada função `_to_plotly_html()` para converter figuras Plotly em HTML reutilizável no template.
+
+* Criada função `_apply_dark_layout()` para manter os gráficos alinhados à identidade visual dark/profissional do projeto.
+
+* Criada função `generate_categorical_bar_chart()`.
+
+* Implementado gráfico de barras automático para a primeira coluna categórica/texto identificada.
+
+* Criado tratamento para valores ausentes e vazios em colunas categóricas.
+
+* Implementado limite inicial de categorias exibidas no gráfico de barras.
+
+* Criada função `generate_numeric_histogram()`.
+
+* Implementado histograma automático para a primeira coluna numérica identificada.
+
+* Criada função `generate_automatic_charts()` para centralizar a geração dos gráficos disponíveis.
+
+* Arquivo `app/routes.py` atualizado.
+
+* Importação de `generate_automatic_charts` adicionada ao fluxo de upload.
+
+* Rota POST `/upload` passou a gerar gráficos após carregar e analisar o DataFrame.
+
+* Resultado dos gráficos passou a ser enviado para o template `dashboard.html`.
+
+* Template `dashboard.html` atualizado para exibir a seção de gráficos automáticos.
+
+* Plotly.js integrado ao dashboard via CDN.
+
+* Criado bloco visual para exibir cada gráfico em cards.
+
+* Criado estado vazio para quando a planilha não possui colunas compatíveis para gráficos.
+
+* Arquivo `app/static/css/style.css` atualizado com estilos para:
+
+  * grid de gráficos;
+  * cards de gráficos;
+  * cabeçalho dos cards;
+  * badge de tipo de gráfico;
+  * container responsivo dos gráficos.
+
+* Arquivo `tests/test_charts.py` criado.
+
+* Criados testes unitários para geração de gráfico categórico.
+
+* Criados testes unitários para geração de histograma numérico.
+
+* Criado teste para geração automática de múltiplos gráficos.
+
+* Criado teste para DataFrame vazio.
+
+* Criado teste para rejeição de entrada inválida.
+
+* Arquivo `tests/test_upload.py` atualizado com teste de integração para validar a exibição dos gráficos no dashboard.
+
+* O comando `python -m pytest` retornou `28 passed`.
+
 ## Estrutura atual esperada
 
 ```text
@@ -375,6 +445,7 @@ spreadsheet-dashboard-platform/
 │
 ├── tests/
 │   ├── test_analyzer.py
+│   ├── test_charts.py
 │   ├── test_data_loader.py
 │   ├── test_routes.py
 │   └── test_upload.py
@@ -393,14 +464,16 @@ spreadsheet-dashboard-platform/
 └── run.py
 ```
 
-## Arquivos modificados na Conversa 06
+## Arquivos modificados na Conversa 07
 
 ```text
+requirements.txt
+app/services/charts.py
 app/routes.py
 app/templates/dashboard.html
 app/static/css/style.css
+tests/test_charts.py
 tests/test_upload.py
-README.md
 PROJECT_STATE.md
 ```
 
@@ -424,10 +497,10 @@ O comando abaixo deve retornar todos os testes passando:
 python -m pytest
 ```
 
-Resultado validado na Conversa 06:
+Resultado validado na Conversa 07:
 
 ```text
-23 passed
+28 passed
 ```
 
 ## Estado funcional atual
@@ -448,61 +521,106 @@ Atualmente o sistema permite:
 * calcular valores ausentes por coluna;
 * calcular percentual de valores ausentes por coluna;
 * calcular estatísticas básicas das colunas numéricas;
-* exibir toda a análise automática no dashboard web.
+* exibir toda a análise automática no dashboard web;
+* gerar gráficos automáticos com Plotly;
+* gerar gráfico de barras para coluna categórica/texto;
+* gerar histograma para coluna numérica;
+* exibir os gráficos automáticos no dashboard;
+* exibir estado vazio quando não houver colunas compatíveis para gráficos;
+* manter o visual dos gráficos alinhado à identidade dark/profissional do projeto.
 
 ## O que ainda não foi implementado
 
-* Gráficos interativos.
-* Plotly integrado ao dashboard.
 * Banco de dados.
 * SQLAlchemy.
 * Histórico real de uploads.
+* Página funcional de histórico.
 * Geração de PDF.
 * Autenticação.
 * Deploy.
 * Pipeline CI/CD.
+* Filtros avançados.
+* Dashboards customizáveis.
+* Upload múltiplo.
 
 ## Próxima entrega sugerida
 
-Conversa 07 — Gráficos automáticos com Plotly.
+Conversa 08 — Histórico inicial de uploads com SQLite e SQLAlchemy.
 
-## Objetivo provável da Conversa 07
+## Objetivo provável da Conversa 08
 
-Criar a primeira camada de geração automática de gráficos a partir dos dados carregados, mantendo o escopo controlado e reaproveitando a análise já feita nas conversas anteriores.
+Criar a primeira camada de persistência real do sistema, registrando cada upload realizado pelo usuário em um banco SQLite local usando SQLAlchemy.
 
-## Escopo recomendado para a Conversa 07
+Essa entrega transforma o projeto de uma aplicação apenas temporária de análise para uma plataforma web com histórico básico de uso.
 
-* Atualizar o arquivo `app/services/charts.py`.
-* Criar função para gerar gráficos automáticos a partir de um DataFrame.
-* Gerar pelo menos um gráfico para colunas categóricas.
-* Gerar pelo menos um gráfico para colunas numéricas.
-* Integrar os gráficos gerados ao `dashboard.html`.
-* Manter o visual alinhado com a identidade dark/profissional do projeto.
-* Adicionar testes unitários para a camada de gráficos.
-* Adicionar teste de integração para garantir que o dashboard exibe os gráficos.
+## Escopo recomendado para a Conversa 08
 
-## Escopo recomendado inicial para gráficos
+* Atualizar o arquivo `requirements.txt` com `SQLAlchemy` se ainda não estiver instalado.
+* Configurar caminho do banco SQLite no projeto.
+* Atualizar `app/config.py` com configuração de banco de dados.
+* Implementar ou atualizar `app/models.py`.
+* Criar modelo `UploadRecord` ou equivalente.
+* Registrar informações básicas de cada upload:
 
-Para manter a entrega pequena, iniciar apenas com:
+  * nome original ou nome seguro do arquivo;
+  * extensão do arquivo;
+  * quantidade de linhas;
+  * quantidade de colunas;
+  * data e hora do upload.
 
-* gráfico de barras para uma coluna categórica;
-* histograma ou gráfico simples para uma coluna numérica.
+* Criar camada simples de persistência para salvar o registro do upload.
+* Integrar o salvamento do histórico ao fluxo POST `/upload`.
+* Criar rota GET `/history`.
+* Criar ou finalizar template `history.html` para listar uploads anteriores.
+* Ativar o link de histórico no menu, se ainda estiver inativo.
+* Manter o visual da página de histórico alinhado com a identidade dark/profissional.
+* Criar testes unitários para o modelo ou serviço de histórico.
+* Criar teste de integração para validar que um upload gera registro no histórico.
+* Criar teste para validar acesso à página `/history`.
 
-## Manter fora do escopo da Conversa 07
+## Escopo recomendado inicial para histórico
 
-* Banco de dados.
-* Histórico real de uploads.
+Para manter a entrega pequena, iniciar apenas com histórico simples de uploads.
+
+Campos mínimos recomendados:
+
+```text
+id
+file_name
+file_extension
+rows
+columns
+created_at
+```
+
+A página de histórico pode começar apenas com uma tabela simples contendo:
+
+```text
+Data/Hora
+Arquivo
+Extensão
+Linhas
+Colunas
+```
+
+## Manter fora do escopo da Conversa 08
+
+* Autenticação de usuários.
+* Upload por usuário específico.
+* Permissões por perfil.
+* Histórico detalhado de análise.
+* Histórico de gráficos gerados.
+* Exclusão de registros de histórico.
+* Edição de registros de histórico.
 * Exportação em PDF.
-* Autenticação.
 * Deploy.
 * CI/CD.
-* Filtros avançados.
 * Dashboards customizáveis.
 * Upload múltiplo.
 
 ## Observação de continuidade
 
-A Conversa 06 concluiu a integração entre upload, leitura da planilha, análise automática e exibição no dashboard.
+A Conversa 07 concluiu a integração entre upload, leitura da planilha, análise automática e visualização gráfica com Plotly.
 
 O projeto agora possui um fluxo funcional completo para:
 
@@ -510,6 +628,8 @@ O projeto agora possui um fluxo funcional completo para:
 2. carregar os dados com Pandas;
 3. extrair metadados;
 4. analisar a estrutura dos dados;
-5. exibir a análise na interface web.
+5. exibir a análise na interface web;
+6. gerar gráficos automáticos;
+7. exibir os gráficos no dashboard.
 
-A partir da Conversa 07, o projeto deve evoluir para a visualização gráfica dos dados com Plotly, ainda sem banco de dados e sem histórico persistente.
+A partir da Conversa 08, o projeto deve evoluir para persistência de dados, criando um histórico simples de uploads com SQLite e SQLAlchemy.

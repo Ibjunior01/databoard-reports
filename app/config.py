@@ -25,3 +25,6 @@ class Config:
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024
 
     ALLOWED_EXTENSIONS = {"csv", "xlsx", "xls"}
+
+    SQLALCHEMY_DATABASE_URI = "sqlite:///databoard.sqlite3"
+    SQLALCHEMY_TRACK_MODIFICATIONS = False

@@ -5,15 +5,17 @@ from flask import Blueprint, current_app, flash, redirect, render_template, requ
 from werkzeug.utils import secure_filename
 
 from app.services.analyzer import analyze_dataframe
+from app.services.charts import generate_automatic_charts
 from app.services.data_loader import (
     UnsupportedFileTypeError,
     allowed_file,
     load_spreadsheet,
     load_spreadsheet_metadata,
 )
-
+from app.services.history import create_upload_record, list_upload_records
 
 main_bp = Blueprint("main", __name__)
+
 
 def build_dashboard_analysis(analysis_result, dataframe):
     if is_dataclass(analysis_result):
@@ -79,6 +81,15 @@ def upload_file():
         metadata = load_spreadsheet_metadata(file_path)
         analysis_result = analyze_dataframe(dataframe)
         analysis = build_dashboard_analysis(analysis_result, dataframe)
+        charts = generate_automatic_charts(dataframe)
+
+        create_upload_record(
+            file_name=filename,
+            file_extension=file_path.suffix,
+            row_count=len(dataframe),
+            column_count=len(dataframe.columns),
+        )
+
     except UnsupportedFileTypeError:
         flash("Tipo de arquivo não suportado.", "error")
         return redirect(url_for("main.upload_file"))
@@ -95,14 +106,25 @@ def upload_file():
         "dashboard.html",
         metadata=metadata,
         analysis=analysis,
+        charts=charts,
     )
 
 
 @main_bp.route("/dashboard")
 def dashboard():
-    return render_template("dashboard.html", metadata=None, analysis=None)
+    return render_template(
+        "dashboard.html",
+        metadata=None,
+        analysis=None,
+        charts=[],
+    )
 
 
 @main_bp.route("/history")
 def history():
-    return render_template("history.html")
+    records = list_upload_records()
+
+    return render_template(
+        "history.html",
+        records=records,
+    )
