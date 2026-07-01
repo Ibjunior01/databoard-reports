@@ -1,5 +1,6 @@
 from io import BytesIO
 
+from app.extensions import db
 from app.models import UploadRecord
 from app.services.history import create_upload_record, list_upload_records
 
@@ -9,17 +10,19 @@ def test_create_upload_record_persists_data(app):
         record = create_upload_record(
             file_name="vendas.csv",
             file_extension=".csv",
-            row_count=10,
-            column_count=4,
+            row_count=100,
+            column_count=5,
+            file_path="app/uploads/vendas.csv",
         )
 
-        saved_record = UploadRecord.query.get(record.id)
+        saved_record = db.session.get(UploadRecord, record.id)
 
         assert saved_record is not None
         assert saved_record.file_name == "vendas.csv"
         assert saved_record.file_extension == ".csv"
-        assert saved_record.row_count == 10
-        assert saved_record.column_count == 4
+        assert saved_record.row_count == 100
+        assert saved_record.column_count == 5
+        assert saved_record.file_path == "app/uploads/vendas.csv"
 
 
 def test_list_upload_records_returns_newest_first(app):
@@ -75,3 +78,61 @@ def test_upload_creates_history_record(client, app):
         assert record.file_extension == ".csv"
         assert record.row_count == 3
         assert record.column_count == 2
+        assert record.file_path
+        assert record.file_path.endswith("dados.csv")
+
+
+def test_upload_detail_page_returns_record_data(client, app):
+    with app.app_context():
+        record = create_upload_record(
+            file_name="vendas.csv",
+            file_extension=".csv",
+            row_count=100,
+            column_count=5,
+            file_path="app/uploads/vendas.csv",
+        )
+        record_id = record.id
+
+    response = client.get(f"/history/{record_id}")
+
+    assert response.status_code == 200
+    assert b"vendas.csv" in response.data
+    assert b".csv" in response.data
+    assert b"100" in response.data
+    assert b"5" in response.data
+    assert b"app/uploads/vendas.csv" in response.data
+
+
+def test_upload_detail_page_returns_404_for_missing_record(client):
+    response = client.get("/history/999999")
+
+    assert response.status_code == 404
+
+
+def test_history_page_contains_upload_detail_link(client, app):
+    with app.app_context():
+        record = create_upload_record(
+            file_name="relatorio.xlsx",
+            file_extension=".xlsx",
+            row_count=50,
+            column_count=8,
+        )
+        record_id = record.id
+
+    response = client.get("/history")
+
+    assert response.status_code == 200
+    assert f"/history/{record_id}".encode() in response.data
+
+
+def test_create_upload_record_saves_file_path(app):
+    with app.app_context():
+        record = create_upload_record(
+            file_name="dados.xlsx",
+            file_extension=".xlsx",
+            row_count=20,
+            column_count=4,
+            file_path="app/uploads/dados.xlsx",
+        )
+
+        assert record.file_path == "app/uploads/dados.xlsx"

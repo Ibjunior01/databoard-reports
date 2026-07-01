@@ -1,21 +1,5 @@
 from io import BytesIO
 
-import pytest
-
-from app import create_app
-
-
-@pytest.fixture()
-def client(tmp_path):
-    app = create_app()
-    app.config.update(
-        TESTING=True,
-        UPLOAD_FOLDER=tmp_path,
-    )
-
-    with app.test_client() as test_client:
-        yield test_client
-
 
 def test_index_route_returns_200(client):
     response = client.get("/")

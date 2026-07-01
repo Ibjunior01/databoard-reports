@@ -12,7 +12,13 @@ from app.services.data_loader import (
     load_spreadsheet,
     load_spreadsheet_metadata,
 )
-from app.services.history import create_upload_record, list_upload_records
+from app.services.history import (
+    create_upload_record,
+    list_upload_records,
+    get_upload_record,
+)
+
+from flask import abort
 
 main_bp = Blueprint("main", __name__)
 
@@ -88,6 +94,7 @@ def upload_file():
             file_extension=file_path.suffix,
             row_count=len(dataframe),
             column_count=len(dataframe.columns),
+            file_path=str(file_path),
         )
 
     except UnsupportedFileTypeError:
@@ -96,17 +103,18 @@ def upload_file():
     except FileNotFoundError:
         flash("Arquivo enviado não foi encontrado no servidor.", "error")
         return redirect(url_for("main.upload_file"))
-    except Exception:
-        flash("Não foi possível ler a planilha enviada. Verifique o formato do arquivo.", "error")
-        return redirect(url_for("main.upload_file"))
+    except Exception as error:
+        raise error
 
-    flash("Arquivo carregado com sucesso.", "success")
+    flash("Arquivo carregado com sucesso", "success")
 
     return render_template(
         "dashboard.html",
+        filename=filename,
         metadata=metadata,
         analysis=analysis,
         charts=charts,
+        success_message="Arquivo carregado com sucesso",
     )
 
 
@@ -128,3 +136,13 @@ def history():
         "history.html",
         records=records,
     )
+
+
+@main_bp.route("/history/<int:record_id>")
+def upload_detail(record_id):
+    record = get_upload_record(record_id)
+
+    if record is None:
+        abort(404)
+
+    return render_template("upload_detail.html", record=record)

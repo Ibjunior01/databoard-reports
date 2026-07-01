@@ -3,6 +3,13 @@
 {% block title %}Dashboard - DataBoard Reports{% endblock %}
 
 {% block content %}
+
+{% if success_message %}
+    <div class="alert alert-success" role="alert">
+        {{ success_message }}
+    </div>
+{% endif %}
+
 <section class="dashboard-section">
     <div class="dashboard-header">
         <div>
