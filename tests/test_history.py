@@ -1,0 +1,197 @@
+from io import BytesIO
+
+from app.extensions import db
+from app.models import UploadRecord
+from app.services.history import create_upload_record, list_upload_records
+
+
+def test_create_upload_record_persists_data(app):
+    with app.app_context():
+        record = create_upload_record(
+            file_name="vendas.csv",
+            file_extension=".csv",
+            row_count=100,
+            column_count=5,
+            file_path="app/uploads/vendas.csv",
+        )
+
+        saved_record = db.session.get(UploadRecord, record.id)
+
+        assert saved_record is not None
+        assert saved_record.file_name == "vendas.csv"
+        assert saved_record.file_extension == ".csv"
+        assert saved_record.row_count == 100
+        assert saved_record.column_count == 5
+        assert saved_record.file_path == "app/uploads/vendas.csv"
+
+
+def test_list_upload_records_returns_newest_first(app):
+    with app.app_context():
+        first_record = create_upload_record(
+            file_name="primeiro.csv",
+            file_extension=".csv",
+            row_count=5,
+            column_count=2,
+        )
+
+        second_record = create_upload_record(
+            file_name="segundo.csv",
+            file_extension=".csv",
+            row_count=8,
+            column_count=3,
+        )
+
+        records = list_upload_records()
+
+        assert records[0].id == second_record.id
+        assert records[1].id == first_record.id
+
+
+def test_history_page_loads_successfully(client):
+    response = client.get("/history")
+
+    assert response.status_code == 200
+    assert "Histórico de uploads".encode("utf-8") in response.data
+
+
+def test_upload_creates_history_record(client, app):
+    data = {
+        "file": (
+            BytesIO(b"Categoria,Valor\nA,10\nB,20\nA,30\n"),
+            "dados.csv",
+        )
+    }
+
+    response = client.post(
+        "/upload",
+        data=data,
+        content_type="multipart/form-data",
+        follow_redirects=True,
+    )
+
+    assert response.status_code == 200
+
+    with app.app_context():
+        record = UploadRecord.query.one()
+
+        assert record.file_name == "dados.csv"
+        assert record.file_extension == ".csv"
+        assert record.row_count == 3
+        assert record.column_count == 2
+        assert record.file_path
+        assert record.file_path.endswith("dados.csv")
+
+
+def test_upload_detail_page_returns_record_data(client, app):
+    with app.app_context():
+        record = create_upload_record(
+            file_name="vendas.csv",
+            file_extension=".csv",
+            row_count=100,
+            column_count=5,
+            file_path="app/uploads/vendas.csv",
+        )
+        record_id = record.id
+
+    response = client.get(f"/history/{record_id}")
+
+    assert response.status_code == 200
+    assert b"vendas.csv" in response.data
+    assert b".csv" in response.data
+    assert b"100" in response.data
+    assert b"5" in response.data
+    assert b"app/uploads/vendas.csv" in response.data
+
+
+def test_upload_detail_page_returns_404_for_missing_record(client):
+    response = client.get("/history/999999")
+
+    assert response.status_code == 404
+
+
+def test_history_page_contains_upload_detail_link(client, app):
+    with app.app_context():
+        record = create_upload_record(
+            file_name="relatorio.xlsx",
+            file_extension=".xlsx",
+            row_count=50,
+            column_count=8,
+        )
+        record_id = record.id
+
+    response = client.get("/history")
+
+    assert response.status_code == 200
+    assert f"/history/{record_id}".encode() in response.data
+
+
+def test_create_upload_record_saves_file_path(app):
+    with app.app_context():
+        record = create_upload_record(
+            file_name="dados.xlsx",
+            file_extension=".xlsx",
+            row_count=20,
+            column_count=4,
+            file_path="app/uploads/dados.xlsx",
+        )
+
+        assert record.file_path == "app/uploads/dados.xlsx"
+
+
+def test_reprocess_upload_success(client, app, tmp_path):
+    from app.extensions import db
+    from app.models import UploadRecord
+
+    file_path = tmp_path / "sample.csv"
+    file_path.write_text("nome,valor\nProduto A,10\nProduto B,20\n", encoding="utf-8")
+
+    with app.app_context():
+        record = UploadRecord(
+            file_name="sample.csv",
+            file_extension="csv",
+            row_count=2,
+            column_count=2,
+            file_path=str(file_path),
+        )
+
+        db.session.add(record)
+        db.session.commit()
+
+        record_id = record.id
+
+    response = client.get(f"/history/{record_id}/reprocess")
+
+    assert response.status_code == 200
+    assert b"Produto A" in response.data or b"Dashboard" in response.data
+
+
+def test_reprocess_upload_not_found(client):
+    response = client.get("/history/999/reprocess")
+
+    assert response.status_code == 404
+
+
+def test_reprocess_upload_missing_physical_file(client, app):
+    from app.extensions import db
+    from app.models import UploadRecord
+
+    with app.app_context():
+        record = UploadRecord(
+            file_name="missing.csv",
+            file_extension="csv",
+            row_count=2,
+            column_count=2,
+            file_path="app/uploads/missing-file.csv",
+        )
+
+        db.session.add(record)
+        db.session.commit()
+
+        record_id = record.id
+
+    response = client.get(f"/history/{record_id}/reprocess", follow_redirects=True)
+
+    assert response.status_code == 200
+    assert "O arquivo físico deste upload não foi encontrado no servidor.".encode("utf-8") in response.data
+
+

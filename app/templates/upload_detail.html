@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}Detalhes do Upload{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <div>
+        <p class="page-subtitle">Histórico de uploads</p>
+        <h1>Upload #{{ record.id }}</h1>
+    </div>
+
+    <div class="detail-actions">
+    <a href="{{ url_for('main.history') }}" class="btn-secondary">
+        Voltar ao histórico
+    </a>
+
+    <a href="{{ url_for('main.reprocess_upload', record_id=record.id) }}" class="btn-primary">
+        Reprocessar upload
+    </a>
+</div>
+</section>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div class="flash-messages">
+            {% for category, message in messages %}
+                <div class="flash-message flash-{{ category }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}
+
+<section class="detail-card">
+    <h2>Informações do arquivo</h2>
+
+    <div class="detail-grid">
+        <div class="detail-item">
+            <span>ID</span>
+            <strong>{{ record.id }}</strong>
+        </div>
+
+        <div class="detail-item">
+            <span>Arquivo</span>
+            <strong>{{ record.file_name }}</strong>
+        </div>
+
+        <div class="detail-item">
+            <span>Extensão</span>
+            <strong>{{ record.file_extension }}</strong>
+        </div>
+
+        <div class="detail-item">
+            <span>Linhas</span>
+            <strong>{{ record.row_count }}</strong>
+        </div>
+
+        <div class="detail-item">
+            <span>Colunas</span>
+            <strong>{{ record.column_count }}</strong>
+        </div>
+
+        <div class="detail-item">
+            <span>Criado em</span>
+            <strong>{{ record.created_at.strftime("%d/%m/%Y %H:%M") }}</strong>
+        </div>
+
+        <div class="detail-item">
+            <span>Caminho salvo</span>
+            <strong>{{ record.file_path }}</strong>
+        </div>
+    </div>
+</section>
+{% endblock %}

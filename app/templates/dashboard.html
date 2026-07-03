@@ -1,0 +1,276 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - DataBoard Reports{% endblock %}
+
+{% block content %}
+
+{% if success_message %}
+    <div class="alert alert-success" role="alert">
+        {{ success_message }}
+    </div>
+{% endif %}
+
+<section class="dashboard-section">
+    <div class="dashboard-header">
+        <div>
+            <p class="section-label">Prévia da Planilha</p>
+            <h1>Dados carregados com sucesso</h1>
+            <p class="section-description">
+                Confira abaixo os metadados básicos, uma amostra das primeiras linhas e a análise automática do arquivo enviado.
+            </p>
+        </div>
+
+        <a href="{{ url_for('main.upload_file') }}" class="btn-secondary">
+            Enviar outro arquivo
+        </a>
+    </div>
+
+    {% if metadata %}
+        <div class="metadata-grid">
+            <div class="metadata-card">
+                <span>Arquivo</span>
+                <strong>{{ metadata.file_name }}</strong>
+            </div>
+
+            <div class="metadata-card">
+                <span>Extensão</span>
+                <strong>{{ metadata.file_extension }}</strong>
+            </div>
+
+            <div class="metadata-card">
+                <span>Linhas</span>
+                <strong>{{ metadata.rows }}</strong>
+            </div>
+
+            <div class="metadata-card">
+                <span>Colunas</span>
+                <strong>{{ metadata.columns }}</strong>
+            </div>
+        </div>
+
+        <div class="columns-card">
+            <h2>Colunas identificadas</h2>
+
+            <div class="columns-list">
+                {% for column in metadata.column_names %}
+                    <span>{{ column }}</span>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="preview-card">
+            <div class="preview-header">
+                <h2>Prévia dos dados</h2>
+                <p>Exibindo as primeiras linhas da planilha.</p>
+            </div>
+
+            {% if metadata.preview %}
+                <div class="table-wrapper">
+                    <table class="preview-table">
+                        <thead>
+                            <tr>
+                                {% for column in metadata.column_names %}
+                                    <th>{{ column }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for row in metadata.preview %}
+                                <tr>
+                                    {% for column in metadata.column_names %}
+                                        <td>{{ row.get(column, "") }}</td>
+                                    {% endfor %}
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="empty-message">
+                    A planilha foi carregada, mas não há linhas disponíveis para prévia.
+                </p>
+            {% endif %}
+        </div>
+
+        {% if analysis %}
+            <div class="columns-card">
+                <h2>Análise automática</h2>
+
+                <div class="metadata-grid">
+                    <div class="metadata-card">
+                        <span>Total de linhas</span>
+                        <strong>{{ metadata.rows }}</strong>
+                    </div>
+
+                    <div class="metadata-card">
+                        <span>Total de colunas</span>
+                        <strong>{{ metadata.columns }}</strong>
+                    </div>
+
+                    <div class="metadata-card">
+                        <span>Colunas numéricas</span>
+                        <strong>{{ analysis.numeric_columns | length }}</strong>
+                    </div>
+
+                    <div class="metadata-card">
+                        <span>Colunas categóricas</span>
+                        <strong>{{ analysis.categorical_columns | length }}</strong>
+                    </div>
+                </div>
+            </div>
+
+            <div class="columns-card">
+                <h2>Tipos de colunas</h2>
+
+                <h3>Colunas numéricas</h3>
+
+                {% if analysis.numeric_columns %}
+                    <div class="columns-list">
+                        {% for column in analysis.numeric_columns %}
+                            <span>{{ column }}</span>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="empty-message">
+                        Nenhuma coluna numérica identificada.
+                    </p>
+                {% endif %}
+
+                <h3>Colunas categóricas/texto</h3>
+
+                {% if analysis.categorical_columns %}
+                    <div class="columns-list">
+                        {% for column in analysis.categorical_columns %}
+                            <span>{{ column }}</span>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="empty-message">
+                        Nenhuma coluna categórica identificada.
+                    </p>
+                {% endif %}
+            </div>
+
+            <div class="preview-card">
+                <div class="preview-header">
+                    <h2>Valores ausentes</h2>
+                    <p>Quantidade e percentual de valores vazios por coluna.</p>
+                </div>
+
+                <div class="table-wrapper">
+                    <table class="preview-table">
+                        <thead>
+                            <tr>
+                                <th>Coluna</th>
+                                <th>Quantidade</th>
+                                <th>Percentual</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for column, missing_count in analysis.missing_values.items() %}
+                                <tr>
+                                    <td>{{ column }}</td>
+                                    <td>{{ missing_count }}</td>
+                                    <td>{{ "%.2f"|format(analysis.missing_percentage.get(column, 0)) }}%</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="preview-card">
+                <div class="preview-header">
+                    <h2>Estatísticas numéricas</h2>
+                    <p>Média, mínimo, máximo e mediana das colunas numéricas.</p>
+                </div>
+
+                {% if analysis.numeric_statistics %}
+                    <div class="table-wrapper">
+                        <table class="preview-table">
+                            <thead>
+                                <tr>
+                                    <th>Coluna</th>
+                                    <th>Média</th>
+                                    <th>Mínimo</th>
+                                    <th>Máximo</th>
+                                    <th>Mediana</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                {% for column, stats in analysis.numeric_statistics.items() %}
+                                <tr>
+                                    <td>{{ column }}</td>
+                                    <td>{{ "%.2f"|format(stats.mean | default(0, true)) }}</td>
+                                    <td>{{ "%.2f"|format(stats.min | default(0, true)) }}</td>
+                                    <td>{{ "%.2f"|format(stats.max | default(0, true)) }}</td>
+                                    <td>{{ "%.2f"|format(stats.median | default(0, true)) }}</td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="empty-message">
+                        Nenhuma estatística numérica disponível.
+                    </p>
+                {% endif %}
+            </div>
+        {% endif %}
+    {% else %}
+        <div class="empty-dashboard">
+            <h2>Nenhum arquivo carregado ainda</h2>
+            <p>
+                Envie uma planilha CSV ou Excel para visualizar a prévia dos dados.
+            </p>
+            <a href="{{ url_for('main.upload_file') }}" class="btn-primary">
+                Enviar planilha
+            </a>
+        </div>
+    {% endif %}
+</section>
+
+{% if charts %}
+<section class="dashboard-section">
+    <div class="section-header">
+        <p class="section-eyebrow">Visualização automática</p>
+        <h2>Gráficos automáticos</h2>
+        <p>
+            O sistema identificou colunas compatíveis e gerou visualizações iniciais
+            para apoiar a leitura dos dados carregados.
+        </p>
+    </div>
+
+    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+
+    <div class="charts-grid">
+        {% for chart in charts %}
+        <article class="chart-card">
+            <div class="chart-card-header">
+                <span class="chart-badge">{{ chart.chart_type }}</span>
+                <h3>{{ chart.title }}</h3>
+                <p>Coluna analisada: {{ chart.column_name }}</p>
+            </div>
+
+            <div class="chart-container">
+                {{ chart.html|safe }}
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+</section>
+{% else %}
+<section class="dashboard-section">
+    <div class="empty-state">
+        <h2>Gráficos automáticos indisponíveis</h2>
+        <p>
+            Não foram encontradas colunas numéricas ou categóricas suficientes
+            para gerar gráficos nesta planilha.
+        </p>
+    </div>
+</section>
+{% endif %}
+{% endblock %}

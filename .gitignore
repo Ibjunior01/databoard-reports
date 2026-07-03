@@ -1,0 +1,51 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environment
+venv/
+.env/
+.venv/
+
+# Environment variables
+.env
+
+# Flask
+instance/
+.webassets-cache
+
+# Uploads and generated reports
+app/uploads/*
+!app/uploads/.gitkeep
+
+app/reports/*
+!app/reports/.gitkeep
+
+# Sample generated files
+sample_data/*
+!sample_data/.gitkeep
+
+# SQLite databases
+*.db
+*.sqlite
+*.sqlite3
+
+# OS and editors
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Docker
+*.log
+
+#instance/
+instance/
+*.db
+*.sqlite
+*.sqlite3

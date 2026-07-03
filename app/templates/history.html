@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}Histórico de uploads{% endblock %}
+
+{% block content %}
+<section class="dashboard-section">
+    <div class="section-header">
+        <p class="section-eyebrow">Uploads Registrados</p>
+        <h1>Histórico de uploads</h1>
+        <p>
+            Consulte os arquivos enviados anteriormente e acompanhe os principais
+            metadados registrados pelo sistema.
+        </p>
+    </div>
+
+    {% if records %}
+    <div class="history-table-wrapper">
+        <table class="history-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Arquivo</th>
+                    <th>Extensão</th>
+                    <th>Linhas</th>
+                    <th>Colunas</th>
+                    <th>Criado em</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for record in records %}
+                <tr>
+                    <td>{{ record.id }}</td>
+                    <td>{{ record.file_name }}</td>
+                    <td>{{ record.file_extension }}</td>
+                    <td>{{ record.row_count }}</td>
+                    <td>{{ record.column_count }}</td>
+                    <td>{{ record.created_at.strftime("%d/%m/%Y %H:%M") }}</td>
+                    <td>
+                        <a
+                            href="{{ url_for('main.upload_detail', record_id=record.id) }}"
+                            class="table-action-link"
+                        >
+                            Ver detalhes
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <h2>Nenhum upload registrado</h2>
+        <p>
+            Quando uma planilha for enviada, o registro aparecerá automaticamente aqui.
+        </p>
+        <a class="button-primary" href="{{ url_for('main.upload_file') }}">
+            Enviar primeira planilha
+        </a>
+    </div>
+    {% endif %}
+</section>
+{% endblock %}

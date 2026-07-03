@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}Upload de Arquivos | DataBoard Reports{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <div>
+        <p class="eyebrow">Entrada de dados</p>
+        <h1>Upload de planilha</h1>
+        <p class="page-description">
+            Envie um arquivo CSV ou Excel para preparar a base que será analisada
+            nas próximas etapas do DataBoard Reports.
+        </p>
+    </div>
+</section>
+
+<section class="upload-section">
+    <div class="upload-card">
+        <div class="upload-card-header">
+            <h2>Enviar arquivo</h2>
+            <p>
+                Formatos permitidos:
+                <strong>.csv</strong>,
+                <strong>.xlsx</strong> e
+                <strong>.xls</strong>.
+            </p>
+        </div>
+
+        <form
+            action="{{ url_for('main.upload_file') }}"
+            method="POST"
+            enctype="multipart/form-data"
+            class="upload-form"
+        >
+            <div class="mb-3">
+                <label for="file" class="form-label">
+                    Selecione a planilha
+                </label>
+
+                <input
+                    type="file"
+                    class="form-control"
+                    id="file"
+                    name="file"
+                    accept=".csv,.xlsx,.xls"
+                    required
+                >
+
+                <div class="form-text">
+                    Nesta etapa, o sistema apenas valida e salva o arquivo.
+                    A leitura dos dados com Pandas será implementada na próxima conversa.
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary upload-button">
+                Enviar arquivo
+            </button>
+        </form>
+    </div>
+
+    <div class="upload-info-card">
+        <h3>O que acontece agora?</h3>
+
+        <ul>
+            <li>O sistema valida a extensão do arquivo.</li>
+            <li>O nome do arquivo é tratado com segurança.</li>
+            <li>O arquivo é salvo em <code>app/uploads/</code>.</li>
+            <li>Uma mensagem informa se o upload deu certo ou falhou.</li>
+        </ul>
+    </div>
+</section>
+{% endblock %}
