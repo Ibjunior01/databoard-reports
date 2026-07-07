@@ -138,17 +138,35 @@ def test_create_upload_record_saves_file_path(app):
         assert record.file_path == "app/uploads/dados.xlsx"
 
 
-def test_reprocess_upload_success(client, app, tmp_path):
-    from app.extensions import db
-    from app.models import UploadRecord
+def test_upload_detail_page_contains_reprocess_button(client, app):
+    with app.app_context():
+        record = create_upload_record(
+            file_name="vendas.csv",
+            file_extension=".csv",
+            row_count=100,
+            column_count=5,
+            file_path="app/uploads/vendas.csv",
+        )
+        record_id = record.id
 
+    response = client.get(f"/history/{record_id}")
+
+    assert response.status_code == 200
+    assert "Reprocessar upload".encode("utf-8") in response.data
+    assert f"/history/{record_id}/reprocess".encode() in response.data
+
+
+def test_reprocess_upload_success(client, app, tmp_path):
     file_path = tmp_path / "sample.csv"
-    file_path.write_text("nome,valor\nProduto A,10\nProduto B,20\n", encoding="utf-8")
+    file_path.write_text(
+        "nome,valor\nProduto A,10\nProduto B,20\n",
+        encoding="utf-8",
+    )
 
     with app.app_context():
         record = UploadRecord(
             file_name="sample.csv",
-            file_extension="csv",
+            file_extension=".csv",
             row_count=2,
             column_count=2,
             file_path=str(file_path),
@@ -162,26 +180,27 @@ def test_reprocess_upload_success(client, app, tmp_path):
     response = client.get(f"/history/{record_id}/reprocess")
 
     assert response.status_code == 200
-    assert b"Produto A" in response.data or b"Dashboard" in response.data
+    assert b"sample.csv" in response.data
+    assert b"Produto A" in response.data
+    assert b"Produto B" in response.data
 
 
 def test_reprocess_upload_not_found(client):
-    response = client.get("/history/999/reprocess")
+    response = client.get("/history/999999/reprocess")
 
     assert response.status_code == 404
 
 
-def test_reprocess_upload_missing_physical_file(client, app):
-    from app.extensions import db
-    from app.models import UploadRecord
+def test_reprocess_upload_missing_physical_file(client, app, tmp_path):
+    missing_file_path = tmp_path / "missing-file.csv"
 
     with app.app_context():
         record = UploadRecord(
             file_name="missing.csv",
-            file_extension="csv",
+            file_extension=".csv",
             row_count=2,
             column_count=2,
-            file_path="app/uploads/missing-file.csv",
+            file_path=str(missing_file_path),
         )
 
         db.session.add(record)
@@ -189,9 +208,13 @@ def test_reprocess_upload_missing_physical_file(client, app):
 
         record_id = record.id
 
-    response = client.get(f"/history/{record_id}/reprocess", follow_redirects=True)
+    response = client.get(
+        f"/history/{record_id}/reprocess",
+        follow_redirects=True,
+    )
 
     assert response.status_code == 200
-    assert "O arquivo físico deste upload não foi encontrado no servidor.".encode("utf-8") in response.data
-
-
+    assert (
+        "O arquivo físico deste upload não foi encontrado no servidor.".encode("utf-8")
+        in response.data
+    )

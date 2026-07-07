@@ -268,23 +268,25 @@ Essa entrega transforma o histórico em uma funcionalidade mais útil, permitind
 
 ### Conversa 11 — Reprocessamento de uploads antigos
 
+### Conversa 11 — Reprocessamento de uploads antigos
+
 * Botão “Reprocessar upload” adicionado à página de detalhes do upload.
 * Rota GET `/history/<int:record_id>/reprocess` criada.
-* Busca do registro de upload pelo ID implementada na rota de reprocessamento.
+* Busca individual do registro de upload reutilizada para reprocessamento.
 * Tratamento 404 implementado para tentativa de reprocessar upload inexistente.
 * Validação de existência física do arquivo salvo em `file_path` implementada.
-* Mensagem amigável exibida quando o arquivo físico não existe mais no servidor.
-* Reprocessamento de arquivo antigo implementado usando o caminho salvo no banco.
-* Planilha antiga passou a ser recarregada com `load_spreadsheet()`.
-* Metadados passaram a ser recalculados com `load_spreadsheet_metadata()`.
-* Análise automática passou a ser recalculada com `analyze_dataframe()`.
-* Resultado de `analyze_dataframe()` adaptado para o formato esperado pelo template `dashboard.html`.
-* Gráficos automáticos passaram a ser regenerados com `generate_automatic_charts()`.
-* Dashboard passou a ser renderizado novamente a partir de um upload antigo.
-* Teste de reprocessamento com sucesso criado.
-* Teste para reprocessamento de upload inexistente criado.
-* Teste para arquivo físico ausente criado.
-* O comando `python -m pytest` retornou `39 passed`.
+* Mensagem de erro exibida quando o arquivo físico não é encontrado no servidor.
+* Reprocessamento de planilha antiga implementado usando o caminho salvo.
+* Metadados recalculados a partir do arquivo antigo.
+* Análise automática recalculada a partir do arquivo antigo.
+* Prévia dos dados recriada a partir do arquivo antigo.
+* Gráficos automáticos regenerados a partir do arquivo antigo.
+* Dashboard renderizado novamente a partir de um upload histórico.
+* Teste criado para validar botão de reprocessamento na página de detalhes.
+* Teste criado para validar erro 404 em upload inexistente.
+* Teste criado para validar mensagem de erro quando o arquivo físico não existe.
+* Teste criado para validar reprocessamento com sucesso.
+* O comando `python -m pytest` retornou `40 passed`.
 
 ---
 
@@ -398,6 +400,7 @@ PROJECT_STATE.md
 ```text
 app/routes.py
 app/templates/upload_detail.html
+app/templates/base.html
 app/static/css/style.css
 tests/test_history.py
 PROJECT_STATE.md

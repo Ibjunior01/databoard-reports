@@ -170,20 +170,8 @@ def reprocess_upload(record_id):
 
     dataframe = load_spreadsheet(record.file_path)
     metadata = load_spreadsheet_metadata(record.file_path)
-
     analysis_result = analyze_dataframe(dataframe)
-
-    if is_dataclass(analysis_result):
-        analysis_result = asdict(analysis_result)
-
-    analysis = {
-        "numeric_columns": analysis_result.get("numeric_columns", []),
-        "categorical_columns": analysis_result.get("categorical_columns", []),
-        "missing_values": analysis_result.get("missing_values", {}),
-        "missing_percentages": analysis_result.get("missing_percentages", {}),
-        "numeric_statistics": analysis_result.get("numeric_statistics", {}),
-    }
-
+    analysis = build_dashboard_analysis(analysis_result, dataframe)
     charts = generate_automatic_charts(dataframe)
 
     preview = dataframe.head(10).to_html(
@@ -194,6 +182,7 @@ def reprocess_upload(record_id):
 
     return render_template(
         "dashboard.html",
+        filename=record.file_name,
         metadata=metadata,
         preview=preview,
         analysis=analysis,
