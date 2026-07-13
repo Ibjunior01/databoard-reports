@@ -2,6 +2,7 @@ import os
 
 from dataclasses import asdict, is_dataclass
 from pathlib import Path
+from app.services.reports import generate_upload_report
 
 from flask import (
     Blueprint,
@@ -11,6 +12,7 @@ from flask import (
     redirect,
     render_template,
     request,
+    send_file,
     url_for,
 )
 from werkzeug.utils import secure_filename
@@ -187,4 +189,28 @@ def reprocess_upload(record_id):
         preview=preview,
         analysis=analysis,
         charts=charts,
+    )
+
+
+@main_bp.get("/history/<int:record_id>/report")
+def download_upload_report(record_id):
+    """
+    Gera e disponibiliza para download o relatório PDF de um upload.
+    """
+
+    upload_record = get_upload_record(record_id)
+
+    if upload_record is None:
+        abort(404)
+
+    report_path = generate_upload_report(
+        upload_record=upload_record,
+        reports_folder=current_app.config["REPORTS_FOLDER"],
+    )
+
+    return send_file(
+        report_path.resolve(),
+        mimetype="application/pdf",
+        as_attachment=True,
+        download_name=report_path.name,
     )

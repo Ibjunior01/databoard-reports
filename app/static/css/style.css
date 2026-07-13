@@ -658,3 +658,24 @@ textarea:focus {
 .btn-primary:hover {
     background: #7dd3fc;
 }
+
+.detail-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+    .page-header {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .detail-actions {
+        justify-content: flex-start;
+        width: 100%;
+    }
+}

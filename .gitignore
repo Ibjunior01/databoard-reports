@@ -49,3 +49,7 @@ instance/
 *.db
 *.sqlite
 *.sqlite3
+
+#relatórios pdf
+app/reports/*.pdf
+!app/reports/.gitkeep

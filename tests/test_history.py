@@ -218,3 +218,68 @@ def test_reprocess_upload_missing_physical_file(client, app, tmp_path):
         "O arquivo físico deste upload não foi encontrado no servidor.".encode("utf-8")
         in response.data
     )
+
+def test_upload_detail_displays_generate_pdf_button(app, client):
+    with app.app_context():
+        record = create_upload_record(
+            file_name="vendas.csv",
+            file_extension=".csv",
+            row_count=100,
+            column_count=5,
+            file_path="app/uploads/vendas.csv",
+        )
+
+        record_id = record.id
+
+    response = client.get(f"/history/{record_id}")
+
+    assert response.status_code == 200
+    assert b"Gerar PDF" in response.data
+    assert f"/history/{record_id}/report".encode() in response.data
+
+
+def test_download_upload_report_returns_pdf(
+    app,
+    client,
+    tmp_path,
+):
+    reports_folder = tmp_path / "reports"
+    app.config["REPORTS_FOLDER"] = reports_folder
+
+    with app.app_context():
+        record = create_upload_record(
+            file_name="vendas.csv",
+            file_extension=".csv",
+            row_count=100,
+            column_count=5,
+            file_path="app/uploads/vendas.csv",
+        )
+
+        record_id = record.id
+
+    response = client.get(f"/history/{record_id}/report")
+
+    assert response.status_code == 200
+    assert response.mimetype == "application/pdf"
+    assert response.data.startswith(b"%PDF")
+
+    content_disposition = response.headers.get(
+        "Content-Disposition",
+        "",
+    )
+
+    assert "attachment" in content_disposition
+    assert ".pdf" in content_disposition
+
+    generated_reports = list(reports_folder.glob("*.pdf"))
+
+    assert len(generated_reports) == 1
+    assert generated_reports[0].stat().st_size > 0
+
+
+def test_download_upload_report_returns_404_for_missing_record(
+    client,
+):
+    response = client.get("/history/999999/report")
+
+    assert response.status_code == 404
