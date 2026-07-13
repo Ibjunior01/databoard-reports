@@ -1,12 +1,14 @@
 # DataBoard Reports
 
-DataBoard Reports é uma plataforma web desenvolvida em Python com Flask para upload de planilhas CSV ou Excel, leitura inicial dos dados com Pandas, exibição de prévia dos dados e análise automática da estrutura da planilha.
+DataBoard Reports é uma plataforma web desenvolvida em Python com Flask para upload, processamento e análise de planilhas CSV ou Excel.
 
-O projeto está sendo desenvolvido em entregas pequenas e sequenciais, com foco em boas práticas de engenharia de software, testes automatizados, organização profissional de repositório e apresentação em portfólio no GitHub e LinkedIn.
+A aplicação utiliza Pandas para leitura e análise dos dados, Plotly para geração de gráficos interativos, SQLite com SQLAlchemy para persistência do histórico e ReportLab para exportação de relatórios em PDF.
+
+O projeto está sendo construído em entregas pequenas e sequenciais, com foco em boas práticas de engenharia de software, testes automatizados, organização profissional de repositório e apresentação em portfólio no GitHub e LinkedIn.
 
 ## Objetivo do projeto
 
-Criar uma aplicação web profissional onde empresas possam:
+Criar uma aplicação web profissional que permita:
 
 * enviar planilhas CSV ou Excel;
 * visualizar uma prévia dos dados carregados;
@@ -16,10 +18,14 @@ Criar uma aplicação web profissional onde empresas possam:
 * visualizar estatísticas numéricas básicas;
 * gerar dashboards automáticos;
 * visualizar gráficos interativos;
-* exportar relatórios em PDF;
-* consultar histórico de uploads e relatórios gerados.
+* registrar os uploads em banco de dados;
+* consultar o histórico de arquivos enviados;
+* visualizar os detalhes de cada upload;
+* reprocessar arquivos enviados anteriormente;
+* gerar e baixar relatórios em PDF;
+* evoluir futuramente para dashboards customizáveis e relatórios avançados.
 
-## Stack planejada
+## Stack principal
 
 * Python
 * Flask
@@ -27,61 +33,265 @@ Criar uma aplicação web profissional onde empresas possam:
 * Plotly
 * SQLite
 * SQLAlchemy
+* Flask-SQLAlchemy
 * ReportLab
-* HTML/CSS
+* HTML
+* CSS
 * Bootstrap
 * Docker
 * Pytest
-* Git/GitHub
+* Git
+* GitHub
 
 ## Status atual
 
 Entrega atual:
 
-**Conversa 06 — Exibição da análise automática no dashboard**
+**Conversa 12 — Geração inicial de relatório PDF**
 
-Funcionalidades implementadas até agora:
+O sistema já possui um fluxo funcional para:
 
-* Base inicial Flask com application factory.
+1. receber uma planilha;
+2. validar sua extensão;
+3. salvar o arquivo no servidor;
+4. carregar os dados com Pandas;
+5. extrair metadados;
+6. gerar uma prévia dos dados;
+7. realizar análise automática;
+8. gerar gráficos interativos;
+9. exibir o dashboard;
+10. registrar o upload no banco SQLite;
+11. listar uploads anteriores;
+12. abrir os detalhes de um upload;
+13. reprocessar um arquivo antigo;
+14. gerar um relatório PDF;
+15. baixar o relatório pelo navegador.
 
-* Página inicial.
+## Funcionalidades implementadas
 
-* Template base.
+### Estrutura Flask
 
-* CSS inicial com identidade visual dark/profissional.
-
+* Application factory.
 * Configuração centralizada.
+* Uso de Blueprint para organização das rotas.
+* Templates com herança Jinja.
+* Arquivos estáticos organizados.
+* Identidade visual dark e profissional.
 
-* Upload de arquivos CSV e Excel.
+### Upload de planilhas
 
-* Validação de extensões permitidas.
+A aplicação permite o envio de arquivos nos formatos:
 
-* Salvamento seguro dos arquivos enviados.
+```text
+.csv
+.xlsx
+.xls
+```
 
-* Mensagens de sucesso e erro com flash.
+O fluxo de upload possui:
 
-* Leitura inicial de arquivos `.csv`, `.xlsx` e `.xls` com Pandas.
+* validação de extensão;
+* rejeição de arquivos inválidos;
+* sanitização do nome com `secure_filename`;
+* salvamento do arquivo no servidor;
+* tratamento de erros;
+* mensagens de sucesso e erro;
+* registro do upload no banco de dados.
 
-* Extração de metadados básicos da planilha:
+### Leitura de dados com Pandas
 
-  * nome do arquivo;
-  * extensão;
-  * quantidade de linhas;
-  * quantidade de colunas;
-  * nomes das colunas;
-  * primeiras linhas da planilha.
+O serviço responsável pela leitura das planilhas está em:
 
-* Exibição da prévia dos dados carregados no dashboard.
+```text
+app/services/data_loader.py
+```
 
-* Análise automática da planilha:
+Ele permite:
 
-  * identificação de colunas numéricas;
-  * identificação de colunas categóricas/texto;
-  * contagem de valores ausentes por coluna;
-  * percentual de valores ausentes por coluna;
-  * estatísticas básicas das colunas numéricas.
+* validar se o arquivo existe;
+* validar se a extensão é suportada;
+* carregar arquivos CSV;
+* carregar arquivos XLSX;
+* carregar arquivos XLS;
+* retornar um DataFrame Pandas;
+* extrair metadados básicos;
+* retornar uma prévia das primeiras linhas.
 
-* Testes automatizados com Pytest.
+### Metadados da planilha
+
+Após o processamento, o sistema extrai:
+
+* nome do arquivo;
+* extensão;
+* quantidade de linhas;
+* quantidade de colunas;
+* nomes das colunas;
+* primeiras linhas da planilha;
+* caminho físico do arquivo salvo.
+
+### Análise automática
+
+O serviço responsável pela análise está em:
+
+```text
+app/services/analyzer.py
+```
+
+A análise automática identifica:
+
+* total de linhas;
+* total de colunas;
+* colunas numéricas;
+* colunas categóricas;
+* valores ausentes por coluna;
+* percentual de valores ausentes;
+* média das colunas numéricas;
+* mediana das colunas numéricas;
+* menor valor;
+* maior valor;
+* estatísticas numéricas básicas.
+
+### Dashboard
+
+O dashboard está localizado em:
+
+```text
+app/templates/dashboard.html
+```
+
+Atualmente ele exibe:
+
+* informações básicas do arquivo;
+* nomes das colunas;
+* prévia tabular dos dados;
+* resumo da análise automática;
+* colunas numéricas;
+* colunas categóricas;
+* qualidade dos dados;
+* valores ausentes;
+* estatísticas numéricas;
+* gráficos automáticos com Plotly.
+
+### Gráficos automáticos com Plotly
+
+O serviço responsável pelos gráficos está em:
+
+```text
+app/services/charts.py
+```
+
+O sistema gera automaticamente:
+
+* gráfico de barras para coluna categórica;
+* histograma para coluna numérica;
+* estado vazio quando não existem colunas compatíveis.
+
+Os gráficos seguem a identidade visual dark do DataBoard Reports.
+
+### Histórico de uploads
+
+Cada upload válido gera um registro no banco SQLite.
+
+O modelo principal está em:
+
+```text
+app/models.py
+```
+
+O histórico armazena:
+
+* ID;
+* nome do arquivo;
+* extensão;
+* quantidade de linhas;
+* quantidade de colunas;
+* caminho físico do arquivo;
+* data e hora do upload.
+
+A listagem pode ser acessada em:
+
+```text
+/history
+```
+
+### Detalhes do upload
+
+Cada registro possui uma página individual:
+
+```text
+/history/<id>
+```
+
+A página apresenta:
+
+* ID do upload;
+* nome do arquivo;
+* extensão;
+* quantidade de linhas;
+* quantidade de colunas;
+* data e hora do upload;
+* caminho salvo do arquivo;
+* botão para reprocessamento;
+* botão para geração de PDF.
+
+Uploads inexistentes retornam erro HTTP 404.
+
+### Reprocessamento de uploads antigos
+
+A rota de reprocessamento permite reutilizar um arquivo salvo anteriormente:
+
+```text
+/history/<id>/reprocess
+```
+
+Durante o reprocessamento, o sistema:
+
+* localiza o arquivo pelo campo `file_path`;
+* verifica se o arquivo ainda existe;
+* recarrega a planilha com Pandas;
+* recalcula os metadados;
+* recria a prévia;
+* executa novamente a análise automática;
+* gera novamente os gráficos;
+* renderiza o dashboard atualizado.
+
+Quando o arquivo físico não existe mais, uma mensagem amigável é exibida.
+
+### Relatórios em PDF
+
+O serviço responsável pela geração de relatórios está em:
+
+```text
+app/services/reports.py
+```
+
+A rota de geração é:
+
+```text
+/history/<id>/report
+```
+
+A primeira versão do relatório contém:
+
+* título do sistema;
+* descrição do relatório;
+* ID do upload;
+* nome do arquivo;
+* extensão;
+* quantidade de linhas;
+* quantidade de colunas;
+* data do upload;
+* data e hora de geração.
+
+Os relatórios:
+
+* são gerados com ReportLab;
+* possuem layout tabular;
+* utilizam nome seguro e único;
+* são armazenados em `app/reports/`;
+* são enviados ao navegador para download;
+* suportam quebra de linha em nomes de arquivos extensos;
+* tratam caracteres especiais no nome do arquivo.
 
 ## Estrutura do projeto
 
@@ -91,6 +301,7 @@ spreadsheet-dashboard-platform/
 ├── app/
 │   ├── __init__.py
 │   ├── config.py
+│   ├── extensions.py
 │   ├── models.py
 │   ├── routes.py
 │   │
@@ -99,6 +310,7 @@ spreadsheet-dashboard-platform/
 │   │   ├── data_loader.py
 │   │   ├── analyzer.py
 │   │   ├── charts.py
+│   │   ├── history.py
 │   │   └── reports.py
 │   │
 │   ├── templates/
@@ -106,7 +318,8 @@ spreadsheet-dashboard-platform/
 │   │   ├── index.html
 │   │   ├── upload.html
 │   │   ├── dashboard.html
-│   │   └── history.html
+│   │   ├── history.html
+│   │   └── upload_detail.html
 │   │
 │   ├── static/
 │   │   └── css/
@@ -120,7 +333,10 @@ spreadsheet-dashboard-platform/
 │
 ├── tests/
 │   ├── test_analyzer.py
+│   ├── test_charts.py
 │   ├── test_data_loader.py
+│   ├── test_history.py
+│   ├── test_reports.py
 │   ├── test_routes.py
 │   └── test_upload.py
 │
@@ -138,122 +354,159 @@ spreadsheet-dashboard-platform/
 └── run.py
 ```
 
+## Banco de dados
+
+O projeto utiliza SQLite com Flask-SQLAlchemy.
+
+A configuração do banco está centralizada em:
+
+```text
+app/config.py
+```
+
+A instância do SQLAlchemy está em:
+
+```text
+app/extensions.py
+```
+
+As tabelas são inicializadas durante a criação da aplicação.
+
+Durante os testes, o projeto utiliza um banco SQLite em memória para evitar alterações no banco local.
+
 ## Como executar localmente
 
-Crie e ative o ambiente virtual:
+### 1. Clonar o repositório
+
+```bash
+git clone https://github.com/Ibjunior01/databoard-reports.git
+```
+
+Entre na pasta:
+
+```bash
+cd databoard-reports
+```
+
+### 2. Criar o ambiente virtual
 
 ```bash
 python -m venv venv
 ```
 
+### 3. Ativar o ambiente virtual
+
 No Windows PowerShell:
 
-```bash
+```powershell
 venv\Scripts\Activate.ps1
 ```
 
-Instale as dependências:
+No Prompt de Comando:
+
+```cmd
+venv\Scripts\activate
+```
+
+No Linux ou macOS:
+
+```bash
+source venv/bin/activate
+```
+
+### 4. Instalar as dependências
 
 ```bash
 pip install -r requirements.txt
 ```
 
-Execute a aplicação:
+### 5. Executar a aplicação
 
 ```bash
 python run.py
 ```
 
-Acesse no navegador:
+### 6. Acessar no navegador
 
 ```text
 http://127.0.0.1:5000
 ```
 
-## Como rodar os testes
+## Rotas principais
 
-Execute:
+| Método | Rota | Descrição |
+|---|---|---|
+| GET | `/` | Página inicial |
+| GET | `/upload` | Formulário de upload |
+| POST | `/upload` | Processamento do arquivo |
+| GET | `/history` | Histórico de uploads |
+| GET | `/history/<id>` | Detalhes de um upload |
+| GET | `/history/<id>/reprocess` | Reprocessamento de upload |
+| GET | `/history/<id>/report` | Geração e download do PDF |
+
+## Como executar os testes
+
+Execute toda a suíte:
 
 ```bash
 python -m pytest
 ```
 
-Resultado atual esperado:
+Para uma saída mais detalhada:
 
-```text
-23 passed
+```bash
+python -m pytest -v
 ```
 
-## Funcionalidades principais
+Para executar apenas os testes de relatórios:
 
-### Upload de planilhas
-
-A aplicação permite o envio de arquivos nos formatos:
-
-```text
-.csv
-.xlsx
-.xls
+```bash
+python -m pytest tests/test_reports.py -v
 ```
 
-O upload possui validação de extensão, salvamento seguro do arquivo e tratamento de erros para arquivos inválidos ou não suportados.
-
-### Leitura de dados com Pandas
-
-O arquivo principal responsável pela leitura das planilhas é:
+Resultado atual:
 
 ```text
-app/services/data_loader.py
+46 passed
 ```
 
-Ele possui funções para:
+## Testes automatizados
 
-* validar se o arquivo existe;
-* validar se a extensão é suportada;
-* ler arquivos `.csv`;
-* ler arquivos `.xlsx`;
-* ler arquivos `.xls`;
-* retornar um DataFrame Pandas;
-* gerar metadados básicos da planilha;
-* retornar uma prévia das primeiras linhas.
+O projeto possui testes para:
 
-### Análise automática dos dados
+* rotas principais;
+* página inicial;
+* tela de upload;
+* upload de arquivos válidos;
+* rejeição de arquivos inválidos;
+* validação de extensões;
+* leitura de arquivos CSV;
+* leitura de arquivos Excel;
+* extração de metadados;
+* geração de prévia;
+* análise automática;
+* identificação de colunas numéricas;
+* identificação de colunas categóricas;
+* cálculo de valores ausentes;
+* cálculo de percentuais de valores ausentes;
+* cálculo de estatísticas numéricas;
+* geração de gráficos;
+* estado vazio dos gráficos;
+* criação de registros no histórico;
+* listagem do histórico;
+* página de detalhes;
+* erro 404 para registros inexistentes;
+* persistência do caminho do arquivo;
+* reprocessamento de uploads;
+* arquivo físico inexistente;
+* geração física do PDF;
+* validação do cabeçalho `%PDF`;
+* criação automática da pasta de relatórios;
+* botão de geração do PDF;
+* download do relatório;
+* erro 404 ao gerar relatório de upload inexistente.
 
-O arquivo principal responsável pela análise automática é:
-
-```text
-app/services/analyzer.py
-```
-
-Ele possui funções para analisar um DataFrame e retornar informações como:
-
-* total de linhas;
-* total de colunas;
-* colunas numéricas;
-* colunas categóricas;
-* valores ausentes;
-* percentual de valores ausentes;
-* estatísticas básicas das colunas numéricas.
-
-### Dashboard
-
-O arquivo principal da interface de dashboard é:
-
-```text
-app/templates/dashboard.html
-```
-
-Atualmente o dashboard exibe:
-
-* dados básicos do arquivo enviado;
-* lista de colunas identificadas;
-* prévia tabular das primeiras linhas;
-* resumo da análise automática;
-* tipos de colunas;
-* valores ausentes por coluna;
-* estatísticas numéricas.
-
-## Exemplo de metadados retornados
+## Exemplo de metadados
 
 ```python
 {
@@ -261,7 +514,13 @@ Atualmente o dashboard exibe:
     "file_extension": ".csv",
     "rows": 100,
     "columns": 5,
-    "column_names": ["product", "quantity", "revenue", "date", "category"],
+    "column_names": [
+        "product",
+        "quantity",
+        "revenue",
+        "date",
+        "category"
+    ],
     "preview": [
         {
             "product": "Notebook",
@@ -278,8 +537,14 @@ Atualmente o dashboard exibe:
 
 ```python
 {
-    "numeric_columns": ["quantity", "revenue"],
-    "categorical_columns": ["product", "category"],
+    "numeric_columns": [
+        "quantity",
+        "revenue"
+    ],
+    "categorical_columns": [
+        "product",
+        "category"
+    ],
     "missing_values": {
         "product": 0,
         "quantity": 0,
@@ -303,50 +568,85 @@ Atualmente o dashboard exibe:
 }
 ```
 
-## Testes automatizados
+## Arquivos gerados localmente
 
-O projeto possui testes para:
-
-* rotas principais da aplicação;
-* upload de arquivos válidos;
-* rejeição de arquivos inválidos;
-* validação de extensões suportadas;
-* leitura de arquivo CSV;
-* leitura de arquivo Excel;
-* geração de metadados;
-* análise automática de DataFrame;
-* identificação de colunas numéricas;
-* identificação de colunas categóricas;
-* cálculo de valores ausentes;
-* cálculo de estatísticas numéricas;
-* exibição da análise automática no dashboard.
-
-## Resultado atual dos testes
+Os arquivos enviados são armazenados em:
 
 ```text
-23 passed
+app/uploads/
 ```
 
-## Próximas entregas planejadas
+Os relatórios PDF são armazenados em:
 
-A próxima entrega provavelmente será:
+```text
+app/reports/
+```
 
-**Conversa 07 — Gráficos automáticos com Plotly**
+Arquivos gerados localmente não devem ser enviados para o GitHub.
 
-Escopo recomendado:
+O `.gitignore` deve conter:
 
-* criar função inicial em `app/services/charts.py`;
-* gerar gráfico automático para colunas categóricas;
-* gerar gráfico automático para colunas numéricas;
-* integrar os gráficos ao dashboard;
-* manter os gráficos simples e controlados;
-* adicionar testes para a geração dos gráficos.
+```gitignore
+app/uploads/*
+!app/uploads/.gitkeep
 
-Fora do escopo da próxima entrega:
+app/reports/*.pdf
+!app/reports/.gitkeep
 
-* banco de dados;
-* histórico real de uploads;
+instance/
+*.sqlite3
+```
+
+## Próxima entrega planejada
+
+### Conversa 13 — Inclusão da análise automática no relatório PDF
+
+O objetivo da próxima entrega será evoluir o relatório básico para incluir um resumo da análise automática da planilha.
+
+Escopo inicial recomendado:
+
+* localizar o arquivo original pelo campo `file_path`;
+* recarregar a planilha com o serviço de dados;
+* reutilizar o analisador existente;
+* incluir no PDF a quantidade de colunas numéricas;
+* incluir a quantidade de colunas categóricas;
+* incluir o total de valores ausentes;
+* listar os nomes das colunas numéricas;
+* listar os nomes das colunas categóricas;
+* tratar arquivos físicos inexistentes;
+* criar testes específicos para o relatório com análise.
+
+Permanecem fora do próximo escopo:
+
+* gráficos Plotly dentro do PDF;
+* prévia completa da planilha no PDF;
+* persistência dos relatórios no banco;
+* histórico de relatórios;
 * autenticação;
-* exportação em PDF;
-* deploy;
-* CI/CD.
+* permissões por usuário;
+* dashboards customizáveis;
+* upload múltiplo;
+* CI/CD;
+* deploy em produção.
+
+## Roadmap futuro
+
+* Relatórios PDF com análise automática.
+* Inclusão de gráficos no PDF.
+* Inclusão de prévia tabular no PDF.
+* Persistência dos relatórios no banco.
+* Histórico de relatórios gerados.
+* Exclusão de registros do histórico.
+* Upload múltiplo.
+* Filtros avançados.
+* Dashboards customizáveis.
+* Autenticação.
+* Controle de acesso por usuário.
+* Migrações com Flask-Migrate.
+* Dockerização completa.
+* Pipeline CI/CD.
+* Deploy em ambiente de produção.
+
+## Licença
+
+Este projeto está sendo desenvolvido para fins de estudo, portfólio profissional e demonstração de conhecimentos em desenvolvimento web, análise de dados e engenharia de software.
