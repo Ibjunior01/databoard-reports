@@ -52,13 +52,13 @@ O projeto segue uma identidade visual dark/profissional, inspirada em dashboards
 
 ## Entrega atual
 
-Conversa 12 — Geração inicial de relatório PDF
+Conversa 13 — Inclusão da análise automática no relatório PDF
 
 ## Objetivo da entrega atual
 
-Criar a primeira funcionalidade de exportação em PDF do DataBoard Reports, permitindo gerar e baixar um relatório básico contendo os principais metadados de um upload registrado.
+Evoluir o relatório PDF básico para incluir um resumo da análise automática da planilha, reutilizando o arquivo físico salvo no servidor e os serviços existentes de carregamento e análise de dados.
 
-Essa entrega aproxima o sistema de seu objetivo principal: transformar planilhas processadas em relatórios que possam ser armazenados, compartilhados e apresentados.
+O relatório agora apresenta, além dos metadados do upload, a quantidade e os nomes das colunas numéricas e categóricas, o total de valores ausentes e o detalhamento das ausências por coluna.
 
 ---
 
@@ -331,6 +331,54 @@ Essa entrega aproxima o sistema de seu objetivo principal: transformar planilhas
 * Teste de erro 404 para relatório de registro inexistente criado.
 * Arquivo `.gitignore` atualizado para ignorar PDFs gerados.
 * Todos os testes automatizados permaneceram passando.
+
+### Conversa 13 — Inclusão da análise automática no relatório PDF
+
+* Serviço `app/services/reports.py` atualizado para receber o resultado da análise automática.
+* Função `generate_upload_report()` atualizada para receber:
+  * registro do upload;
+  * resultado da análise;
+  * pasta de relatórios.
+* Resultado de `analyze_dataframe()` integrado à geração do PDF.
+* Função auxiliar criada para converter diferentes formatos de resultado de análise em dicionário.
+* Função auxiliar `_build_analysis_summary()` criada.
+* Resumo estruturado da análise automática implementado.
+* PDF atualizado para exibir:
+  * quantidade de colunas numéricas;
+  * quantidade de colunas categóricas/texto;
+  * quantidade total de valores ausentes;
+  * nomes das colunas numéricas;
+  * nomes das colunas categóricas/texto.
+* Seção “Valores ausentes por coluna” adicionada ao relatório.
+* Quantidade de valores ausentes por coluna adicionada.
+* Percentual de valores ausentes por coluna adicionado.
+* Mensagem específica criada para planilhas sem valores ausentes.
+* Tratamento de listas vazias de colunas implementado.
+* Quebra automática de listas longas de colunas mantida no PDF.
+* Caracteres especiais nos nomes das colunas tratados com escape.
+* Data de geração passou a ser calculada uma única vez para uso no nome e no conteúdo do relatório.
+* Função reutilizável `get_existing_upload_file_path()` criada em `app/routes.py`.
+* Validação do caminho físico padronizada com `Path.is_file()`.
+* Dependência direta de `os.path.exists()` removida das rotas.
+* Rota de reprocessamento atualizada para usar a validação compartilhada de arquivo físico.
+* Rota GET `/history/<int:record_id>/report` atualizada.
+* Arquivo original passou a ser recarregado antes da geração do relatório.
+* Serviço `load_spreadsheet()` passou a ser reutilizado pela rota do relatório.
+* Serviço `analyze_dataframe()` passou a ser reutilizado pela rota do relatório.
+* Geração do PDF bloqueada quando o arquivo físico não existe.
+* Redirecionamento para a página de detalhes implementado quando o arquivo não é encontrado.
+* Mensagem amigável exibida quando o arquivo original não está disponível.
+* Tratamento para tipo de arquivo salvo não suportado implementado.
+* Testes de relatório atualizados para a nova assinatura de `generate_upload_report()`.
+* DataFrames reais passaram a ser usados nos testes do relatório.
+* Teste do resumo de colunas numéricas e categóricas criado.
+* Teste do cálculo de valores ausentes criado.
+* Teste para análise sem valores ausentes criado.
+* Teste da rota de download atualizado para criar um arquivo CSV físico temporário.
+* Teste para geração de relatório com arquivo físico inexistente criado.
+* Teste confirmou que nenhum PDF é criado quando o arquivo original não existe.
+* Todos os testes anteriores permaneceram funcionando.
+* O comando `python -m pytest` retornou `48 passed`.
   
 ---
 
@@ -377,6 +425,7 @@ spreadsheet-dashboard-platform/
 │   ├── test_charts.py
 │   ├── test_data_loader.py
 │   ├── test_history.py
+│   ├── test_reports.py
 │   ├── test_routes.py
 │   └── test_upload.py
 │
@@ -462,21 +511,31 @@ tests/test_reports.py
 tests/test_history.py
 .gitignore
 PROJECT_STATE.md
+```
+## Arquivos modificados na Conversa 13
 
----
+```text
+app/services/reports.py
+app/routes.py
+tests/test_reports.py
+tests/test_history.py
+PROJECT_STATE.md
+```
 
+```markdown
 ## Resultado esperado dos testes
 
 Use o número exibido no seu terminal. Caso tenham sido adicionados exatamente os seis testes planejados nesta conversa, o bloco deverá ficar assim:
 
 ```bash
 python -m pytest
+
 ```
 
 Resultado validado na Conversa 11:
 
 ```text
-46 passed
+48 passed
 ```
 
 ---
@@ -521,7 +580,7 @@ Atualmente o sistema permite:
 * recalcular metadados, análise automática e gráficos de um upload antigo;
 * receber mensagem amigável quando o arquivo físico de um upload antigo não existe mais;
 * usar banco SQLite em memória nos testes automatizados;
-* validar o comportamento com 40 testes automatizados.
+* validar o comportamento com 48 testes automatizados.
 * gerar um relatório PDF básico a partir de um upload registrado;
 * salvar relatórios gerados na pasta `app/reports/`;
 * baixar o relatório PDF pelo navegador;
@@ -530,7 +589,22 @@ Atualmente o sistema permite:
 * formatar datas e horários no relatório;
 * quebrar nomes longos de arquivos em múltiplas linhas;
 * receber erro 404 ao solicitar relatório de upload inexistente;
-* acessar a geração de PDF pela página de detalhes do upload.
+* acessar a geração de PDF pela página de detalhes do upload;
+  * recarregar o arquivo original antes de gerar o relatório PDF;
+* validar a existência física do arquivo antes da geração do PDF;
+* reutilizar o serviço de carregamento de planilhas na geração do relatório;
+* reutilizar o serviço de análise automática na geração do relatório;
+* exibir no PDF a quantidade de colunas numéricas;
+* exibir no PDF a quantidade de colunas categóricas/texto;
+* exibir no PDF os nomes das colunas numéricas;
+* exibir no PDF os nomes das colunas categóricas/texto;
+* exibir no PDF a quantidade total de valores ausentes;
+* exibir no PDF os valores ausentes por coluna;
+* exibir no PDF o percentual de valores ausentes por coluna;
+* exibir mensagem no PDF quando não houver valores ausentes;
+* impedir a geração do relatório quando o arquivo original não existir;
+* redirecionar o usuário para os detalhes do upload quando o arquivo original não for encontrado;
+* manter a geração de PDF protegida contra registros inexistentes com resposta 404.
 ---
 
 ## O que ainda não foi implementado
@@ -538,7 +612,7 @@ Atualmente o sistema permite:
 * Persistência da análise automática completa.
 * Persistência dos gráficos gerados.
 * Persistência da prévia da planilha.
-* Relatórios PDF avançados com análise automática.
+* Inclusão das estatísticas numéricas detalhadas no relatório PDF.
 * Inserção de gráficos no PDF.
 * Inserção de prévia da planilha no PDF.
 * Persistência dos relatórios gerados no banco de dados.
@@ -558,97 +632,72 @@ Atualmente o sistema permite:
 
 ## Próxima entrega sugerida
 
-Conversa 13 — Inclusão da análise automática no relatório PDF
+Conversa 14 — Inclusão das estatísticas numéricas no relatório PDF
 
-## Objetivo provável da Conversa 13
+## Objetivo provável da Conversa 14
 
-Evoluir o relatório PDF básico para apresentar também um resumo da análise automática da planilha, reutilizando o arquivo salvo no servidor e os serviços já existentes de carregamento e análise.
+Evoluir o relatório PDF para apresentar as estatísticas básicas das colunas numéricas já calculadas pelo serviço `analyzer.py`.
 
-## Escopo recomendado para a Conversa 13
+A entrega deverá reutilizar o campo `numeric_statistics` do objeto `DataAnalysisResult`, sem recalcular os indicadores dentro do serviço de relatórios.
 
-* Localizar o arquivo original pelo campo `file_path`.
-* Recarregar a planilha com o serviço `data_loader.py`.
-* Reutilizar o serviço `analyzer.py`.
-* Inserir no PDF:
-  * quantidade de colunas numéricas;
-  * quantidade de colunas categóricas;
-  * quantidade total de valores ausentes;
-  * nomes das colunas numéricas;
-  * nomes das colunas categóricas.
-* Criar tratamento para arquivo físico inexistente.
-* Criar testes para o relatório com análise automática.
+## Escopo recomendado para a Conversa 14
+
+* Reutilizar `numeric_statistics` retornado por `analyze_dataframe()`.
+* Inserir no PDF uma tabela de estatísticas por coluna numérica.
+* Exibir para cada coluna:
+  * média;
+  * mediana;
+  * valor mínimo;
+  * valor máximo.
+* Criar formatação padronizada para números decimais.
+* Tratar estatísticas com valor `None`.
+* Tratar planilhas sem colunas numéricas.
+* Criar testes para a preparação das estatísticas.
+* Criar teste de geração do PDF com estatísticas numéricas.
 * Manter gráficos e prévia da tabela fora desta entrega.
 
----
+## Manter fora do escopo da Conversa 14
 
-## Escopo recomendado para a Conversa 12
-
-* Confirmar ou criar o serviço `reports.py`.
-* Implementar geração inicial de PDF com ReportLab.
-* Criar função para gerar relatório básico a partir de metadados do upload.
-* Criar rota inicial para exportação de relatório.
-* Adicionar botão “Gerar PDF” no dashboard ou na página de detalhes.
-* Salvar o PDF gerado na pasta `app/reports/`.
-* Retornar o arquivo PDF para download.
-* Criar teste para geração do PDF.
-* Criar teste para rota de exportação.
-
----
-
-## Escopo recomendado inicial para geração de PDF
-
-Para manter a entrega pequena, iniciar apenas com um relatório simples contendo:
-
-* título do relatório;
-* nome do arquivo;
-* extensão;
-* quantidade de linhas;
-* quantidade de colunas;
-* data/hora de geração do PDF.
-
-A primeira versão do PDF não precisa conter gráficos, preview da tabela ou análise automática completa.
-
----
-
-## Manter fora do escopo da Conversa 12
-
-* Inserir gráficos Plotly no PDF.
-* Inserir prévia da planilha no PDF.
-* Inserir análise automática completa no PDF.
-* Persistir relatório PDF no banco de dados.
-* Criar histórico de relatórios gerados.
-* Criar templates avançados de PDF.
-* Criar layout corporativo completo.
-* Criar autenticação.
-* Criar permissões por usuário.
-* Criar filtros avançados.
-* Criar dashboards customizáveis.
-* Criar upload múltiplo.
-* Criar Flask-Migrate.
-* Criar deploy.
+* Inserção de gráficos Plotly no PDF.
+* Inserção de prévia das linhas da planilha.
+* Persistência dos relatórios no banco de dados.
+* Histórico de relatórios gerados.
+* Seleção de colunas pelo usuário.
+* Seleção de abas de arquivos Excel.
+* Autenticação.
+* Deploy.
 
 ---
 
 ## Observação de continuidade
 
-A Conversa 11 concluiu o reprocessamento de uploads antigos.
+A Conversa 13 concluiu a inclusão da análise automática no relatório PDF.
 
 O projeto agora possui um fluxo funcional para:
 
 1. receber uma planilha;
-2. salvar o arquivo no servidor;
-3. carregar os dados com Pandas;
-4. extrair metadados;
-5. analisar a estrutura dos dados;
-6. gerar gráficos automáticos;
-7. exibir o dashboard;
-8. registrar o upload no banco SQLite;
-9. salvar o caminho do arquivo enviado;
-10. listar uploads anteriores na página de histórico;
-11. abrir uma página individual de detalhes para cada upload;
-12. visualizar o caminho salvo do arquivo;
-13. reprocessar um upload antigo usando o `file_path` salvo no banco;
-14. recriar dashboard, metadados, análise automática e gráficos a partir de um arquivo antigo;
-15. validar o comportamento com 40 testes automatizados.
+2. validar sua extensão;
+3. salvar o arquivo no servidor;
+4. carregar os dados com Pandas;
+5. extrair metadados;
+6. analisar automaticamente a estrutura dos dados;
+7. identificar colunas numéricas e categóricas;
+8. calcular valores ausentes e estatísticas numéricas;
+9. gerar gráficos automáticos com Plotly;
+10. exibir o dashboard;
+11. registrar o upload no banco SQLite;
+12. salvar o caminho físico do arquivo;
+13. listar os uploads anteriores;
+14. abrir os detalhes de cada upload;
+15. reprocessar um upload antigo;
+16. recriar o dashboard a partir de um arquivo salvo;
+17. gerar e baixar um relatório PDF;
+18. incluir no PDF os metadados do upload;
+19. recarregar a planilha original antes da geração do relatório;
+20. incluir no PDF o resumo da análise automática;
+21. apresentar colunas numéricas e categóricas no PDF;
+22. apresentar valores ausentes e percentuais por coluna;
+23. impedir a geração do PDF quando o arquivo original não existe;
+24. validar o comportamento com 48 testes automatizados.
 
-A partir da Conversa 12, o projeto deve evoluir para a geração inicial de relatórios em PDF.
+A partir da Conversa 14, o projeto deverá evoluir para a inclusão das estatísticas numéricas detalhadas no relatório PDF.

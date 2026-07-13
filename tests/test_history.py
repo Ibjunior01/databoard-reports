@@ -244,15 +244,25 @@ def test_download_upload_report_returns_pdf(
     tmp_path,
 ):
     reports_folder = tmp_path / "reports"
+    spreadsheet_path = tmp_path / "vendas.csv"
+
     app.config["REPORTS_FOLDER"] = reports_folder
+
+    spreadsheet_path.write_text(
+        "categoria,valor\n"
+        "A,10\n"
+        "B,20\n"
+        "A,\n",
+        encoding="utf-8",
+    )
 
     with app.app_context():
         record = create_upload_record(
             file_name="vendas.csv",
             file_extension=".csv",
-            row_count=100,
-            column_count=5,
-            file_path="app/uploads/vendas.csv",
+            row_count=3,
+            column_count=2,
+            file_path=str(spreadsheet_path),
         )
 
         record_id = record.id
@@ -274,12 +284,45 @@ def test_download_upload_report_returns_pdf(
     generated_reports = list(reports_folder.glob("*.pdf"))
 
     assert len(generated_reports) == 1
+    assert generated_reports[0].is_file()
     assert generated_reports[0].stat().st_size > 0
 
 
-def test_download_upload_report_returns_404_for_missing_record(
+def test_download_upload_report_missing_physical_file(
+    app,
     client,
+    tmp_path,
 ):
-    response = client.get("/history/999999/report")
+    reports_folder = tmp_path / "reports"
+    missing_file_path = tmp_path / "arquivo-inexistente.csv"
 
-    assert response.status_code == 404
+    app.config["REPORTS_FOLDER"] = reports_folder
+
+    with app.app_context():
+        record = create_upload_record(
+            file_name="arquivo-inexistente.csv",
+            file_extension=".csv",
+            row_count=10,
+            column_count=3,
+            file_path=str(missing_file_path),
+        )
+
+        record_id = record.id
+
+    response = client.get(
+        f"/history/{record_id}/report",
+        follow_redirects=True,
+    )
+
+    assert response.status_code == 200
+
+    assert (
+        "O arquivo físico deste upload não foi encontrado no servidor.".encode(
+            "utf-8"
+        )
+        in response.data
+    )
+
+    generated_reports = list(reports_folder.glob("*.pdf"))
+
+    assert generated_reports == []
