@@ -52,13 +52,15 @@ O projeto segue uma identidade visual dark/profissional, inspirada em dashboards
 
 ## Entrega atual
 
-Conversa 13 — Inclusão da análise automática no relatório PDF
+Conversa 16 — Inserção da prévia dos dados no relatório PDF
 
 ## Objetivo da entrega atual
 
-Evoluir o relatório PDF básico para incluir um resumo da análise automática da planilha, reutilizando o arquivo físico salvo no servidor e os serviços existentes de carregamento e análise de dados.
+Evoluir o relatório PDF para incluir uma prévia limitada dos dados da planilha processada.
 
-O relatório agora apresenta, além dos metadados do upload, a quantidade e os nomes das colunas numéricas e categóricas, o total de valores ausentes e o detalhamento das ausências por coluna.
+A entrega reutiliza o mesmo DataFrame já carregado durante a geração do relatório, evitando uma nova leitura do arquivo e mantendo a separação de responsabilidades entre as camadas da aplicação.
+
+A prévia foi limitada para preservar a legibilidade do documento em formato A4.
 
 ---
 
@@ -379,7 +381,168 @@ O relatório agora apresenta, além dos metadados do upload, a quantidade e os n
 * Teste confirmou que nenhum PDF é criado quando o arquivo original não existe.
 * Todos os testes anteriores permaneceram funcionando.
 * O comando `python -m pytest` retornou `48 passed`.
-  
+
+### Conversa 14 — Inclusão das estatísticas numéricas no relatório PDF
+
+* Serviço `app/services/reports.py` atualizado.
+* Relatório PDF evoluído para apresentar estatísticas das colunas numéricas.
+* Campo `numeric_statistics` de `DataAnalysisResult` reutilizado diretamente.
+* Nenhum cálculo estatístico duplicado foi implementado no serviço de relatórios.
+* Função `_build_numeric_statistics()` criada.
+* Estatísticas numéricas organizadas para apresentação no PDF.
+* Função `_format_number()` criada.
+* Formatação numérica padronizada implementada.
+* Valores inteiros passaram a ser exibidos sem casas decimais desnecessárias.
+* Separador de milhar no padrão brasileiro implementado.
+* Separador decimal com vírgula implementado.
+* Valores decimais passaram a ser exibidos com duas casas.
+* Valores estatísticos `None` passaram a ser exibidos como `Não disponível`.
+* Nova seção “Estatísticas das colunas numéricas” adicionada ao relatório PDF.
+* Tabela de estatísticas criada com as colunas:
+  * coluna;
+  * média;
+  * mediana;
+  * mínimo;
+  * máximo.
+* Tratamento para planilhas sem colunas numéricas implementado.
+* Mensagem específica adicionada quando nenhuma coluna numérica é identificada.
+* Função reutilizável `_apply_data_table_style()` criada.
+* Estilo das tabelas de dados centralizado.
+* Tabela de valores ausentes passou a reutilizar o estilo compartilhado.
+* Testes de formatação numérica criados.
+* Teste para números inteiros criado.
+* Teste para números decimais criado.
+* Teste para valor `None` criado.
+* Teste da preparação das estatísticas numéricas criado.
+* Teste para planilha sem colunas numéricas criado.
+* Teste de geração de PDF sem colunas numéricas criado.
+* Todos os testes anteriores permaneceram funcionando.
+* O comando `python -m pytest` retornou `54 passed`.
+
+### Conversa 15 — Inserção de gráficos no relatório PDF
+
+* Dependência `Kaleido` adicionada ao projeto.
+* Restrição de versão do Plotly atualizada.
+* Plotly atualizado para versão compatível com Kaleido.
+* Ambiente validado com:
+  * Plotly `6.9.0`;
+  * Kaleido instalado com sucesso.
+* Serviço `app/services/charts.py` refatorado.
+* Responsabilidades do serviço de gráficos atualizadas.
+* Lógica de construção dos gráficos separada da lógica de saída.
+* Função `_build_categorical_bar_figure()` criada.
+* Função `_build_numeric_histogram_figure()` criada.
+* A mesma figura Plotly passou a ser reutilizada para:
+  * HTML interativo no dashboard;
+  * imagem PNG no relatório PDF.
+* Classe `StaticChartResult` criada.
+* `StaticChartResult` passou a armazenar:
+  * título;
+  * tipo do gráfico;
+  * nome da coluna;
+  * imagem em bytes.
+* Função `_to_plotly_image_bytes()` criada.
+* Exportação de figuras Plotly para PNG em memória implementada.
+* Nenhum arquivo PNG temporário passou a ser necessário.
+* Layout dos gráficos separado por contexto.
+* Função `_apply_dark_layout()` mantida para o dashboard.
+* Função `_apply_report_layout()` criada para o relatório PDF.
+* Gráficos do dashboard mantidos com visual dark.
+* Gráficos do PDF passaram a utilizar fundo claro e maior legibilidade para impressão.
+* Função `generate_categorical_bar_chart_image()` criada.
+* Função `generate_numeric_histogram_image()` criada.
+* Função `generate_automatic_chart_images()` criada.
+* Gráfico de barras categórico passou a poder ser exportado como PNG.
+* Histograma numérico passou a poder ser exportado como PNG.
+* Serviço `app/services/reports.py` atualizado.
+* Suporte a `chart_results` adicionado à função `generate_upload_report()`.
+* Argumento `chart_results` mantido como opcional para preservar compatibilidade.
+* Importação de `BytesIO` adicionada.
+* Integração com `reportlab.platypus.Image` implementada.
+* Função `_build_chart_elements()` criada.
+* Imagens PNG passaram a ser inseridas diretamente no PDF a partir da memória.
+* Componente `KeepTogether` utilizado para manter título e gráfico juntos quando possível.
+* Nova seção “Visualizações gráficas” adicionada ao relatório PDF.
+* Relatório passou a exibir:
+  * gráfico de barras para a primeira coluna categórica compatível;
+  * histograma para a primeira coluna numérica compatível.
+* Mensagem específica criada para planilhas sem gráficos compatíveis.
+* Rota de geração de relatório atualizada.
+* Função `generate_automatic_chart_images()` integrada à rota `/history/<int:record_id>/report`.
+* Fluxo completo da geração do relatório passou a ser:
+  * carregar arquivo;
+  * analisar DataFrame;
+  * gerar imagens dos gráficos;
+  * gerar PDF;
+  * retornar o arquivo para download.
+* Testes de gráficos expandidos de 5 para 10.
+* Teste de geração de PNG do gráfico categórico criado.
+* Teste de geração de PNG do histograma criado.
+* Assinatura binária real de arquivos PNG validada.
+* Teste de geração automática de múltiplas imagens criado.
+* Teste para DataFrame vazio criado.
+* Teste de entrada inválida para geração estática criado.
+* Testes de relatórios expandidos de 11 para 13.
+* Teste de inclusão de um gráfico estático no PDF criado.
+* Teste de inclusão de múltiplos gráficos no PDF criado.
+* Testes do serviço de relatórios passaram a usar uma pequena imagem PNG válida em memória.
+* Testes de Plotly/Kaleido mantidos separados dos testes de ReportLab.
+* Fluxo real Plotly → Kaleido → PNG validado.
+* Fluxo PNG → ReportLab → PDF validado.
+* Fluxo completo CSV → Pandas → Plotly → Kaleido → PNG → ReportLab → PDF validado pela suíte integrada.
+* Todos os testes anteriores permaneceram funcionando.
+* O comando `python -m pytest` retornou `61 passed`.
+
+### Conversa 16 — Inserção da prévia dos dados no relatório PDF
+
+* Serviço `app/services/reports.py` atualizado.
+* Suporte a DataFrame adicionado à função `generate_upload_report()`.
+* Novo argumento opcional `dataframe` adicionado ao serviço de relatórios.
+* DataFrame já carregado pela rota passou a ser reutilizado na geração do PDF.
+* Nenhuma nova leitura do arquivo foi necessária para gerar a prévia.
+* Dependência do Pandas adicionada ao serviço de relatórios.
+* Configurações de limite da prévia criadas:
+  * máximo de 5 linhas;
+  * máximo de 6 colunas;
+  * máximo de 40 caracteres por célula.
+* Função `_format_preview_value()` criada.
+* Valores ausentes passaram a ser exibidos como `-`.
+* Valores normais passaram a ser convertidos para texto.
+* Textos longos passaram a ser truncados com reticências.
+* Função `_build_dataframe_preview()` criada.
+* Limitação de linhas da prévia implementada.
+* Limitação de colunas da prévia implementada.
+* Quantidade total de linhas registrada na estrutura da prévia.
+* Quantidade total de colunas registrada na estrutura da prévia.
+* Quantidade de linhas exibidas registrada.
+* Quantidade de colunas exibidas registrada.
+* Quantidade de linhas omitidas calculada.
+* Quantidade de colunas omitidas calculada.
+* Validação de entrada implementada para garantir uso de `pandas.DataFrame`.
+* Validação de limites negativos implementada.
+* Nova seção “Prévia dos dados” adicionada ao relatório PDF.
+* Tabela de prévia criada com cabeçalho e células formatadas.
+* Largura das colunas calculada dinamicamente.
+* Cabeçalho da tabela repetido automaticamente em caso de quebra de página.
+* Nota informativa adicionada com a quantidade de linhas e colunas exibidas.
+* Mensagem adicionada quando a prévia é limitada para preservar a legibilidade.
+* Tratamento implementado para ausência de DataFrame.
+* Tratamento implementado para planilha sem colunas.
+* Tratamento implementado para planilha sem linhas.
+* Rota de geração do relatório atualizada.
+* DataFrame passou a ser enviado diretamente para `generate_upload_report()`.
+* Testes de relatórios expandidos de 13 para 19.
+* Teste de tratamento de valores ausentes criado.
+* Teste de formatação de valores regulares criado.
+* Teste de truncamento de texto longo criado.
+* Teste de limite de linhas e colunas criado.
+* Teste de contabilização de dados omitidos criado.
+* Teste de formatação de valores ausentes na prévia criado.
+* Teste de rejeição de entrada inválida criado.
+* Teste de geração real do PDF com prévia criado.
+* Todos os testes anteriores permaneceram funcionando.
+* O comando `python -m pytest` retornou `67 passed`.
+
 ---
 
 ## Estrutura atual esperada
@@ -521,6 +684,29 @@ tests/test_reports.py
 tests/test_history.py
 PROJECT_STATE.md
 ```
+## Arquivos modificados na Conversa 14
+
+```text
+app/services/reports.py
+tests/test_reports.py
+PROJECT_STATE.md
+```
+```text
+requirements.txt
+app/services/charts.py
+app/services/reports.py
+app/routes.py
+tests/test_charts.py
+tests/test_reports.py
+PROJECT_STATE.md
+```
+## Arquivos modificados na Conversa 16
+
+```text
+app/services/reports.py
+app/routes.py
+tests/test_reports.py
+PROJECT_STATE.md
 
 ```markdown
 ## Resultado esperado dos testes
@@ -532,10 +718,10 @@ python -m pytest
 
 ```
 
-Resultado validado na Conversa 11:
+Resultado validado na Conversa 15:
 
 ```text
-48 passed
+67 passed
 ```
 
 ---
@@ -580,7 +766,7 @@ Atualmente o sistema permite:
 * recalcular metadados, análise automática e gráficos de um upload antigo;
 * receber mensagem amigável quando o arquivo físico de um upload antigo não existe mais;
 * usar banco SQLite em memória nos testes automatizados;
-* validar o comportamento com 48 testes automatizados.
+* validar o comportamento com 67 testes automatizados.
 * gerar um relatório PDF básico a partir de um upload registrado;
 * salvar relatórios gerados na pasta `app/reports/`;
 * baixar o relatório PDF pelo navegador;
@@ -605,6 +791,36 @@ Atualmente o sistema permite:
 * impedir a geração do relatório quando o arquivo original não existir;
 * redirecionar o usuário para os detalhes do upload quando o arquivo original não for encontrado;
 * manter a geração de PDF protegida contra registros inexistentes com resposta 404.
+* reutilizar as estatísticas numéricas calculadas pelo serviço `analyzer.py`;
+* exibir no PDF a média das colunas numéricas;
+* exibir no PDF a mediana das colunas numéricas;
+* exibir no PDF o valor mínimo das colunas numéricas;
+* exibir no PDF o valor máximo das colunas numéricas;
+* formatar números inteiros sem casas decimais desnecessárias;
+* formatar números decimais com duas casas;
+* utilizar separadores numéricos no padrão brasileiro;
+* tratar estatísticas indisponíveis;
+* gerar normalmente o relatório quando a planilha não possui colunas numéricas;
+* gerar versões estáticas dos gráficos Plotly;
+* exportar gráficos Plotly para imagens PNG com Kaleido;
+* manter as imagens dos gráficos em memória;
+* gerar gráfico de barras estático para a primeira coluna categórica compatível;
+* gerar histograma estático para a primeira coluna numérica compatível;
+* reutilizar a mesma lógica de construção de gráficos no dashboard e no PDF;
+* manter o dashboard com gráficos interativos;
+* inserir gráficos estáticos no relatório PDF;
+* exibir uma seção de visualizações gráficas no relatório;
+* gerar normalmente o PDF quando não existem gráficos compatíveis;
+* executar o fluxo completo de geração de relatório com análise, estatísticas e gráficos.
+* reutilizar o DataFrame já carregado para gerar a prévia do relatório;
+* inserir uma prévia dos dados no PDF;
+* limitar a prévia a 5 linhas;
+* limitar a prévia a 6 colunas;
+* truncar textos longos nas células;
+* exibir valores ausentes como `-`;
+* informar quantas linhas e colunas estão sendo exibidas;
+* informar quando a prévia foi limitada;
+* gerar normalmente o relatório quando a planilha não possui linhas ou colunas disponíveis para prévia.
 ---
 
 ## O que ainda não foi implementado
@@ -612,9 +828,6 @@ Atualmente o sistema permite:
 * Persistência da análise automática completa.
 * Persistência dos gráficos gerados.
 * Persistência da prévia da planilha.
-* Inclusão das estatísticas numéricas detalhadas no relatório PDF.
-* Inserção de gráficos no PDF.
-* Inserção de prévia da planilha no PDF.
 * Persistência dos relatórios gerados no banco de dados.
 * Histórico de relatórios gerados.
 * Autenticação.
@@ -632,46 +845,45 @@ Atualmente o sistema permite:
 
 ## Próxima entrega sugerida
 
-Conversa 14 — Inclusão das estatísticas numéricas no relatório PDF
+Conversa 17 — Persistência dos relatórios gerados
 
-## Objetivo provável da Conversa 14
+## Objetivo provável da Conversa 17
 
-Evoluir o relatório PDF para apresentar as estatísticas básicas das colunas numéricas já calculadas pelo serviço `analyzer.py`.
+Criar uma camada de persistência para registrar cada relatório PDF gerado, relacionando o relatório ao upload que lhe deu origem.
 
-A entrega deverá reutilizar o campo `numeric_statistics` do objeto `DataAnalysisResult`, sem recalcular os indicadores dentro do serviço de relatórios.
+Essa entrega transformará os PDFs gerados em entidades persistentes do sistema, permitindo posteriormente criar um histórico de relatórios.
 
-## Escopo recomendado para a Conversa 14
+## Escopo recomendado para a Conversa 17
 
-* Reutilizar `numeric_statistics` retornado por `analyze_dataframe()`.
-* Inserir no PDF uma tabela de estatísticas por coluna numérica.
-* Exibir para cada coluna:
-  * média;
-  * mediana;
-  * valor mínimo;
-  * valor máximo.
-* Criar formatação padronizada para números decimais.
-* Tratar estatísticas com valor `None`.
-* Tratar planilhas sem colunas numéricas.
-* Criar testes para a preparação das estatísticas.
-* Criar teste de geração do PDF com estatísticas numéricas.
-* Manter gráficos e prévia da tabela fora desta entrega.
+* Criar modelo `ReportRecord`.
+* Relacionar cada relatório a um `UploadRecord`.
+* Persistir:
+  * nome do arquivo PDF;
+  * caminho físico do relatório;
+  * data e hora de geração;
+  * ID do upload relacionado.
+* Registrar o relatório após geração bem-sucedida.
+* Criar serviço específico para persistência de relatórios.
+* Criar relacionamento entre upload e relatórios.
+* Exibir os relatórios gerados na página de detalhes do upload.
+* Criar link para download de um relatório já existente.
+* Criar testes do modelo e do serviço de relatórios persistidos.
+* Criar testes de integração da geração e persistência.
 
-## Manter fora do escopo da Conversa 14
+## Manter fora do escopo da Conversa 17
 
-* Inserção de gráficos Plotly no PDF.
-* Inserção de prévia das linhas da planilha.
-* Persistência dos relatórios no banco de dados.
-* Histórico de relatórios gerados.
-* Seleção de colunas pelo usuário.
-* Seleção de abas de arquivos Excel.
+* Exclusão de relatórios.
+* Regeneração automática de relatórios.
+* Versionamento de relatórios.
 * Autenticação.
+* Permissões por usuário.
 * Deploy.
 
 ---
 
 ## Observação de continuidade
 
-A Conversa 13 concluiu a inclusão da análise automática no relatório PDF.
+A Conversa 16 concluiu a inserção da prévia dos dados no relatório PDF.
 
 O projeto agora possui um fluxo funcional para:
 
@@ -682,22 +894,27 @@ O projeto agora possui um fluxo funcional para:
 5. extrair metadados;
 6. analisar automaticamente a estrutura dos dados;
 7. identificar colunas numéricas e categóricas;
-8. calcular valores ausentes e estatísticas numéricas;
-9. gerar gráficos automáticos com Plotly;
-10. exibir o dashboard;
-11. registrar o upload no banco SQLite;
-12. salvar o caminho físico do arquivo;
-13. listar os uploads anteriores;
-14. abrir os detalhes de cada upload;
-15. reprocessar um upload antigo;
-16. recriar o dashboard a partir de um arquivo salvo;
-17. gerar e baixar um relatório PDF;
-18. incluir no PDF os metadados do upload;
-19. recarregar a planilha original antes da geração do relatório;
+8. calcular valores ausentes;
+9. calcular estatísticas numéricas;
+10. gerar gráficos interativos com Plotly;
+11. exibir os gráficos no dashboard;
+12. registrar o upload no banco SQLite;
+13. salvar o caminho físico do arquivo;
+14. listar uploads anteriores;
+15. abrir os detalhes de cada upload;
+16. reprocessar uploads antigos;
+17. recriar o dashboard a partir de arquivos salvos;
+18. gerar e baixar relatórios PDF;
+19. incluir no PDF os metadados do upload;
 20. incluir no PDF o resumo da análise automática;
-21. apresentar colunas numéricas e categóricas no PDF;
-22. apresentar valores ausentes e percentuais por coluna;
-23. impedir a geração do PDF quando o arquivo original não existe;
-24. validar o comportamento com 48 testes automatizados.
+21. apresentar valores ausentes e percentuais por coluna;
+22. apresentar estatísticas das colunas numéricas;
+23. gerar versões estáticas dos gráficos com Plotly e Kaleido;
+24. inserir gráficos estáticos no PDF;
+25. inserir uma prévia limitada dos dados da planilha;
+26. tratar valores ausentes e textos longos na prévia;
+27. informar os limites aplicados à prévia;
+28. impedir a geração do relatório quando o arquivo original não existe;
+29. validar o comportamento com 67 testes automatizados.
 
-A partir da Conversa 14, o projeto deverá evoluir para a inclusão das estatísticas numéricas detalhadas no relatório PDF.
+A partir da Conversa 17, o projeto deverá evoluir para a persistência dos relatórios gerados no banco de dados.

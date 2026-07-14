@@ -15,7 +15,10 @@ from flask import (
 from werkzeug.utils import secure_filename
 
 from app.services.analyzer import analyze_dataframe
-from app.services.charts import generate_automatic_charts
+from app.services.charts import (
+    generate_automatic_chart_images,
+    generate_automatic_charts,
+)
 from app.services.data_loader import (
     UnsupportedFileTypeError,
     allowed_file,
@@ -298,11 +301,14 @@ def download_upload_report(record_id):
     try:
         dataframe = load_spreadsheet(file_path)
         analysis_result = analyze_dataframe(dataframe)
+        chart_results = generate_automatic_chart_images(dataframe)
 
         report_path = generate_upload_report(
             upload_record=upload_record,
             analysis_result=analysis_result,
             reports_folder=current_app.config["REPORTS_FOLDER"],
+            chart_results=chart_results,
+            dataframe=dataframe,
         )
 
     except UnsupportedFileTypeError:
