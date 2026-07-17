@@ -37,12 +37,36 @@
                     <td>{{ record.column_count }}</td>
                     <td>{{ record.created_at.strftime("%d/%m/%Y %H:%M") }}</td>
                     <td>
-                        <a
-                            href="{{ url_for('main.upload_detail', record_id=record.id) }}"
-                            class="table-action-link"
-                        >
-                            Ver detalhes
-                        </a>
+                        <div class="report-actions">
+                            <a
+                                href="{{ url_for(
+                                    'main.upload_detail',
+                                    record_id=record.id
+                                ) }}"
+                                class="table-action-link"
+                            >
+                                Ver detalhes
+                            </a>
+
+                            <form
+                                method="post"
+                                action="{{ url_for(
+                                    'main.delete_upload',
+                                    record_id=record.id
+                                ) }}"
+                                class="inline-form"
+                                onsubmit="return confirm(
+                                    'Excluir este upload, o arquivo original e todos os relatórios relacionados?'
+                                );"
+                            >
+                                <button
+                                    type="submit"
+                                    class="danger-button"
+                                >
+                                    Excluir
+                                </button>
+                            </form>
+                        </div>
                     </td>
                 </tr>
                 {% endfor %}

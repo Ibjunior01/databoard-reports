@@ -4,6 +4,7 @@ from app.extensions import db
 from app.models import ReportRecord, UploadRecord
 from app.services.history import (
     create_upload_record,
+    delete_upload_record,
     list_upload_records,
 )
 from app.services.report_history import (
@@ -605,3 +606,342 @@ def test_delete_report_redirects_to_upload_detail(
             )
             is None
         )
+
+
+def test_delete_upload_record_removes_files_and_database_records(
+    app,
+    tmp_path,
+):
+    upload_path = tmp_path / "dados.csv"
+    first_report_path = tmp_path / "primeiro.pdf"
+    second_report_path = tmp_path / "segundo.pdf"
+
+    upload_path.write_text(
+        "produto,valor\nA,10\n",
+        encoding="utf-8",
+    )
+
+    first_report_path.write_bytes(
+        b"%PDF-1.4\n"
+    )
+
+    second_report_path.write_bytes(
+        b"%PDF-1.4\n"
+    )
+
+    with app.app_context():
+        upload = create_upload_record(
+            file_name="dados.csv",
+            file_extension=".csv",
+            row_count=1,
+            column_count=2,
+            file_path=str(upload_path),
+        )
+
+        first_report = create_report_record(
+            upload_id=upload.id,
+            file_name=first_report_path.name,
+            file_path=first_report_path,
+        )
+
+        second_report = create_report_record(
+            upload_id=upload.id,
+            file_name=second_report_path.name,
+            file_path=second_report_path,
+        )
+
+        upload_id = upload.id
+        first_report_id = first_report.id
+        second_report_id = second_report.id
+
+        result = delete_upload_record(
+            upload
+        )
+
+        assert result.upload_file_deleted is True
+        assert result.report_files_deleted == 2
+        assert result.report_records_deleted == 2
+        assert result.missing_files == 0
+
+        assert (
+            db.session.get(
+                UploadRecord,
+                upload_id,
+            )
+            is None
+        )
+
+        assert (
+            db.session.get(
+                ReportRecord,
+                first_report_id,
+            )
+            is None
+        )
+
+        assert (
+            db.session.get(
+                ReportRecord,
+                second_report_id,
+            )
+            is None
+        )
+
+    assert not upload_path.exists()
+    assert not first_report_path.exists()
+    assert not second_report_path.exists()
+
+
+def test_delete_upload_record_handles_missing_physical_files(
+    app,
+    tmp_path,
+):
+    missing_upload_path = (
+        tmp_path / "upload-inexistente.csv"
+    )
+
+    missing_report_path = (
+        tmp_path / "relatorio-inexistente.pdf"
+    )
+
+    with app.app_context():
+        upload = create_upload_record(
+            file_name="upload-inexistente.csv",
+            file_extension=".csv",
+            row_count=5,
+            column_count=2,
+            file_path=str(missing_upload_path),
+        )
+
+        report = create_report_record(
+            upload_id=upload.id,
+            file_name=missing_report_path.name,
+            file_path=missing_report_path,
+        )
+
+        upload_id = upload.id
+        report_id = report.id
+
+        result = delete_upload_record(
+            upload
+        )
+
+        assert result.upload_file_deleted is False
+        assert result.report_files_deleted == 0
+        assert result.report_records_deleted == 1
+        assert result.missing_files == 2
+
+        assert (
+            db.session.get(
+                UploadRecord,
+                upload_id,
+            )
+            is None
+        )
+
+        assert (
+            db.session.get(
+                ReportRecord,
+                report_id,
+            )
+            is None
+        )
+
+
+def test_delete_upload_does_not_remove_other_uploads(
+    app,
+    tmp_path,
+):
+    first_path = tmp_path / "primeiro.csv"
+    second_path = tmp_path / "segundo.csv"
+
+    first_path.write_text(
+        "valor\n10\n",
+        encoding="utf-8",
+    )
+
+    second_path.write_text(
+        "valor\n20\n",
+        encoding="utf-8",
+    )
+
+    with app.app_context():
+        first_upload = create_upload_record(
+            file_name="primeiro.csv",
+            file_extension=".csv",
+            row_count=1,
+            column_count=1,
+            file_path=str(first_path),
+        )
+
+        second_upload = create_upload_record(
+            file_name="segundo.csv",
+            file_extension=".csv",
+            row_count=1,
+            column_count=1,
+            file_path=str(second_path),
+        )
+
+        first_id = first_upload.id
+        second_id = second_upload.id
+
+        delete_upload_record(
+            first_upload
+        )
+
+        assert (
+            db.session.get(
+                UploadRecord,
+                first_id,
+            )
+            is None
+        )
+
+        remaining_upload = db.session.get(
+            UploadRecord,
+            second_id,
+        )
+
+        assert remaining_upload is not None
+        assert remaining_upload.file_name == "segundo.csv"
+
+    assert not first_path.exists()
+    assert second_path.exists()
+
+
+def test_upload_detail_contains_delete_upload_form(
+    app,
+    client,
+):
+    with app.app_context():
+        upload = create_upload_record(
+            file_name="dados.csv",
+            file_extension=".csv",
+            row_count=5,
+            column_count=2,
+        )
+
+        upload_id = upload.id
+
+    response = client.get(
+        f"/history/{upload_id}"
+    )
+
+    assert response.status_code == 200
+
+    assert (
+        f"/history/{upload_id}/delete".encode()
+        in response.data
+    )
+
+    assert b'method="post"' in response.data
+    assert b"Excluir upload" in response.data
+
+
+def test_history_page_contains_delete_upload_form(
+    app,
+    client,
+):
+    with app.app_context():
+        upload = create_upload_record(
+            file_name="dados.csv",
+            file_extension=".csv",
+            row_count=5,
+            column_count=2,
+        )
+
+        upload_id = upload.id
+
+    response = client.get(
+        "/history"
+    )
+
+    assert response.status_code == 200
+
+    assert (
+        f"/history/{upload_id}/delete".encode()
+        in response.data
+    )
+
+    assert b'method="post"' in response.data
+    assert b"Excluir" in response.data
+
+
+def test_delete_upload_route_removes_upload_and_related_files(
+    app,
+    client,
+    tmp_path,
+):
+    upload_path = tmp_path / "dados.csv"
+    report_path = tmp_path / "relatorio.pdf"
+
+    upload_path.write_text(
+        "produto,valor\nA,10\n",
+        encoding="utf-8",
+    )
+
+    report_path.write_bytes(
+        b"%PDF-1.4\n"
+    )
+
+    with app.app_context():
+        upload = create_upload_record(
+            file_name="dados.csv",
+            file_extension=".csv",
+            row_count=1,
+            column_count=2,
+            file_path=str(upload_path),
+        )
+
+        report = create_report_record(
+            upload_id=upload.id,
+            file_name=report_path.name,
+            file_path=report_path,
+        )
+
+        upload_id = upload.id
+        report_id = report.id
+
+    response = client.post(
+        f"/history/{upload_id}/delete",
+        follow_redirects=True,
+    )
+
+    assert response.status_code == 200
+
+    assert (
+        "Upload e arquivos associados excluídos com sucesso.".encode(
+            "utf-8"
+        )
+        in response.data
+    )
+
+    assert not upload_path.exists()
+    assert not report_path.exists()
+
+    with app.app_context():
+        assert (
+            db.session.get(
+                UploadRecord,
+                upload_id,
+            )
+            is None
+        )
+
+        assert (
+            db.session.get(
+                ReportRecord,
+                report_id,
+            )
+            is None
+        )
+
+
+def test_delete_upload_route_returns_404_for_missing_record(
+    client,
+):
+    response = client.post(
+        "/history/999999/delete"
+    )
+
+    assert response.status_code == 404

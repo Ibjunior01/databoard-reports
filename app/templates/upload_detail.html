@@ -36,6 +36,25 @@
         >
             Gerar PDF
         </a>
+
+        <form
+            method="post"
+            action="{{ url_for(
+                'main.delete_upload',
+                record_id=record.id
+            ) }}"
+            class="inline-form"
+            onsubmit="return confirm(
+                'Excluir este upload, o arquivo original e todos os relatórios relacionados?'
+            );"
+        >
+            <button
+                type="submit"
+                class="danger-button"
+            >
+                Excluir upload
+            </button>
+        </form>
     </div>
 </section>
 

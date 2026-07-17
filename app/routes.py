@@ -27,6 +27,7 @@ from app.services.data_loader import (
 )
 from app.services.history import (
     create_upload_record,
+    delete_upload_record,
     get_upload_record,
     list_upload_records,
 )
@@ -247,6 +248,70 @@ def upload_detail(record_id):
         "upload_detail.html",
         record=record,
         reports=reports,
+    )
+
+
+@main_bp.post("/history/<int:record_id>/delete")
+def delete_upload(record_id):
+    """
+    Exclui um upload, os relatórios relacionados
+    e os arquivos físicos associados.
+    """
+
+    upload_record = get_upload_record(
+        record_id
+    )
+
+    if upload_record is None:
+        abort(404)
+
+    try:
+        deletion_result = delete_upload_record(
+            upload_record
+        )
+
+    except Exception:
+        current_app.logger.exception(
+            "Falha ao excluir o upload %s.",
+            record_id,
+        )
+
+        flash(
+            (
+                "Não foi possível excluir o upload. "
+                "Tente novamente."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "main.upload_detail",
+                record_id=record_id,
+            )
+        )
+
+    if deletion_result.missing_files > 0:
+        flash(
+            (
+                "Upload e registros associados excluídos. "
+                "Alguns arquivos físicos já não estavam "
+                "disponíveis."
+            ),
+            "success",
+        )
+
+    else:
+        flash(
+            (
+                "Upload e arquivos associados "
+                "excluídos com sucesso."
+            ),
+            "success",
+        )
+
+    return redirect(
+        url_for("main.history")
     )
 
 
