@@ -506,3 +506,102 @@ def test_download_existing_report_handles_missing_file(
         f"Upload #{upload_id}".encode()
         in response.data
     )
+
+
+def test_upload_detail_contains_report_delete_form(
+    app,
+    client,
+    tmp_path,
+):
+    report_path = tmp_path / "relatorio.pdf"
+    report_path.write_bytes(
+        b"%PDF-1.4\n"
+    )
+
+    with app.app_context():
+        upload = create_upload_record(
+            file_name="dados.csv",
+            file_extension=".csv",
+            row_count=5,
+            column_count=2,
+        )
+
+        report = create_report_record(
+            upload_id=upload.id,
+            file_name=report_path.name,
+            file_path=report_path,
+        )
+
+        upload_id = upload.id
+        report_id = report.id
+
+    response = client.get(
+        f"/history/{upload_id}"
+    )
+
+    assert response.status_code == 200
+
+    assert (
+        f"/reports/{report_id}/delete".encode()
+        in response.data
+    )
+
+    assert b'name="redirect_to"' in response.data
+    assert b'value="upload"' in response.data
+
+
+def test_delete_report_redirects_to_upload_detail(
+    app,
+    client,
+    tmp_path,
+):
+    report_path = tmp_path / "relatorio.pdf"
+    report_path.write_bytes(
+        b"%PDF-1.4\n"
+    )
+
+    with app.app_context():
+        upload = create_upload_record(
+            file_name="dados.csv",
+            file_extension=".csv",
+            row_count=5,
+            column_count=2,
+        )
+
+        report = create_report_record(
+            upload_id=upload.id,
+            file_name=report_path.name,
+            file_path=report_path,
+        )
+
+        upload_id = upload.id
+        report_id = report.id
+
+    response = client.post(
+        f"/reports/{report_id}/delete",
+        data={
+            "redirect_to": "upload",
+        },
+        follow_redirects=True,
+    )
+
+    assert response.status_code == 200
+    assert f"Upload #{upload_id}".encode() in response.data
+
+    assert (
+        "Nenhum relatório PDF foi gerado para este upload.".encode(
+            "utf-8"
+        )
+        in response.data
+    )
+
+    assert not report_path.exists()
+
+    with app.app_context():
+        assert (
+            db.session.get(
+                ReportRecord,
+                report_id,
+            )
+            is None
+        )

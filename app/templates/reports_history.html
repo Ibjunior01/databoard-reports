@@ -81,6 +81,32 @@
                                     >
                                         Baixar PDF
                                     </a>
+                                    
+                                    <form
+                                        method="post"
+                                        action="{{ url_for(
+                                            'main.delete_report',
+                                            report_id=report.id
+                                        ) }}"
+                                        class="inline-form"
+                                        onsubmit="return confirm(
+                                            'Excluir este relatório permanentemente?'
+                                        );"
+                                    >
+                                        <input
+                                            type="hidden"
+                                            name="redirect_to"
+                                            value="reports"
+                                        >
+
+                                        <button
+                                            type="submit"
+                                            class="danger-button"
+                                        >
+                                            Excluir
+                                        </button>
+                                    </form>
+
                                 </div>
                             </td>
                         </tr>

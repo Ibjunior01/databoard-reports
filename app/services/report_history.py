@@ -5,9 +5,10 @@ dos relatórios PDF gerados.
 
 from pathlib import Path
 
+from sqlalchemy.orm import joinedload
+
 from app.extensions import db
 from app.models import ReportRecord
-from sqlalchemy.orm import joinedload
 
 
 def create_report_record(
@@ -95,3 +96,42 @@ def get_report_record(
         ReportRecord,
         report_id,
     )
+
+
+def delete_report_record(
+    report_record: ReportRecord,
+) -> bool:
+    """
+    Exclui um relatório persistido.
+
+    O arquivo físico é removido quando ainda existe.
+    O registro do banco é removido mesmo quando o
+    arquivo físico já não está disponível.
+
+    Returns:
+        True: o arquivo físico existia e foi removido.
+        False: o arquivo físico não existia.
+    """
+
+    file_deleted = False
+
+    try:
+        if report_record.file_path:
+            report_path = Path(
+                report_record.file_path
+            )
+
+            if report_path.is_file():
+                report_path.unlink()
+                file_deleted = True
+
+        db.session.delete(
+            report_record
+        )
+        db.session.commit()
+
+        return file_deleted
+
+    except Exception:
+        db.session.rollback()
+        raise

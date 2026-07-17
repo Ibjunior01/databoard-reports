@@ -33,6 +33,7 @@ from app.services.history import (
 
 from app.services.report_history import (
     create_report_record,
+    delete_report_record,
     get_report_record,
     list_report_records,
     list_report_records_by_upload,
@@ -435,4 +436,88 @@ def download_existing_report(report_id):
         mimetype="application/pdf",
         as_attachment=True,
         download_name=report_record.file_name,
+    )
+
+
+@main_bp.post("/reports/<int:report_id>/delete")
+def delete_report(report_id):
+    """
+    Exclui um relatório persistido e remove
+    seu arquivo físico quando disponível.
+    """
+
+    report_record = get_report_record(
+        report_id
+    )
+
+    if report_record is None:
+        abort(404)
+
+    upload_id = report_record.upload_id
+
+    redirect_to = request.form.get(
+        "redirect_to",
+        "reports",
+    )
+
+    try:
+        file_deleted = delete_report_record(
+            report_record
+        )
+
+    except Exception:
+        current_app.logger.exception(
+            "Falha ao excluir o relatório %s.",
+            report_id,
+        )
+
+        flash(
+            (
+                "Não foi possível excluir o relatório. "
+                "Tente novamente."
+            ),
+            "error",
+        )
+
+        if redirect_to == "upload":
+            return redirect(
+                url_for(
+                    "main.upload_detail",
+                    record_id=upload_id,
+                )
+            )
+
+        return redirect(
+            url_for(
+                "main.reports_history"
+            )
+        )
+
+    if file_deleted:
+        flash(
+            "Relatório excluído com sucesso.",
+            "success",
+        )
+
+    else:
+        flash(
+            (
+                "O registro do relatório foi excluído. "
+                "O arquivo físico já não estava disponível."
+            ),
+            "success",
+        )
+
+    if redirect_to == "upload":
+        return redirect(
+            url_for(
+                "main.upload_detail",
+                record_id=upload_id,
+            )
+        )
+
+    return redirect(
+        url_for(
+            "main.reports_history"
+        )
     )

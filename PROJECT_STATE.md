@@ -53,13 +53,14 @@ O projeto segue uma identidade visual dark/profissional, inspirada em dashboards
 
 ## Entrega atual
 
-Conversa 18 — Histórico geral de relatórios gerados
+Conversa 19 — Exclusão segura de relatórios persistidos
 
-Objetivo da entrega atual
+## Objetivo da entrega atual
 
-Criar uma página central para consultar todos os relatórios PDF persistidos, independentemente do upload de origem.
+Permitir a exclusão segura de relatórios PDF, removendo o arquivo físico quando disponível e excluindo o respectivo registro do banco de dados.
 
-A entrega permite visualizar os relatórios gerados, identificar o arquivo de origem, acessar os detalhes do upload e baixar novamente o PDF existente.
+A exclusão utiliza requisição `POST`, exige confirmação na interface e funciona tanto no histórico geral de relatórios quanto na página de detalhes do upload.
+
 
 ---
 
@@ -625,6 +626,38 @@ Teste do estado vazio criado.
 Teste do link “Relatórios” no menu criado.
 Todos os testes anteriores permaneceram funcionando.
 O comando python -m pytest retornou 81 passed.
+
+### Conversa 19 — Exclusão segura de relatórios persistidos
+
+* Função `delete_report_record()` criada.
+* Exclusão de registros da tabela `report_records` implementada.
+* Remoção do arquivo PDF físico implementada.
+* Registro do banco passou a ser removido mesmo quando o arquivo físico já não existe.
+* Retorno booleano criado para informar se o arquivo físico foi removido.
+* Commit e rollback implementados no serviço de exclusão.
+* Rota POST `/reports/<int:report_id>/delete` criada.
+* Exclusões por requisição GET foram evitadas.
+* Tratamento 404 implementado para relatórios inexistentes.
+* Tratamento de falhas inesperadas com log da aplicação implementado.
+* Mensagens de sucesso e erro adicionadas.
+* Redirecionamento após exclusão implementado.
+* Usuário pode retornar ao histórico geral de relatórios.
+* Usuário pode retornar à página de detalhes do upload.
+* Botão “Excluir” adicionado ao histórico geral de relatórios.
+* Botão “Excluir” adicionado à lista de relatórios de cada upload.
+* Confirmação JavaScript adicionada antes da exclusão.
+* Campo oculto `redirect_to` criado para controlar o redirecionamento.
+* Estilo visual de ação destrutiva adicionado ao `style.css`.
+* Teste de exclusão do arquivo físico e registro criado.
+* Teste de exclusão quando o arquivo físico não existe criado.
+* Teste de exibição do formulário de exclusão criado.
+* Teste da rota de exclusão criado.
+* Teste de erro 404 criado.
+* Teste do formulário na página de detalhes do upload criado.
+* Teste do redirecionamento para os detalhes do upload criado.
+* Todos os testes anteriores permaneceram funcionando.
+* O comando `python -m pytest` retornou `88 passed`.
+
 ---
 
 ## Estrutura atual esperada
@@ -806,7 +839,7 @@ tests/test_report_history.py
 PROJECT_STATE.md
 ```
 
-
+```text
 ## Arquivos modificados na Conversa 18
 app/services/report_history.py
 app/routes.py
@@ -816,6 +849,20 @@ app/static/css/style.css
 tests/test_report_history.py
 PROJECT_STATE.md
 ```
+
+```text
+## Arquivos modificados na Conversa 19
+
+app/services/report_history.py
+app/routes.py
+app/templates/reports_history.html
+app/templates/upload_detail.html
+app/static/css/style.css
+tests/test_report_history.py
+tests/test_history.py
+PROJECT_STATE.md
+```
+
 
 ```markdown
 ## Resultado atual dos testes
@@ -829,7 +876,7 @@ python -m pytest
 Resultado validado na Conversa 18:
 
 ```text
-81 passed in 23.28s
+88 passed in 23.28s
 ```
 ---
 
@@ -950,17 +997,26 @@ Atualmente o sistema permite:
 * visualizar os relatórios do mais recente para o mais antigo;
 * visualizar um estado vazio quando nenhum relatório foi gerado;
 * acessar a página de relatórios pelo menu principal;
+* excluir relatórios por requisição `POST`;
+* remover o arquivo PDF físico quando ele existe;
+* remover o registro do relatório do banco de dados;
+* excluir registros mesmo quando o arquivo físico já não está disponível;
+* confirmar a exclusão antes do envio do formulário;
+* excluir relatórios pelo histórico geral;
+* excluir relatórios pela página de detalhes do upload;
+* retornar à página correta após a exclusão;
+* tratar relatórios inexistentes com resposta 404;
+* validar o comportamento da aplicação com 88 testes automatizados.
 
 ---
 
 ## O que ainda não foi implementado
 
-* Persistência da análise automática completa.
+* Exclusão de uploads.
+* Remoção automática dos relatórios ao excluir um upload.
+* Persistência completa da análise automática.
 * Persistência dos gráficos gerados.
 * Persistência da prévia da planilha.
-* Exclusão de relatórios.
-* Exclusão de registros de upload.
-* Limpeza automática de arquivos físicos.
 * Autenticação.
 * Permissões por usuário.
 * Filtros avançados.
@@ -971,61 +1027,62 @@ Atualmente o sistema permite:
 * Deploy.
 
 
+
 ---
 
 ## Próxima entrega sugerida
 
-Conversa 19 — Exclusão segura de relatórios
+Conversa 20 — Exclusão segura de uploads e arquivos associados
 
-## Objetivo provável da Conversa 19
+## Objetivo provável da Conversa 20
 
-Permitir a exclusão de um relatório persistido, removendo de forma segura o registro do banco de dados e o arquivo PDF correspondente.
+Permitir a exclusão completa de um upload, removendo seu arquivo CSV ou Excel, os PDFs relacionados e os respectivos registros do banco de dados.
 
-## Escopo recomendado para a Conversa 19
+## Escopo recomendado para a Conversa 20
 
-Criar serviço para exclusão de relatório.
-Validar a existência do registro.
-Remover o arquivo PDF quando ele existir.
-Remover o registro do banco de dados.
-Implementar commit e rollback.
-Criar rota POST /reports/<int:report_id>/delete.
-Adicionar botão de exclusão no histórico geral.
-Adicionar botão de exclusão na página de detalhes do upload.
-Exibir mensagem de sucesso após a exclusão.
-Tratar relatório inexistente com erro 404.
-Tratar registro existente sem arquivo físico.
-Criar testes unitários e de integração.
+* Criar serviço para exclusão de upload.
+* Localizar os relatórios relacionados ao upload.
+* Remover os arquivos PDF associados.
+* Remover o arquivo original da planilha.
+* Excluir os registros de relatórios.
+* Excluir o registro do upload.
+* Utilizar commit e rollback.
+* Criar rota POST `/history/<int:record_id>/delete`.
+* Adicionar botão de exclusão na página de detalhes.
+* Adicionar confirmação antes da exclusão.
+* Redirecionar para o histórico após sucesso.
+* Tratar arquivos físicos inexistentes.
+* Tratar upload inexistente com erro 404.
+* Criar testes unitários e de integração.
 
-## Manter fora do escopo da Conversa 19
-Exclusão de uploads.
-Exclusão em massa.
-Lixeira ou restauração.
-Versionamento de relatórios.
-Autenticação.
-Permissões por usuário.
-Deploy.
+## Manter fora do escopo da Conversa 20
+
+* Exclusão em massa.
+* Lixeira e restauração.
+* Autenticação.
+* Permissões por usuário.
+* Migrações de banco.
+* Deploy.
+
 
 
 ---
 ## Observação de continuidade
 
-A Conversa 17 concluiu a persistência dos relatórios PDF gerados.
-
-A Conversa 18 concluiu a página geral de histórico de relatórios.
+A Conversa 19 concluiu a exclusão segura de relatórios persistidos.
 
 O projeto agora permite:
 
-1 enviar e processar planilhas;
-2 analisar automaticamente os dados;
-3 gerar gráficos interativos;
-4 registrar uploads no banco;
-5 reprocessar uploads antigos;
-6 gerar relatórios PDF com análise, estatísticas, gráficos e prévia;
-7 persistir os relatórios gerados;
-8 listar relatórios por upload;
-9 consultar todos os relatórios em uma página central;
-10 acessar o upload de origem;
-11 baixar novamente PDFs existentes;
-12 validar o comportamento com 81 testes automatizados.
+1. enviar e processar planilhas;
+2. analisar automaticamente os dados;
+3. gerar gráficos interativos;
+4. registrar e reprocessar uploads;
+5. gerar relatórios PDF com análise, estatísticas, gráficos e prévia;
+6. persistir os relatórios no banco;
+7. consultar relatórios por upload ou em uma página geral;
+8. baixar novamente PDFs existentes;
+9. excluir relatórios e seus arquivos físicos;
+10. tratar relatórios cujo arquivo físico já não existe;
+11. validar o comportamento com 88 testes automatizados.
 
-A partir da Conversa 19, o projeto deverá evoluir para a exclusão segura de relatórios persistidos.
+A partir da Conversa 20, o projeto deverá evoluir para a exclusão segura de uploads e de todos os arquivos associados.
