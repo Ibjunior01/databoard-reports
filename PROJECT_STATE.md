@@ -53,15 +53,13 @@ O projeto segue uma identidade visual dark/profissional, inspirada em dashboards
 
 ## Entrega atual
 
-Conversa 16 — Inserção da prévia dos dados no relatório PDF
+Conversa 17 — Persistência dos relatórios gerados
 
-## Objetivo da entrega atual
+### Objetivo da entrega atual
 
-Evoluir o relatório PDF para incluir uma prévia limitada dos dados da planilha processada.
+Criar uma camada de persistência para registrar cada relatório PDF gerado, relacionando o relatório ao upload que lhe deu origem.
 
-A entrega reutiliza o mesmo DataFrame já carregado durante a geração do relatório, evitando uma nova leitura do arquivo e mantendo a separação de responsabilidades entre as camadas da aplicação.
-
-A prévia foi limitada para preservar a legibilidade do documento em formato A4.
+A entrega transforma os arquivos PDF em entidades persistentes do sistema, permitindo consultar os relatórios já gerados, exibi-los na página de detalhes do upload e realizar novamente o download sem precisar recriar o documento.
 
 ---
 
@@ -544,6 +542,61 @@ A prévia foi limitada para preservar a legibilidade do documento em formato A4.
 * Todos os testes anteriores permaneceram funcionando.
 * O comando `python -m pytest` retornou `67 passed`.
 
+### Conversa 17 — Persistência dos relatórios gerados
+
+* Modelo `ReportRecord` criado.
+* Tabela `report_records` criada.
+* Relacionamento entre `UploadRecord` e `ReportRecord` implementado.
+* Um upload passou a poder possuir vários relatórios.
+* Cada relatório passou a manter referência ao upload que lhe deu origem.
+* Campo `upload_id` criado como chave estrangeira para `upload_records.id`.
+* Campo `file_name` criado para armazenar o nome do arquivo PDF.
+* Campo `file_path` criado para armazenar o caminho físico do relatório.
+* Campo `created_at` criado para registrar a data e hora de geração.
+* Índice adicionado ao campo `upload_id`.
+* Relacionamento `UploadRecord.reports` criado.
+* Relacionamento `ReportRecord.upload` criado.
+* Configuração `cascade="all, delete-orphan"` adicionada ao relacionamento.
+* Serviço `app/services/report_history.py` criado.
+* Função `create_report_record()` criada.
+* Persistência de relatórios com commit e rollback implementada.
+* Função `list_report_records_by_upload()` criada.
+* Relatórios passaram a ser listados do mais recente para o mais antigo.
+* Função `get_report_record()` criada.
+* Rota de geração de relatório atualizada.
+* Registro no banco passou a ocorrer somente após a geração bem-sucedida do PDF.
+* Nome e caminho físico do PDF gerado passaram a ser persistidos.
+* Página de detalhes do upload atualizada.
+* Relatórios relacionados ao upload passaram a ser enviados ao template.
+* Nova seção “Relatórios PDF” adicionada à página de detalhes.
+* Nome, ID e data de geração dos relatórios passaram a ser exibidos.
+* Estado vazio criado para uploads que ainda não possuem relatórios.
+* Link “Baixar PDF” adicionado para cada relatório persistido.
+* Rota GET `/reports/<int:report_id>/download` criada.
+* Download de relatórios existentes implementado.
+* Tratamento 404 criado para relatório inexistente.
+* Validação da existência física do PDF implementada.
+* Mensagem amigável adicionada quando o arquivo físico do relatório não existe mais.
+* Redirecionamento para a página de detalhes do upload implementado quando o PDF não é encontrado.
+* Pasta temporária de relatórios adicionada à configuração dos testes.
+* Testes deixaram de gerar PDFs dentro da pasta real da aplicação.
+* Arquivo `tests/test_report_history.py` criado.
+* Teste de persistência de relatório criado.
+* Teste do relacionamento entre upload e relatório criado.
+* Teste da listagem de relatórios por upload criado.
+* Teste da busca individual de relatório criado.
+* Teste de integração entre geração física e persistência criado.
+* Teste de exibição dos relatórios na página de detalhes criado.
+* Teste do estado vazio de relatórios criado.
+* Teste de download de relatório existente criado.
+* Teste de erro 404 para relatório inexistente criado.
+* Teste para arquivo físico de relatório inexistente criado.
+* Correção de recuo realizada na seção “Prévia dos dados” do relatório PDF.
+* A prévia do PDF passou a ser inserida corretamente mesmo quando a planilha não possui colunas numéricas.
+* Todos os testes anteriores permaneceram funcionando.
+* O comando `python -m pytest` retornou `76 passed`.
+
+
 ---
 
 ## Estrutura atual esperada
@@ -711,6 +764,20 @@ app/routes.py
 tests/test_reports.py
 PROJECT_STATE.md
 ```
+## Arquivos modificados na Conversa 17
+
+```text
+app/models.py
+app/routes.py
+app/services/reports.py
+app/services/report_history.py
+app/templates/upload_detail.html
+conftest.py
+tests/test_history.py
+tests/test_report_history.py
+PROJECT_STATE.md
+```
+
 
 ```markdown
 ## Resultado atual dos testes
@@ -719,23 +786,13 @@ Comando executado:
 
 ```bash
 python -m pytest
-
-## Resultado validado na Conversa 16:
-
-```text
-collected 67 items
-
-tests/test_analyzer.py .........                                           [ 13%]
-tests/test_charts.py ..........                                            [ 28%]
-tests/test_data_loader.py .........                                        [ 41%]
-tests/test_history.py ...............                                      [ 64%]
-tests/test_reports.py ...................                                  [ 92%]
-tests/test_routes.py ....                                                  [ 98%]
-tests/test_upload.py .                                                     [100%]
-
-67 passed in 26.06s
 ```
 
+Resultado validado na Conversa 17:
+
+```text
+76 passed in 23.28s
+```
 ---
 
 ## Estado funcional atual
@@ -833,6 +890,21 @@ Atualmente o sistema permite:
 * informar quantas linhas e colunas estão sendo exibidas;
 * informar quando a prévia foi limitada;
 * gerar normalmente o relatório quando a planilha não possui linhas ou colunas disponíveis para prévia.
+* registrar cada relatório PDF gerado no banco SQLite;
+* relacionar cada relatório ao upload que lhe deu origem;
+* armazenar o nome do arquivo PDF;
+* armazenar o caminho físico do relatório;
+* armazenar a data e hora de geração do relatório;
+* consultar os relatórios relacionados a um upload;
+* listar os relatórios do mais recente para o mais antigo;
+* exibir os relatórios na página de detalhes do upload;
+* exibir um estado vazio quando nenhum relatório foi gerado;
+* baixar novamente um relatório já existente;
+* impedir o download de registros de relatório inexistentes;
+* informar quando o registro existe, mas o arquivo físico do PDF não está mais disponível;
+* manter a geração física do PDF separada da persistência dos relatórios;
+* validar o comportamento da aplicação com 76 testes automatizados.
+
 ---
 
 ## O que ainda não foi implementado
@@ -840,62 +912,68 @@ Atualmente o sistema permite:
 * Persistência da análise automática completa.
 * Persistência dos gráficos gerados.
 * Persistência da prévia da planilha.
-* Persistência dos relatórios gerados no banco de dados.
-* Histórico de relatórios gerados.
+* Página geral de histórico de relatórios.
+* Exclusão de relatórios.
+* Exclusão de registros de upload.
 * Autenticação.
 * Deploy.
 * Pipeline CI/CD.
 * Filtros avançados.
 * Dashboards customizáveis.
 * Upload múltiplo.
-* Exclusão de registros de histórico.
 * Edição de registros de histórico.
 * Migrações profissionais de banco com Flask-Migrate.
 * Permissões por usuário.
+
 
 ---
 
 ## Próxima entrega sugerida
 
-Conversa 17 — Persistência dos relatórios gerados
+Conversa 18 — Histórico geral de relatórios gerados
 
-## Objetivo provável da Conversa 17
+## Objetivo provável da Conversa 18
 
-Criar uma camada de persistência para registrar cada relatório PDF gerado, relacionando o relatório ao upload que lhe deu origem.
+Criar uma página central para consultar todos os relatórios PDF gerados pela aplicação, independentemente do upload de origem.
 
-Essa entrega transformará os PDFs gerados em entidades persistentes do sistema, permitindo posteriormente criar um histórico de relatórios.
+Essa entrega permitirá visualizar os documentos gerados em um histórico próprio, identificar o arquivo de origem e acessar novamente cada relatório.
 
-## Escopo recomendado para a Conversa 17
+## Escopo recomendado para a Conversa 18
 
-* Criar modelo `ReportRecord`.
-* Relacionar cada relatório a um `UploadRecord`.
-* Persistir:
-  * nome do arquivo PDF;
-  * caminho físico do relatório;
+* Criar função para listar todos os relatórios persistidos.
+* Carregar o upload relacionado junto com cada relatório.
+* Criar rota GET `/reports`.
+* Criar template `reports_history.html`.
+* Adicionar o item “Relatórios” ao menu principal.
+* Exibir:
+
+  * ID do relatório;
+  * nome do PDF;
+  * upload de origem;
   * data e hora de geração;
-  * ID do upload relacionado.
-* Registrar o relatório após geração bem-sucedida.
-* Criar serviço específico para persistência de relatórios.
-* Criar relacionamento entre upload e relatórios.
-* Exibir os relatórios gerados na página de detalhes do upload.
-* Criar link para download de um relatório já existente.
-* Criar testes do modelo e do serviço de relatórios persistidos.
-* Criar testes de integração da geração e persistência.
+  * link para os detalhes do upload;
+  * link para download do PDF.
+* Criar estado vazio para ausência de relatórios.
+* Criar testes do serviço de listagem.
+* Criar testes da página geral de relatórios.
+* Criar testes dos links de navegação e download.
+* Manter a ordenação do mais recente para o mais antigo.
 
-## Manter fora do escopo da Conversa 17
+## Manter fora do escopo da Conversa 18
 
 * Exclusão de relatórios.
 * Regeneração automática de relatórios.
 * Versionamento de relatórios.
+* Filtros avançados.
 * Autenticação.
 * Permissões por usuário.
 * Deploy.
 
----
 
+---
 ## Observação de continuidade
 
-A Conversa 16 concluiu a inserção da prévia dos dados no relatório PDF.
+A Conversa 17 concluiu a persistência dos relatórios PDF gerados.
 
 O projeto agora possui um fluxo funcional para:
 
@@ -927,6 +1005,11 @@ O projeto agora possui um fluxo funcional para:
 26. tratar valores ausentes e textos longos na prévia;
 27. informar os limites aplicados à prévia;
 28. impedir a geração do relatório quando o arquivo original não existe;
-29. validar o comportamento com 67 testes automatizados.
+29. registrar no banco cada relatório gerado;
+30. relacionar relatórios aos respectivos uploads;
+31. listar os relatórios na página de detalhes do upload;
+32. baixar novamente relatórios já existentes;
+33. tratar registros e arquivos físicos de relatórios inexistentes;
+34. validar o comportamento com 76 testes automatizados.
 
-A partir da Conversa 17, o projeto deverá evoluir para a persistência dos relatórios gerados no banco de dados.
+A partir da Conversa 18, o projeto deverá evoluir para uma página geral de histórico de relatórios gerados.
