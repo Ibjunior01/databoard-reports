@@ -1,9 +1,14 @@
 from io import BytesIO
 
 from app.extensions import db
-from app.models import UploadRecord
-from app.services.history import create_upload_record, list_upload_records
-
+from app.models import ReportRecord, UploadRecord
+from app.services.history import (
+    create_upload_record,
+    list_upload_records,
+)
+from app.services.report_history import (
+    create_report_record,
+)
 
 def test_create_upload_record_persists_data(app):
     with app.app_context():
@@ -287,6 +292,15 @@ def test_download_upload_report_returns_pdf(
     assert generated_reports[0].is_file()
     assert generated_reports[0].stat().st_size > 0
 
+    with app.app_context():
+        report_record = ReportRecord.query.one()
+
+        assert report_record.upload_id == record_id
+        assert report_record.file_name == generated_reports[0].name
+        assert report_record.file_path == str(
+            generated_reports[0]
+        )
+
 
 def test_download_upload_report_missing_physical_file(
     app,
@@ -326,3 +340,169 @@ def test_download_upload_report_missing_physical_file(
     generated_reports = list(reports_folder.glob("*.pdf"))
 
     assert generated_reports == []
+
+def test_upload_detail_displays_persisted_reports(
+    app,
+    client,
+    tmp_path,
+):
+    report_path = tmp_path / "relatorio_vendas.pdf"
+    report_path.write_bytes(b"%PDF-1.4\n")
+
+    with app.app_context():
+        upload = create_upload_record(
+            file_name="vendas.csv",
+            file_extension=".csv",
+            row_count=10,
+            column_count=3,
+            file_path="app/uploads/vendas.csv",
+        )
+
+        report = create_report_record(
+            upload_id=upload.id,
+            file_name=report_path.name,
+            file_path=report_path,
+        )
+
+        upload_id = upload.id
+        report_id = report.id
+
+    response = client.get(
+        f"/history/{upload_id}"
+    )
+
+    assert response.status_code == 200
+    assert b"Relat" in response.data
+    assert b"relatorio_vendas.pdf" in response.data
+    assert (
+        f"/reports/{report_id}/download".encode()
+        in response.data
+    )
+
+
+def test_upload_detail_displays_empty_report_state(
+    app,
+    client,
+):
+    with app.app_context():
+        upload = create_upload_record(
+            file_name="vendas.csv",
+            file_extension=".csv",
+            row_count=10,
+            column_count=3,
+        )
+
+        upload_id = upload.id
+
+    response = client.get(
+        f"/history/{upload_id}"
+    )
+
+    assert response.status_code == 200
+
+    assert (
+        "Nenhum relatório PDF foi gerado para este upload.".encode(
+            "utf-8"
+        )
+        in response.data
+    )
+
+
+def test_download_existing_report_returns_pdf(
+    app,
+    client,
+    tmp_path,
+):
+    report_path = tmp_path / "relatorio_existente.pdf"
+    report_path.write_bytes(
+        b"%PDF-1.4\narquivo de teste"
+    )
+
+    with app.app_context():
+        upload = create_upload_record(
+            file_name="dados.csv",
+            file_extension=".csv",
+            row_count=5,
+            column_count=2,
+        )
+
+        report = create_report_record(
+            upload_id=upload.id,
+            file_name=report_path.name,
+            file_path=report_path,
+        )
+
+        report_id = report.id
+
+    response = client.get(
+        f"/reports/{report_id}/download"
+    )
+
+    assert response.status_code == 200
+    assert response.mimetype == "application/pdf"
+    assert response.data.startswith(b"%PDF")
+
+    content_disposition = response.headers.get(
+        "Content-Disposition",
+        "",
+    )
+
+    assert "attachment" in content_disposition
+    assert "relatorio_existente.pdf" in content_disposition
+
+
+def test_download_existing_report_returns_404(
+    client,
+):
+    response = client.get(
+        "/reports/999999/download"
+    )
+
+    assert response.status_code == 404
+
+
+def test_download_existing_report_handles_missing_file(
+    app,
+    client,
+    tmp_path,
+):
+    missing_report_path = (
+        tmp_path
+        / "relatorio-inexistente.pdf"
+    )
+
+    with app.app_context():
+        upload = create_upload_record(
+            file_name="dados.csv",
+            file_extension=".csv",
+            row_count=5,
+            column_count=2,
+        )
+
+        report = create_report_record(
+            upload_id=upload.id,
+            file_name="relatorio-inexistente.pdf",
+            file_path=missing_report_path,
+        )
+
+        upload_id = upload.id
+        report_id = report.id
+
+    response = client.get(
+        f"/reports/{report_id}/download",
+        follow_redirects=True,
+    )
+
+    assert response.status_code == 200
+
+    assert (
+        "O arquivo físico deste relatório não foi encontrado no servidor.".encode(
+            "utf-8"
+        )
+        in response.data
+    )
+
+    assert (
+        f"Upload #{upload_id}".encode()
+        in response.data
+    )

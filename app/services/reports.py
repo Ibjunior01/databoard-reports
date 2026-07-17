@@ -1083,7 +1083,7 @@ def generate_upload_report(
             statistics_table
         )
 
-        elements.extend(
+    elements.extend(
         [
             Spacer(
                 1,

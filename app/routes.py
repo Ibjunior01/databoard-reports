@@ -30,6 +30,12 @@ from app.services.history import (
     get_upload_record,
     list_upload_records,
 )
+
+from app.services.report_history import (
+    create_report_record,
+    get_report_record,
+    list_report_records_by_upload,
+)
 from app.services.reports import generate_upload_report
 
 
@@ -90,6 +96,29 @@ def get_existing_upload_file_path(upload_record) -> Path | None:
 
     return file_path
 
+def get_existing_report_file_path(
+    report_record,
+) -> Path | None:
+    """
+    Retorna o caminho físico de um relatório quando
+    o arquivo ainda existe no servidor.
+
+    Returns:
+        Path: caminho válido para o PDF.
+        None: quando o caminho não existe ou não é um arquivo.
+    """
+
+    if not report_record.file_path:
+        return None
+
+    report_path = Path(
+        report_record.file_path
+    )
+
+    if not report_path.is_file():
+        return None
+
+    return report_path
 
 @main_bp.route("/")
 def index():
@@ -195,9 +224,14 @@ def upload_detail(record_id):
     if record is None:
         abort(404)
 
+    reports = list_report_records_by_upload(
+        upload_id=record.id,
+    )
+
     return render_template(
         "upload_detail.html",
         record=record,
+        reports=reports,
     )
 
 
@@ -311,6 +345,12 @@ def download_upload_report(record_id):
             dataframe=dataframe,
         )
 
+        create_report_record(
+            upload_id=upload_record.id,
+            file_name=report_path.name,
+            file_path=report_path,
+        )
+
     except UnsupportedFileTypeError:
         flash(
             "O tipo do arquivo salvo não é suportado para geração do relatório.",
@@ -340,4 +380,45 @@ def download_upload_report(record_id):
         mimetype="application/pdf",
         as_attachment=True,
         download_name=report_path.name,
+    )
+
+@main_bp.get("/reports/<int:report_id>/download")
+def download_existing_report(report_id):
+    """
+    Disponibiliza para download um relatório
+    anteriormente gerado e registrado no banco.
+    """
+
+    report_record = get_report_record(
+        report_id
+    )
+
+    if report_record is None:
+        abort(404)
+
+    report_path = get_existing_report_file_path(
+        report_record
+    )
+
+    if report_path is None:
+        flash(
+            (
+                "O arquivo físico deste relatório "
+                "não foi encontrado no servidor."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "main.upload_detail",
+                record_id=report_record.upload_id,
+            )
+        )
+
+    return send_file(
+        report_path.resolve(),
+        mimetype="application/pdf",
+        as_attachment=True,
+        download_name=report_record.file_name,
     )

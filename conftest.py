@@ -15,12 +15,13 @@ from app.extensions import db
 @pytest.fixture()
 def app(tmp_path):
     app = create_app(
-        {
-            "TESTING": True,
-            "UPLOAD_FOLDER": tmp_path,
-            "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:",
-        }
-    )
+    {
+        "TESTING": True,
+        "UPLOAD_FOLDER": tmp_path / "uploads",
+        "REPORTS_FOLDER": tmp_path / "reports",
+        "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:",
+    }
+)
 
     with app.app_context():
         db.drop_all()

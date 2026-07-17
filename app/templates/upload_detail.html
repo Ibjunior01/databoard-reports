@@ -18,7 +18,10 @@
         </a>
 
         <a
-            href="{{ url_for('main.reprocess_upload', record_id=record.id) }}"
+            href="{{ url_for(
+                'main.reprocess_upload',
+                record_id=record.id
+            ) }}"
             class="secondary-button"
         >
             Reprocessar upload
@@ -77,5 +80,71 @@
             <strong>{{ record.file_path }}</strong>
         </div>
     </div>
+</section>
+
+<section class="detail-card">
+    <div class="section-header">
+        <div>
+            <p class="page-subtitle">Documentos gerados</p>
+            <h2>Relatórios PDF</h2>
+        </div>
+    </div>
+
+    {% if reports %}
+        <div class="table-wrapper">
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Arquivo</th>
+                        <th>Gerado em</th>
+                        <th>Ação</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for report in reports %}
+                        <tr>
+                            <td>#{{ report.id }}</td>
+
+                            <td>
+                                {{ report.file_name }}
+                            </td>
+
+                            <td>
+                                {{
+                                    report.created_at.strftime(
+                                        "%d/%m/%Y %H:%M"
+                                    )
+                                }}
+                            </td>
+
+                            <td>
+                                <a
+                                    href="{{ url_for(
+                                        'main.download_existing_report',
+                                        report_id=report.id
+                                    ) }}"
+                                    class="secondary-button"
+                                >
+                                    Baixar PDF
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <p>
+                Nenhum relatório PDF foi gerado para este upload.
+            </p>
+
+            <p>
+                Use o botão “Gerar PDF” para criar o primeiro relatório.
+            </p>
+        </div>
+    {% endif %}
 </section>
 {% endblock %}
