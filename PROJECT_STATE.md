@@ -24,6 +24,7 @@ O projeto está sendo construído em entregas pequenas e sequenciais, com foco e
 * Flask
 * Pandas
 * Plotly
+* Kaleido
 * SQLite
 * SQLAlchemy
 * Flask-SQLAlchemy
@@ -691,6 +692,8 @@ app/services/reports.py
 tests/test_reports.py
 PROJECT_STATE.md
 ```
+
+## Arquivos modificados na Conversa 15
 ```text
 requirements.txt
 app/services/charts.py
@@ -707,21 +710,30 @@ app/services/reports.py
 app/routes.py
 tests/test_reports.py
 PROJECT_STATE.md
+```
 
 ```markdown
-## Resultado esperado dos testes
+## Resultado atual dos testes
 
-Use o número exibido no seu terminal. Caso tenham sido adicionados exatamente os seis testes planejados nesta conversa, o bloco deverá ficar assim:
+Comando executado:
 
 ```bash
 python -m pytest
 
-```
-
-Resultado validado na Conversa 15:
+## Resultado validado na Conversa 16:
 
 ```text
-67 passed
+collected 67 items
+
+tests/test_analyzer.py .........                                           [ 13%]
+tests/test_charts.py ..........                                            [ 28%]
+tests/test_data_loader.py .........                                        [ 41%]
+tests/test_history.py ...............                                      [ 64%]
+tests/test_reports.py ...................                                  [ 92%]
+tests/test_routes.py ....                                                  [ 98%]
+tests/test_upload.py .                                                     [100%]
+
+67 passed in 26.06s
 ```
 
 ---
@@ -776,7 +788,7 @@ Atualmente o sistema permite:
 * quebrar nomes longos de arquivos em múltiplas linhas;
 * receber erro 404 ao solicitar relatório de upload inexistente;
 * acessar a geração de PDF pela página de detalhes do upload;
-  * recarregar o arquivo original antes de gerar o relatório PDF;
+* recarregar o arquivo original antes de gerar o relatório PDF;
 * validar a existência física do arquivo antes da geração do PDF;
 * reutilizar o serviço de carregamento de planilhas na geração do relatório;
 * reutilizar o serviço de análise automática na geração do relatório;
