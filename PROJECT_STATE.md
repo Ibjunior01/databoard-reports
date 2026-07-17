@@ -999,7 +999,7 @@ O projeto agora possui um fluxo funcional para:
 20. incluir no PDF o resumo da análise automática;
 21. apresentar valores ausentes e percentuais por coluna;
 22. apresentar estatísticas das colunas numéricas;
-23. gerar versões estáticas dos gráficos com Plotly e Kaleido;
+23. gerar versões estáticas dos gráficos com Plotly e Kaleido;git add
 24. inserir gráficos estáticos no PDF;
 25. inserir uma prévia limitada dos dados da planilha;
 26. tratar valores ausentes e textos longos na prévia;
