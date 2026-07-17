@@ -34,6 +34,7 @@ from app.services.history import (
 from app.services.report_history import (
     create_report_record,
     get_report_record,
+    list_report_records,
     list_report_records_by_upload,
 )
 from app.services.reports import generate_upload_report
@@ -214,6 +215,19 @@ def history():
     return render_template(
         "history.html",
         records=records,
+    )
+
+@main_bp.get("/reports")
+def reports_history():
+    """
+    Exibe todos os relatórios PDF persistidos.
+    """
+
+    reports = list_report_records()
+
+    return render_template(
+        "reports_history.html",
+        reports=reports,
     )
 
 

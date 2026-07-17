@@ -53,13 +53,13 @@ O projeto segue uma identidade visual dark/profissional, inspirada em dashboards
 
 ## Entrega atual
 
-Conversa 17 — Persistência dos relatórios gerados
+Conversa 18 — Histórico geral de relatórios gerados
 
-### Objetivo da entrega atual
+Objetivo da entrega atual
 
-Criar uma camada de persistência para registrar cada relatório PDF gerado, relacionando o relatório ao upload que lhe deu origem.
+Criar uma página central para consultar todos os relatórios PDF persistidos, independentemente do upload de origem.
 
-A entrega transforma os arquivos PDF em entidades persistentes do sistema, permitindo consultar os relatórios já gerados, exibi-los na página de detalhes do upload e realizar novamente o download sem precisar recriar o documento.
+A entrega permite visualizar os relatórios gerados, identificar o arquivo de origem, acessar os detalhes do upload e baixar novamente o PDF existente.
 
 ---
 
@@ -596,7 +596,35 @@ A entrega transforma os arquivos PDF em entidades persistentes do sistema, permi
 * Todos os testes anteriores permaneceram funcionando.
 * O comando `python -m pytest` retornou `76 passed`.
 
-
+### Conversa 18 — Histórico geral de relatórios gerados
+Função list_report_records() criada.
+Listagem geral de relatórios implementada.
+Relatórios ordenados do mais recente para o mais antigo.
+Relacionamento com UploadRecord carregado junto com cada relatório.
+Uso de joinedload() implementado para evitar consultas adicionais ao banco.
+Rota GET /reports criada.
+Template reports_history.html criado.
+Página geral de histórico de relatórios implementada.
+Página passou a exibir:
+ID do relatório;
+nome do arquivo PDF;
+upload de origem;
+data e hora de geração;
+link para os detalhes do upload;
+link para download do PDF.
+Estado vazio criado para quando não houver relatórios.
+Item “Relatórios” adicionado ao menu principal.
+Destaque do item ativo no menu implementado.
+Estilos da página de relatórios adicionados ao style.css.
+Teste da listagem geral de relatórios criado.
+Teste da ordenação dos relatórios criado.
+Teste do relacionamento com o upload de origem criado.
+Teste de acesso à página /reports criado.
+Teste da exibição dos relatórios e links criado.
+Teste do estado vazio criado.
+Teste do link “Relatórios” no menu criado.
+Todos os testes anteriores permaneceram funcionando.
+O comando python -m pytest retornou 81 passed.
 ---
 
 ## Estrutura atual esperada
@@ -779,6 +807,16 @@ PROJECT_STATE.md
 ```
 
 
+## Arquivos modificados na Conversa 18
+app/services/report_history.py
+app/routes.py
+app/templates/base.html
+app/templates/reports_history.html
+app/static/css/style.css
+tests/test_report_history.py
+PROJECT_STATE.md
+```
+
 ```markdown
 ## Resultado atual dos testes
 
@@ -788,10 +826,10 @@ Comando executado:
 python -m pytest
 ```
 
-Resultado validado na Conversa 17:
+Resultado validado na Conversa 18:
 
 ```text
-76 passed in 23.28s
+81 passed in 23.28s
 ```
 ---
 
@@ -904,6 +942,14 @@ Atualmente o sistema permite:
 * informar quando o registro existe, mas o arquivo físico do PDF não está mais disponível;
 * manter a geração física do PDF separada da persistência dos relatórios;
 * validar o comportamento da aplicação com 76 testes automatizados.
+* acessar a página geral /reports;
+* consultar todos os relatórios PDF persistidos;
+* visualizar o upload de origem de cada relatório;
+* acessar os detalhes do upload diretamente pelo histórico de relatórios;
+* baixar novamente um relatório existente;
+* visualizar os relatórios do mais recente para o mais antigo;
+* visualizar um estado vazio quando nenhum relatório foi gerado;
+* acessar a página de relatórios pelo menu principal;
 
 ---
 
@@ -912,62 +958,52 @@ Atualmente o sistema permite:
 * Persistência da análise automática completa.
 * Persistência dos gráficos gerados.
 * Persistência da prévia da planilha.
-* Página geral de histórico de relatórios.
 * Exclusão de relatórios.
 * Exclusão de registros de upload.
+* Limpeza automática de arquivos físicos.
 * Autenticação.
-* Deploy.
-* Pipeline CI/CD.
+* Permissões por usuário.
 * Filtros avançados.
 * Dashboards customizáveis.
 * Upload múltiplo.
-* Edição de registros de histórico.
-* Migrações profissionais de banco com Flask-Migrate.
-* Permissões por usuário.
+* Migrações com Flask-Migrate.
+* Pipeline CI/CD.
+* Deploy.
 
 
 ---
 
 ## Próxima entrega sugerida
 
-Conversa 18 — Histórico geral de relatórios gerados
+Conversa 19 — Exclusão segura de relatórios
 
-## Objetivo provável da Conversa 18
+## Objetivo provável da Conversa 19
 
-Criar uma página central para consultar todos os relatórios PDF gerados pela aplicação, independentemente do upload de origem.
+Permitir a exclusão de um relatório persistido, removendo de forma segura o registro do banco de dados e o arquivo PDF correspondente.
 
-Essa entrega permitirá visualizar os documentos gerados em um histórico próprio, identificar o arquivo de origem e acessar novamente cada relatório.
+## Escopo recomendado para a Conversa 19
 
-## Escopo recomendado para a Conversa 18
+Criar serviço para exclusão de relatório.
+Validar a existência do registro.
+Remover o arquivo PDF quando ele existir.
+Remover o registro do banco de dados.
+Implementar commit e rollback.
+Criar rota POST /reports/<int:report_id>/delete.
+Adicionar botão de exclusão no histórico geral.
+Adicionar botão de exclusão na página de detalhes do upload.
+Exibir mensagem de sucesso após a exclusão.
+Tratar relatório inexistente com erro 404.
+Tratar registro existente sem arquivo físico.
+Criar testes unitários e de integração.
 
-* Criar função para listar todos os relatórios persistidos.
-* Carregar o upload relacionado junto com cada relatório.
-* Criar rota GET `/reports`.
-* Criar template `reports_history.html`.
-* Adicionar o item “Relatórios” ao menu principal.
-* Exibir:
-
-  * ID do relatório;
-  * nome do PDF;
-  * upload de origem;
-  * data e hora de geração;
-  * link para os detalhes do upload;
-  * link para download do PDF.
-* Criar estado vazio para ausência de relatórios.
-* Criar testes do serviço de listagem.
-* Criar testes da página geral de relatórios.
-* Criar testes dos links de navegação e download.
-* Manter a ordenação do mais recente para o mais antigo.
-
-## Manter fora do escopo da Conversa 18
-
-* Exclusão de relatórios.
-* Regeneração automática de relatórios.
-* Versionamento de relatórios.
-* Filtros avançados.
-* Autenticação.
-* Permissões por usuário.
-* Deploy.
+## Manter fora do escopo da Conversa 19
+Exclusão de uploads.
+Exclusão em massa.
+Lixeira ou restauração.
+Versionamento de relatórios.
+Autenticação.
+Permissões por usuário.
+Deploy.
 
 
 ---
@@ -975,41 +1011,21 @@ Essa entrega permitirá visualizar os documentos gerados em um histórico própr
 
 A Conversa 17 concluiu a persistência dos relatórios PDF gerados.
 
-O projeto agora possui um fluxo funcional para:
+A Conversa 18 concluiu a página geral de histórico de relatórios.
 
-1. receber uma planilha;
-2. validar sua extensão;
-3. salvar o arquivo no servidor;
-4. carregar os dados com Pandas;
-5. extrair metadados;
-6. analisar automaticamente a estrutura dos dados;
-7. identificar colunas numéricas e categóricas;
-8. calcular valores ausentes;
-9. calcular estatísticas numéricas;
-10. gerar gráficos interativos com Plotly;
-11. exibir os gráficos no dashboard;
-12. registrar o upload no banco SQLite;
-13. salvar o caminho físico do arquivo;
-14. listar uploads anteriores;
-15. abrir os detalhes de cada upload;
-16. reprocessar uploads antigos;
-17. recriar o dashboard a partir de arquivos salvos;
-18. gerar e baixar relatórios PDF;
-19. incluir no PDF os metadados do upload;
-20. incluir no PDF o resumo da análise automática;
-21. apresentar valores ausentes e percentuais por coluna;
-22. apresentar estatísticas das colunas numéricas;
-23. gerar versões estáticas dos gráficos com Plotly e Kaleido;git add
-24. inserir gráficos estáticos no PDF;
-25. inserir uma prévia limitada dos dados da planilha;
-26. tratar valores ausentes e textos longos na prévia;
-27. informar os limites aplicados à prévia;
-28. impedir a geração do relatório quando o arquivo original não existe;
-29. registrar no banco cada relatório gerado;
-30. relacionar relatórios aos respectivos uploads;
-31. listar os relatórios na página de detalhes do upload;
-32. baixar novamente relatórios já existentes;
-33. tratar registros e arquivos físicos de relatórios inexistentes;
-34. validar o comportamento com 76 testes automatizados.
+O projeto agora permite:
 
-A partir da Conversa 18, o projeto deverá evoluir para uma página geral de histórico de relatórios gerados.
+1 enviar e processar planilhas;
+2 analisar automaticamente os dados;
+3 gerar gráficos interativos;
+4 registrar uploads no banco;
+5 reprocessar uploads antigos;
+6 gerar relatórios PDF com análise, estatísticas, gráficos e prévia;
+7 persistir os relatórios gerados;
+8 listar relatórios por upload;
+9 consultar todos os relatórios em uma página central;
+10 acessar o upload de origem;
+11 baixar novamente PDFs existentes;
+12 validar o comportamento com 81 testes automatizados.
+
+A partir da Conversa 19, o projeto deverá evoluir para a exclusão segura de relatórios persistidos.

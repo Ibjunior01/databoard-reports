@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block title %}Histórico de relatórios{% endblock %}
+
+{% block content %}
+<section class="dashboard-section">
+    <div class="section-header">
+        <p class="section-eyebrow">
+            Documentos gerados
+        </p>
+
+        <h1>Histórico de relatórios</h1>
+
+        <p>
+            Consulte os relatórios PDF gerados,
+            identifique seus uploads de origem
+            e faça novamente o download dos arquivos.
+        </p>
+    </div>
+
+    {% if reports %}
+        <div class="history-table-wrapper">
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Relatório</th>
+                        <th>Upload de origem</th>
+                        <th>Gerado em</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for report in reports %}
+                        <tr>
+                            <td>
+                                #{{ report.id }}
+                            </td>
+
+                            <td class="report-name-cell">
+                                {{ report.file_name }}
+                            </td>
+
+                            <td>
+                                {% if report.upload %}
+                                    {{ report.upload.file_name }}
+                                {% else %}
+                                    Upload indisponível
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {{
+                                    report.created_at.strftime(
+                                        "%d/%m/%Y %H:%M"
+                                    )
+                                }}
+                            </td>
+
+                            <td>
+                                <div class="report-actions">
+                                    {% if report.upload %}
+                                        <a
+                                            href="{{ url_for(
+                                                'main.upload_detail',
+                                                record_id=report.upload_id
+                                            ) }}"
+                                            class="table-action-link"
+                                        >
+                                            Ver upload
+                                        </a>
+                                    {% endif %}
+
+                                    <a
+                                        href="{{ url_for(
+                                            'main.download_existing_report',
+                                            report_id=report.id
+                                        ) }}"
+                                        class="table-action-link"
+                                    >
+                                        Baixar PDF
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <h2>Nenhum relatório gerado</h2>
+
+            <p>
+                Quando um relatório PDF for gerado,
+                ele aparecerá automaticamente aqui.
+            </p>
+
+            <a
+                class="btn-primary"
+                href="{{ url_for('main.history') }}"
+            >
+                Consultar uploads
+            </a>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

@@ -55,7 +55,20 @@
                         <a class="nav-link {% if request.endpoint == 'main.history' %}active{% endif %}"
                             href="{{ url_for('main.history') }}"> Histórico </a>
                     </li>
+
+                    <li class="nav-item">
+                        <a
+                            class="nav-link
+                            {% if request.endpoint == 'main.reports_history' %}
+                                active
+                            {% endif %}"
+                            href="{{ url_for('main.reports_history') }}"
+                        >
+                            Relatórios
+                        </a>
+                    </li>
                 </ul>
+
             </div>
         </div>
     </nav>

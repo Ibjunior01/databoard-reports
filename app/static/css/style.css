@@ -679,3 +679,39 @@ textarea:focus {
         width: 100%;
     }
 }
+
+.report-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    flex-wrap: wrap;
+}
+
+.report-name-cell {
+    max-width: 340px;
+    word-break: break-word;
+}
+
+.empty-state {
+    margin-top: 1.5rem;
+    padding: 2rem;
+    text-align: center;
+    border: 1px solid var(--color-border);
+    border-radius: 18px;
+    background: linear-gradient(
+        180deg,
+        rgba(15, 23, 42, 0.98),
+        rgba(17, 24, 39, 0.98)
+    );
+    box-shadow: var(--shadow-card);
+}
+
+.empty-state h2 {
+    margin-bottom: 0.75rem;
+}
+
+.empty-state p {
+    max-width: 620px;
+    margin: 0 auto 1.5rem;
+    color: var(--color-text-muted);
+}

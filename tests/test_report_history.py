@@ -4,6 +4,7 @@ from app.services.history import create_upload_record
 from app.services.report_history import (
     create_report_record,
     get_report_record,
+    list_report_records,
     list_report_records_by_upload,
 )
 
@@ -148,3 +149,136 @@ def test_get_report_record_returns_record_and_none(
         assert saved_report is not None
         assert saved_report.id == report.id
         assert missing_report is None
+
+
+def test_list_report_records_returns_all_reports_newest_first(
+    app,
+):
+    with app.app_context():
+        first_upload = create_upload_record(
+            file_name="vendas.csv",
+            file_extension=".csv",
+            row_count=10,
+            column_count=3,
+        )
+
+        second_upload = create_upload_record(
+            file_name="clientes.xlsx",
+            file_extension=".xlsx",
+            row_count=20,
+            column_count=5,
+        )
+
+        first_report = create_report_record(
+            upload_id=first_upload.id,
+            file_name="primeiro.pdf",
+            file_path="reports/primeiro.pdf",
+        )
+
+        second_report = create_report_record(
+            upload_id=second_upload.id,
+            file_name="segundo.pdf",
+            file_path="reports/segundo.pdf",
+        )
+
+        reports = list_report_records()
+
+        assert len(reports) == 2
+        assert reports[0].id == second_report.id
+        assert reports[1].id == first_report.id
+
+        assert (
+            reports[0].upload.file_name
+            == "clientes.xlsx"
+        )
+
+        assert (
+            reports[1].upload.file_name
+            == "vendas.csv"
+        )
+
+
+def test_reports_history_page_loads_successfully(
+    client,
+):
+    response = client.get("/reports")
+
+    assert response.status_code == 200
+
+    assert (
+        "Histórico de relatórios".encode(
+            "utf-8"
+        )
+        in response.data
+    )
+
+
+def test_reports_history_page_displays_reports_and_links(
+    app,
+    client,
+    tmp_path,
+):
+    report_path = tmp_path / "relatorio_vendas.pdf"
+    report_path.write_bytes(b"%PDF-1.4\n")
+
+    with app.app_context():
+        upload = create_upload_record(
+            file_name="vendas.csv",
+            file_extension=".csv",
+            row_count=10,
+            column_count=3,
+        )
+
+        report = create_report_record(
+            upload_id=upload.id,
+            file_name=report_path.name,
+            file_path=report_path,
+        )
+
+        upload_id = upload.id
+        report_id = report.id
+
+    response = client.get("/reports")
+
+    assert response.status_code == 200
+    assert b"relatorio_vendas.pdf" in response.data
+    assert b"vendas.csv" in response.data
+
+    assert (
+        f"/history/{upload_id}".encode()
+        in response.data
+    )
+
+    assert (
+        f"/reports/{report_id}/download".encode()
+        in response.data
+    )
+
+
+def test_reports_history_page_displays_empty_state(
+    client,
+):
+    response = client.get("/reports")
+
+    assert response.status_code == 200
+
+    assert (
+        "Nenhum relatório gerado".encode(
+            "utf-8"
+        )
+        in response.data
+    )
+
+
+def test_navigation_contains_reports_link(
+    client,
+):
+    response = client.get("/")
+
+    assert response.status_code == 200
+    assert b'href="/reports"' in response.data
+
+    assert (
+        "Relatórios".encode("utf-8")
+        in response.data
+    )

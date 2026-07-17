@@ -7,6 +7,7 @@ from pathlib import Path
 
 from app.extensions import db
 from app.models import ReportRecord
+from sqlalchemy.orm import joinedload
 
 
 def create_report_record(
@@ -33,6 +34,33 @@ def create_report_record(
     except Exception:
         db.session.rollback()
         raise
+
+
+def list_report_records(
+    limit: int = 100,
+) -> list[ReportRecord]:
+    """
+    Lista todos os relatórios persistidos,
+    do mais recente para o mais antigo.
+
+    O upload relacionado é carregado junto com
+    cada relatório para evitar consultas adicionais.
+    """
+
+    return (
+        ReportRecord.query
+        .options(
+            joinedload(
+                ReportRecord.upload
+            )
+        )
+        .order_by(
+            ReportRecord.created_at.desc(),
+            ReportRecord.id.desc(),
+        )
+        .limit(limit)
+        .all()
+    )
 
 
 def list_report_records_by_upload(
