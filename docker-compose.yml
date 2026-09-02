@@ -2,10 +2,13 @@ services:
   web:
     build: .
     container_name: databoard_reports_web
+
     ports:
       - "5000:5000"
+
     environment:
-      - FLASK_DEBUG=True
-      - SECRET_KEY=dev-secret-key-change-me
+      APP_ENV: development
+      SECRET_KEY: ${SECRET_KEY:?Defina SECRET_KEY antes de executar o Docker Compose}
+
     volumes:
       - .:/app
