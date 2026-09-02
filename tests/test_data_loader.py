@@ -5,6 +5,7 @@ from app.services.data_loader import (
     InvalidSpreadsheetError,
     UnsupportedFileTypeError,
     allowed_file,
+    detect_header_row,
     load_spreadsheet,
     load_spreadsheet_metadata,
 )
@@ -163,3 +164,73 @@ def test_load_spreadsheet_raises_invalid_error_for_invalid_csv_encoding(
 
     with pytest.raises(InvalidSpreadsheetError):
         load_spreadsheet(csv_path)
+
+
+def test_detect_header_row_when_header_is_not_first_row():
+    dataframe = pd.DataFrame(
+        [
+            [
+                "RELATÓRIO COMERCIAL",
+                None,
+                None,
+                None,
+            ],
+            [
+                "Período: janeiro a agosto",
+                None,
+                None,
+                None,
+            ],
+            [
+                "DATA",
+                "UNIDADE",
+                "SERVICO",
+                "RECEITA",
+            ],
+            [
+                "01/01/2026",
+                "Aldeota",
+                "Consultoria",
+                1000,
+            ],
+            [
+                "02/01/2026",
+                "Eusébio",
+                "Suporte",
+                800,
+            ],
+        ]
+    )
+
+    detected_row = detect_header_row(dataframe)
+
+    assert detected_row == 2
+
+
+def test_detect_header_row_keeps_first_row_for_standard_table():
+    dataframe = pd.DataFrame(
+        [
+            [
+                "DATA",
+                "PRODUTO",
+                "VALOR",
+                "CLIENTE",
+            ],
+            [
+                "01/01/2026",
+                "Notebook",
+                3500,
+                "Cliente A",
+            ],
+            [
+                "02/01/2026",
+                "Monitor",
+                1200,
+                "Cliente B",
+            ],
+        ]
+    )
+
+    detected_row = detect_header_row(dataframe)
+
+    assert detected_row == 0

@@ -20,6 +20,8 @@ from xlrd.biffh import XLRDError
 
 SUPPORTED_EXTENSIONS = {".csv", ".xlsx", ".xls"}
 DEFAULT_PREVIEW_ROWS = 5
+HEADER_SCAN_ROWS = 15
+MIN_HEADER_NON_EMPTY_CELLS = 2
 
 
 class UnsupportedFileTypeError(ValueError):
@@ -83,6 +85,105 @@ def validate_file_path(file_path: str | Path) -> Path:
         )
 
     return path
+
+
+def detect_header_row(
+    dataframe: pd.DataFrame,
+) -> int:
+    """
+    Detect the most likely header row in a raw spreadsheet preview.
+
+    The function expects a DataFrame loaded with header=None and returns
+    the zero-based row index that most likely contains the table header.
+
+    The scoring favors rows that:
+    - contain multiple populated cells;
+    - contain mostly textual labels;
+    - contain unique labels;
+    - are followed by rows with a compatible table width;
+    - differ structurally from the following data row;
+    - appear earlier in the file when candidates are otherwise similar.
+
+    If no stronger candidate is found, row zero is returned.
+    """
+    if dataframe.empty:
+        return 0
+
+    best_row = 0
+    best_score = float("-inf")
+
+    rows_to_scan = min(
+        len(dataframe),
+        HEADER_SCAN_ROWS,
+    )
+
+    for row_index in range(rows_to_scan):
+        row = dataframe.iloc[row_index]
+
+        non_empty_values = [
+            value for value in row.tolist() if pd.notna(value) and str(value).strip()
+        ]
+
+        non_empty_count = len(non_empty_values)
+
+        if non_empty_count < MIN_HEADER_NON_EMPTY_CELLS:
+            continue
+
+        textual_count = sum(isinstance(value, str) for value in non_empty_values)
+
+        text_ratio = textual_count / non_empty_count
+
+        unique_count = len({str(value).strip().lower() for value in non_empty_values})
+
+        uniqueness_ratio = unique_count / non_empty_count
+
+        next_non_empty_count = 0
+        next_text_ratio = 0.0
+
+        if row_index + 1 < len(dataframe):
+            next_row = dataframe.iloc[row_index + 1]
+
+            next_values = [
+                value
+                for value in next_row.tolist()
+                if pd.notna(value) and str(value).strip()
+            ]
+
+            next_non_empty_count = len(next_values)
+
+            if next_non_empty_count:
+                next_textual_count = sum(
+                    isinstance(value, str) for value in next_values
+                )
+
+                next_text_ratio = next_textual_count / next_non_empty_count
+
+        following_width_ratio = min(
+            next_non_empty_count / non_empty_count,
+            1.0,
+        )
+
+        text_contrast = max(
+            text_ratio - next_text_ratio,
+            0.0,
+        )
+
+        position_penalty = row_index * 0.1
+
+        score = (
+            non_empty_count
+            + text_ratio * 6
+            + uniqueness_ratio * 2
+            + following_width_ratio * 2
+            + text_contrast * 4
+            - position_penalty
+        )
+
+        if score > best_score:
+            best_score = score
+            best_row = row_index
+
+    return best_row
 
 
 def load_spreadsheet(file_path: str | Path) -> pd.DataFrame:
