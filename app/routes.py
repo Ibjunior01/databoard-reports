@@ -129,6 +129,21 @@ def index():
     return render_template("index.html")
 
 
+def remove_file_safely(file_path: Path) -> None:
+    """
+    Remove um arquivo físico sem mascarar o erro original
+    caso a limpeza também falhe.
+    """
+
+    try:
+        file_path.unlink(missing_ok=True)
+    except OSError:
+        current_app.logger.exception(
+            "Falha ao remover arquivo temporário de upload: %s",
+            file_path,
+        )
+
+
 @main_bp.route("/upload", methods=["GET", "POST"])
 def upload_file():
     if request.method == "GET":
@@ -181,14 +196,39 @@ def upload_file():
         )
 
     except UnsupportedFileTypeError:
-        flash("Tipo de arquivo não suportado.", "error")
+        remove_file_safely(file_path)
+
+        flash(
+            "Tipo de arquivo não suportado.",
+            "error",
+        )
         return redirect(url_for("main.upload_file"))
 
     except FileNotFoundError:
+        remove_file_safely(file_path)
+
         flash(
             "Arquivo enviado não foi encontrado no servidor.",
             "error",
         )
+        return redirect(url_for("main.upload_file"))
+
+    except Exception:
+        remove_file_safely(file_path)
+
+        current_app.logger.exception(
+            "Falha ao processar o upload '%s'.",
+            filename,
+        )
+
+        flash(
+            (
+                "Não foi possível processar o arquivo enviado. "
+                "Verifique se ele é uma planilha válida e tente novamente."
+            ),
+            "error",
+        )
+
         return redirect(url_for("main.upload_file"))
 
     flash("Arquivo carregado com sucesso", "success")
