@@ -2,28 +2,57 @@
 Application Factory do DataBoard Reports.
 """
 
+import os
 from pathlib import Path
 
 from flask import Flask
 
-from app.config import Config, TestingConfig
+from app.config import (
+    DevelopmentConfig,
+    ProductionConfig,
+    TestingConfig,
+)
 from app.extensions import db
+
+
+CONFIG_BY_ENV = {
+    "development": DevelopmentConfig,
+    "production": ProductionConfig,
+}
 
 
 def create_app(test_config=None):
     """
     Cria e configura a aplicação Flask.
 
-    Quando TESTING=True é informado, utiliza explicitamente
-    a configuração dedicada ao ambiente de testes.
+    Os testes utilizam sempre TestingConfig.
+
+    Fora dos testes, o ambiente é definido por APP_ENV.
+    Quando APP_ENV não é informado, production é utilizado
+    como padrão seguro.
     """
 
     app = Flask(__name__)
 
     if test_config and test_config.get("TESTING"):
-        app.config.from_object(TestingConfig)
+        config_class = TestingConfig
     else:
-        app.config.from_object(Config)
+        environment = os.getenv(
+            "APP_ENV",
+            "production",
+        ).strip().lower()
+
+        try:
+            config_class = CONFIG_BY_ENV[environment]
+        except KeyError as exc:
+            raise RuntimeError(
+                "APP_ENV inválido. Use 'development' ou 'production'."
+            ) from exc
+
+    app.config.from_object(config_class)
+
+    if config_class is ProductionConfig:
+        ProductionConfig.validate()
 
     if test_config:
         app.config.update(test_config)
