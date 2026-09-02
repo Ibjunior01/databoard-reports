@@ -1,0 +1,67 @@
+# Git
+.git/
+.gitignore
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Virtual environments
+venv/
+.venv/
+env/
+.env/
+
+# Environment variables
+.env
+.env.*
+!.env.examplo
+
+# Flask runtime
+instance/
+
+# Databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Generated uploads and reports
+app/uploads/*
+!app/uploads/.gitkeep
+app/reports/*
+!app/reports/.gitkeep
+
+# Local sample/generated data
+sample_data/*
+!sample_data/.gitkeep
+
+# Tests and local development files
+tests/
+conftest.py
+
+# Editors and OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Project documentation not required at runtime
+README.md
+PROJECT_STATE.md
+
+# Docker development files not required inside image
+docker-compose.yml
+.dockerignore
+
+# Miscellaneous local artifacts
+*.zip
+*.tar
+*.tar.gz
