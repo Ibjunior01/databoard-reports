@@ -4,8 +4,8 @@ Application Factory do DataBoard Reports.
 
 import os
 from pathlib import Path
-
-from flask import Flask
+from flask import Flask, flash, redirect, url_for
+from werkzeug.exceptions import RequestEntityTooLarge
 
 from app.config import (
     DevelopmentConfig,
@@ -37,10 +37,14 @@ def create_app(test_config=None):
     if test_config and test_config.get("TESTING"):
         config_class = TestingConfig
     else:
-        environment = os.getenv(
-            "APP_ENV",
-            "production",
-        ).strip().lower()
+        environment = (
+            os.getenv(
+                "APP_ENV",
+                "production",
+            )
+            .strip()
+            .lower()
+        )
 
         try:
             config_class = CONFIG_BY_ENV[environment]
@@ -68,6 +72,22 @@ def create_app(test_config=None):
     from app.routes import main_bp
 
     app.register_blueprint(main_bp)
+
+    @app.errorhandler(RequestEntityTooLarge)
+    def handle_file_too_large(error):
+        """
+        Trata uploads que excedem MAX_CONTENT_LENGTH.
+        """
+
+        current_limit = app.config["MAX_CONTENT_LENGTH"]
+        limit_mb = current_limit // (1024 * 1024)
+
+        flash(
+            f"O arquivo excede o limite máximo de {limit_mb} MB.",
+            "error",
+        )
+
+        return redirect(url_for("main.upload_file"))
 
     with app.app_context():
         db.create_all()

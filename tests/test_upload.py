@@ -52,16 +52,12 @@ def test_uploads_with_same_name_use_different_physical_files(
 
     upload_folder = app.config["UPLOAD_FOLDER"]
 
-    uploaded_files = list(
-        upload_folder.glob("*_dados.csv")
-    )
+    uploaded_files = list(upload_folder.glob("*_dados.csv"))
 
     assert len(uploaded_files) == 2
     assert uploaded_files[0].name != uploaded_files[1].name
 
-    assert uploaded_files[0].read_bytes() != (
-        uploaded_files[1].read_bytes()
-    )
+    assert uploaded_files[0].read_bytes() != (uploaded_files[1].read_bytes())
 
 
 def test_invalid_excel_upload_is_removed_after_processing_failure(
@@ -91,8 +87,30 @@ def test_invalid_excel_upload_is_removed_after_processing_failure(
 
     upload_folder = app.config["UPLOAD_FOLDER"]
 
-    invalid_files = list(
-        upload_folder.glob("*arquivo_invalido.xlsx")
-    )
+    invalid_files = list(upload_folder.glob("*arquivo_invalido.xlsx"))
 
     assert invalid_files == []
+
+
+def test_upload_larger_than_max_content_length_is_rejected(
+    client,
+):
+    oversized_file = BytesIO(b"x" * (16 * 1024 * 1024 + 1))
+
+    response = client.post(
+        "/upload",
+        data={
+            "file": (
+                oversized_file,
+                "arquivo_grande.csv",
+            )
+        },
+        content_type="multipart/form-data",
+        follow_redirects=True,
+    )
+
+    assert response.status_code == 200
+
+    expected_message = "O arquivo excede o limite máximo de 16 MB."
+
+    assert expected_message.encode("utf-8") in response.data
