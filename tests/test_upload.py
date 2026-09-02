@@ -1,4 +1,5 @@
 from io import BytesIO
+from app.services.data_loader import InvalidSpreadsheetError
 
 
 def test_upload_displays_automatic_charts(client):
@@ -114,3 +115,41 @@ def test_upload_larger_than_max_content_length_is_rejected(
     expected_message = "O arquivo excede o limite máximo de 16 MB."
 
     assert expected_message.encode("utf-8") in response.data
+
+
+def test_invalid_spreadsheet_error_uses_expected_upload_handler(
+    client,
+    monkeypatch,
+    caplog,
+):
+    def raise_invalid_spreadsheet_error(*args, **kwargs):
+        raise InvalidSpreadsheetError("invalid spreadsheet")
+
+    monkeypatch.setattr(
+        "app.routes.load_spreadsheet",
+        raise_invalid_spreadsheet_error,
+    )
+
+    with caplog.at_level("WARNING"):
+        response = client.post(
+            "/upload",
+            data={
+                "file": (
+                    BytesIO(b"Categoria,Valor\nA,10\n"),
+                    "dados.csv",
+                )
+            },
+            content_type="multipart/form-data",
+            follow_redirects=True,
+        )
+
+    assert response.status_code == 200
+
+    expected_message = (
+        "Não foi possível processar o arquivo enviado. "
+        "Verifique se ele é uma planilha válida e tente novamente."
+    )
+
+    assert expected_message.encode("utf-8") in response.data
+
+    assert "Planilha inválida rejeitada durante o upload: dados.csv" in caplog.text

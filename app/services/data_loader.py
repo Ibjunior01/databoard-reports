@@ -11,8 +11,11 @@ Futuras responsabilidades:
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
+from zipfile import BadZipFile
 
 import pandas as pd
+from openpyxl.utils.exceptions import InvalidFileException
+from xlrd.biffh import XLRDError
 
 
 SUPPORTED_EXTENSIONS = {".csv", ".xlsx", ".xls"}
@@ -21,6 +24,10 @@ DEFAULT_PREVIEW_ROWS = 5
 
 class UnsupportedFileTypeError(ValueError):
     """Raised when the uploaded file extension is not supported."""
+
+
+class InvalidSpreadsheetError(ValueError):
+    """Raised when a spreadsheet cannot be safely parsed."""
 
 
 @dataclass(frozen=True)
@@ -86,18 +93,43 @@ def load_spreadsheet(file_path: str | Path) -> pd.DataFrame:
         - .csv
         - .xlsx
         - .xls
+
+    Raises:
+        FileNotFoundError: if the file does not exist.
+        UnsupportedFileTypeError: if the extension is not supported.
+        InvalidSpreadsheetError: if the file cannot be parsed safely.
     """
     path = validate_file_path(file_path)
     extension = get_file_extension(path)
 
-    if extension == ".csv":
-        return pd.read_csv(path)
+    try:
+        if extension == ".csv":
+            return pd.read_csv(path)
 
-    if extension == ".xlsx":
-        return pd.read_excel(path, engine="openpyxl")
+        if extension == ".xlsx":
+            return pd.read_excel(
+                path,
+                engine="openpyxl",
+            )
 
-    if extension == ".xls":
-        return pd.read_excel(path, engine="xlrd")
+        if extension == ".xls":
+            return pd.read_excel(
+                path,
+                engine="xlrd",
+            )
+
+    except (
+        pd.errors.ParserError,
+        UnicodeDecodeError,
+        BadZipFile,
+        InvalidFileException,
+        XLRDError,
+        ValueError,
+        OSError,
+    ) as exc:
+        raise InvalidSpreadsheetError(
+            f"Unable to read spreadsheet: {path.name}"
+        ) from exc
 
     raise UnsupportedFileTypeError(f"Unsupported file extension: {extension}")
 

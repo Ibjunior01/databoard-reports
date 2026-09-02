@@ -21,6 +21,7 @@ from app.services.charts import (
     generate_automatic_charts,
 )
 from app.services.data_loader import (
+    InvalidSpreadsheetError,
     UnsupportedFileTypeError,
     allowed_file,
     load_spreadsheet,
@@ -100,6 +101,7 @@ def get_existing_upload_file_path(upload_record) -> Path | None:
 
     return file_path
 
+
 def get_existing_report_file_path(
     report_record,
 ) -> Path | None:
@@ -115,14 +117,13 @@ def get_existing_report_file_path(
     if not report_record.file_path:
         return None
 
-    report_path = Path(
-        report_record.file_path
-    )
+    report_path = Path(report_record.file_path)
 
     if not report_path.is_file():
         return None
 
     return report_path
+
 
 @main_bp.route("/")
 def index():
@@ -213,6 +214,24 @@ def upload_file():
         )
         return redirect(url_for("main.upload_file"))
 
+    except InvalidSpreadsheetError:
+        remove_file_safely(file_path)
+
+        current_app.logger.warning(
+            "Planilha inválida rejeitada durante o upload: %s",
+            filename,
+        )
+
+        flash(
+            (
+                "Não foi possível processar o arquivo enviado. "
+                "Verifique se ele é uma planilha válida e tente novamente."
+            ),
+            "error",
+        )
+
+        return redirect(url_for("main.upload_file"))
+
     except Exception:
         remove_file_safely(file_path)
 
@@ -262,6 +281,7 @@ def history():
         records=records,
     )
 
+
 @main_bp.get("/reports")
 def reports_history():
     """
@@ -301,17 +321,13 @@ def delete_upload(record_id):
     e os arquivos físicos associados.
     """
 
-    upload_record = get_upload_record(
-        record_id
-    )
+    upload_record = get_upload_record(record_id)
 
     if upload_record is None:
         abort(404)
 
     try:
-        deletion_result = delete_upload_record(
-            upload_record
-        )
+        deletion_result = delete_upload_record(upload_record)
 
     except Exception:
         current_app.logger.exception(
@@ -320,10 +336,7 @@ def delete_upload(record_id):
         )
 
         flash(
-            (
-                "Não foi possível excluir o upload. "
-                "Tente novamente."
-            ),
+            ("Não foi possível excluir o upload. Tente novamente."),
             "error",
         )
 
@@ -346,16 +359,11 @@ def delete_upload(record_id):
 
     else:
         flash(
-            (
-                "Upload e arquivos associados "
-                "excluídos com sucesso."
-            ),
+            ("Upload e arquivos associados excluídos com sucesso."),
             "success",
         )
 
-    return redirect(
-        url_for("main.history")
-    )
+    return redirect(url_for("main.history"))
 
 
 @main_bp.route("/history/<int:record_id>/reprocess")
@@ -505,6 +513,7 @@ def download_upload_report(record_id):
         download_name=report_path.name,
     )
 
+
 @main_bp.get("/reports/<int:report_id>/download")
 def download_existing_report(report_id):
     """
@@ -512,23 +521,16 @@ def download_existing_report(report_id):
     anteriormente gerado e registrado no banco.
     """
 
-    report_record = get_report_record(
-        report_id
-    )
+    report_record = get_report_record(report_id)
 
     if report_record is None:
         abort(404)
 
-    report_path = get_existing_report_file_path(
-        report_record
-    )
+    report_path = get_existing_report_file_path(report_record)
 
     if report_path is None:
         flash(
-            (
-                "O arquivo físico deste relatório "
-                "não foi encontrado no servidor."
-            ),
+            ("O arquivo físico deste relatório não foi encontrado no servidor."),
             "error",
         )
 
@@ -554,9 +556,7 @@ def delete_report(report_id):
     seu arquivo físico quando disponível.
     """
 
-    report_record = get_report_record(
-        report_id
-    )
+    report_record = get_report_record(report_id)
 
     if report_record is None:
         abort(404)
@@ -569,9 +569,7 @@ def delete_report(report_id):
     )
 
     try:
-        file_deleted = delete_report_record(
-            report_record
-        )
+        file_deleted = delete_report_record(report_record)
 
     except Exception:
         current_app.logger.exception(
@@ -580,10 +578,7 @@ def delete_report(report_id):
         )
 
         flash(
-            (
-                "Não foi possível excluir o relatório. "
-                "Tente novamente."
-            ),
+            ("Não foi possível excluir o relatório. Tente novamente."),
             "error",
         )
 
@@ -595,11 +590,7 @@ def delete_report(report_id):
                 )
             )
 
-        return redirect(
-            url_for(
-                "main.reports_history"
-            )
-        )
+        return redirect(url_for("main.reports_history"))
 
     if file_deleted:
         flash(
@@ -624,8 +615,4 @@ def delete_report(report_id):
             )
         )
 
-    return redirect(
-        url_for(
-            "main.reports_history"
-        )
-    )
+    return redirect(url_for("main.reports_history"))

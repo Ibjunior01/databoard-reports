@@ -2,6 +2,7 @@ import pandas as pd
 import pytest
 
 from app.services.data_loader import (
+    InvalidSpreadsheetError,
     UnsupportedFileTypeError,
     allowed_file,
     load_spreadsheet,
@@ -142,3 +143,23 @@ def test_load_spreadsheet_metadata_respects_preview_rows(tmp_path):
     assert metadata["rows"] == 6
     assert len(metadata["preview"]) == 3
     assert metadata["preview"][2]["product"] == "C"
+
+
+def test_load_spreadsheet_raises_invalid_error_for_corrupted_xlsx(
+    tmp_path,
+):
+    excel_path = tmp_path / "corrupted.xlsx"
+    excel_path.write_bytes(b"this is not a valid Excel workbook")
+
+    with pytest.raises(InvalidSpreadsheetError):
+        load_spreadsheet(excel_path)
+
+
+def test_load_spreadsheet_raises_invalid_error_for_invalid_csv_encoding(
+    tmp_path,
+):
+    csv_path = tmp_path / "invalid.csv"
+    csv_path.write_bytes(b"\xff\xfe\x00\x00\xff\xfe")
+
+    with pytest.raises(InvalidSpreadsheetError):
+        load_spreadsheet(csv_path)
