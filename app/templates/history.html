@@ -59,6 +59,11 @@
                                     'Excluir este upload, o arquivo original e todos os relatórios relacionados?'
                                 );"
                             >
+                                <input
+                                    type="hidden"
+                                    name="csrf_token"
+                                    value="{{ csrf_token() }}"
+                                >
                                 <button
                                     type="submit"
                                     class="danger-button"

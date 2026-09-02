@@ -12,7 +12,7 @@ from app.config import (
     ProductionConfig,
     TestingConfig,
 )
-from app.extensions import db
+from app.extensions import csrf, db
 
 
 CONFIG_BY_ENV = {
@@ -67,6 +67,7 @@ def create_app(test_config=None):
     )
 
     db.init_app(app)
+    csrf.init_app(app)
 
     from app import models  # noqa: F401
     from app.routes import main_bp

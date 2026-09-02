@@ -153,3 +153,23 @@ def test_invalid_spreadsheet_error_uses_expected_upload_handler(
     assert expected_message.encode("utf-8") in response.data
 
     assert "Planilha inválida rejeitada durante o upload: dados.csv" in caplog.text
+
+
+def test_upload_without_csrf_token_is_rejected_when_csrf_enabled(
+    client,
+    app,
+):
+    app.config["WTF_CSRF_ENABLED"] = True
+
+    response = client.post(
+        "/upload",
+        data={
+            "file": (
+                BytesIO(b"Categoria,Valor\nA,10\n"),
+                "dados.csv",
+            )
+        },
+        content_type="multipart/form-data",
+    )
+
+    assert response.status_code == 400

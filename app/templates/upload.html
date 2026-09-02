@@ -32,6 +32,12 @@
             enctype="multipart/form-data"
             class="upload-form"
         >
+            <input
+                type="hidden"
+                name="csrf_token"
+                value="{{ csrf_token() }}"
+            >   
+        
             <div class="mb-3">
                 <label for="file" class="form-label">
                     Selecione a planilha

@@ -20,6 +20,7 @@ class Config:
 
     DEBUG = False
     TESTING = False
+    WTF_CSRF_ENABLED = True
 
     UPLOAD_FOLDER = BASE_DIR / "app" / "uploads"
     REPORTS_FOLDER = BASE_DIR / "app" / "reports"
@@ -46,6 +47,7 @@ class TestingConfig(Config):
     """
 
     TESTING = True
+    WTF_CSRF_ENABLED = False
 
     SECRET_KEY = "test-secret-key"
 
@@ -65,6 +67,5 @@ class ProductionConfig(Config):
 
         if not cls.SECRET_KEY:
             raise RuntimeError(
-                "A variável de ambiente SECRET_KEY é obrigatória "
-                "em produção."
+                "A variável de ambiente SECRET_KEY é obrigatória em produção."
             )
