@@ -1,5 +1,6 @@
 from dataclasses import asdict, is_dataclass
 from pathlib import Path
+from uuid import uuid4
 
 from flask import (
     Blueprint,
@@ -156,7 +157,9 @@ def upload_file():
     )
     upload_folder.mkdir(parents=True, exist_ok=True)
 
-    file_path = upload_folder / filename
+    stored_filename = f"{uuid4().hex}_{filename}"
+    file_path = upload_folder / stored_filename
+
     uploaded_file.save(file_path)
 
     try:
