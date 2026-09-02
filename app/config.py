@@ -1,3 +1,7 @@
+"""
+Configurações da aplicação DataBoard Reports.
+"""
+
 import os
 from pathlib import Path
 
@@ -7,17 +11,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 class Config:
     """
-    Configurações centrais da aplicação.
-
-    Nesta primeira entrega, ainda não usaremos banco de dados,
-    upload de arquivos ou geração de relatórios. As pastas já ficam
-    configuradas para facilitar a evolução do projeto nas próximas etapas.
+    Configuração base compartilhada entre os ambientes.
     """
 
-    SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key-change-me")
-    DEBUG = os.getenv("FLASK_DEBUG", "True").lower() == "true"
-
     APP_NAME = "DataBoard Reports"
+
+    SECRET_KEY = os.getenv("SECRET_KEY")
+
+    DEBUG = False
+    TESTING = False
 
     UPLOAD_FOLDER = BASE_DIR / "app" / "uploads"
     REPORTS_FOLDER = BASE_DIR / "app" / "reports"
@@ -28,3 +30,41 @@ class Config:
 
     SQLALCHEMY_DATABASE_URI = "sqlite:///databoard.sqlite3"
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+
+class DevelopmentConfig(Config):
+    """
+    Configuração utilizada no desenvolvimento local.
+    """
+
+    DEBUG = True
+
+
+class TestingConfig(Config):
+    """
+    Configuração utilizada nos testes automatizados.
+    """
+
+    TESTING = True
+
+    SECRET_KEY = "test-secret-key"
+
+
+class ProductionConfig(Config):
+    """
+    Configuração utilizada no ambiente de produção.
+    """
+
+    DEBUG = False
+
+    @classmethod
+    def validate(cls) -> None:
+        """
+        Garante que configurações obrigatórias de produção existam.
+        """
+
+        if not cls.SECRET_KEY:
+            raise RuntimeError(
+                "A variável de ambiente SECRET_KEY é obrigatória "
+                "em produção."
+            )

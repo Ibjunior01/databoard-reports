@@ -1,19 +1,37 @@
+"""
+Application Factory do DataBoard Reports.
+"""
+
 from pathlib import Path
 
 from flask import Flask
 
-from app.config import Config
+from app.config import Config, TestingConfig
 from app.extensions import db
 
 
 def create_app(test_config=None):
+    """
+    Cria e configura a aplicação Flask.
+
+    Quando TESTING=True é informado, utiliza explicitamente
+    a configuração dedicada ao ambiente de testes.
+    """
+
     app = Flask(__name__)
-    app.config.from_object(Config)
+
+    if test_config and test_config.get("TESTING"):
+        app.config.from_object(TestingConfig)
+    else:
+        app.config.from_object(Config)
 
     if test_config:
         app.config.update(test_config)
 
-    Path(app.instance_path).mkdir(parents=True, exist_ok=True)
+    Path(app.instance_path).mkdir(
+        parents=True,
+        exist_ok=True,
+    )
 
     db.init_app(app)
 
