@@ -12,6 +12,8 @@ from app.services.schema_inference import (
     profile_column,
     calculate_currency_score,
     is_currency_column,
+    calculate_date_score,
+    is_date_column,
 )
 
 from app.services.data_loader import load_spreadsheet
@@ -405,3 +407,132 @@ def test_benchmark_detects_currency_columns():
     assert not is_currency_column(base_profiles["QUANTIDADE"])
 
     assert not is_currency_column(base_profiles["CLIENTE_ID"])
+
+
+def test_datetime_dtype_is_detected_as_date():
+    series = pd.Series(
+        pd.to_datetime(
+            [
+                "2026-01-01",
+                "2026-02-15",
+                "2026-03-30",
+            ]
+        ),
+        name="DATA_VENDA",
+    )
+
+    profile = profile_column(series)
+
+    assert is_date_column(profile)
+    assert calculate_date_score(profile) >= 0.60
+
+
+def test_brazilian_date_strings_are_detected():
+    series = pd.Series(
+        [
+            "01/01/2026",
+            "15/02/2026",
+            "30/03/2026",
+        ],
+        name="DATA",
+    )
+
+    profile = profile_column(series)
+
+    assert is_date_column(profile)
+
+
+def test_iso_date_strings_are_detected():
+    series = pd.Series(
+        [
+            "2026-01-01",
+            "2026-02-15",
+            "2026-03-30",
+        ],
+        name="CRIADO_EM",
+    )
+
+    profile = profile_column(series)
+
+    assert is_date_column(profile)
+
+
+def test_numeric_identifier_is_not_detected_as_date():
+    series = pd.Series(
+        [500000, 500001, 500002],
+        name="CODIGO_CLIENTE",
+    )
+
+    profile = profile_column(series)
+
+    assert not is_date_column(profile)
+
+
+def test_regular_text_is_not_detected_as_date():
+    series = pd.Series(
+        [
+            "Premium",
+            "Standard",
+            "Basic",
+        ],
+        name="CATEGORIA",
+    )
+
+    profile = profile_column(series)
+
+    assert not is_date_column(profile)
+
+def test_benchmark_detects_date_columns():
+    base_dataframe = load_spreadsheet(
+        BENCHMARK_PATH,
+        sheet_name="01_Base_Realista",
+    )
+
+    challenging_dataframe = load_spreadsheet(
+        BENCHMARK_PATH,
+        sheet_name="03_Tipos_Desafiadores",
+    )
+
+    header_dataframe = load_spreadsheet(
+        BENCHMARK_PATH,
+        sheet_name="04_Cabecalho_Linha3",
+    )
+
+    base_profiles = {
+        profile.normalized_name: profile
+        for profile in build_column_profiles(base_dataframe)
+    }
+
+    challenging_profiles = {
+        profile.normalized_name: profile
+        for profile in build_column_profiles(
+            challenging_dataframe
+        )
+    }
+
+    header_profiles = {
+        profile.normalized_name: profile
+        for profile in build_column_profiles(
+            header_dataframe
+        )
+    }
+
+    assert is_date_column(
+        base_profiles["DATA_VENDA"]
+    )
+
+    assert is_date_column(
+        challenging_profiles["DATA"]
+    )
+
+    assert is_date_column(
+        header_profiles["DATA"]
+    )
+
+    assert not is_date_column(
+        challenging_profiles["CODIGO_CLIENTE"]
+    )
+
+    assert not is_date_column(
+        challenging_profiles["CEP"]
+    )

@@ -4,10 +4,10 @@ Inferência de esquema e classificação semântica de colunas.
 
 import re
 import unicodedata
+import pandas as pd
+from datetime import date, datetime
 from dataclasses import dataclass
 from typing import Any
-
-import pandas as pd
 
 
 DEFAULT_SAMPLE_SIZE = 5
@@ -49,6 +49,22 @@ CURRENCY_STRONG_NAME_TOKENS = {
 }
 
 CURRENCY_SCORE_THRESHOLD = 0.60
+
+DATE_NAME_TOKENS = {
+    "DATA",
+    "DATE",
+}
+
+DATE_SCORE_THRESHOLD = 0.60
+
+DATE_VALUE_PATTERN = re.compile(
+    r"^(?:"
+    r"\d{1,2}[/-]\d{1,2}[/-]\d{2,4}"
+    r"|"
+    r"\d{4}-\d{1,2}-\d{1,2}"
+    r")"
+    r"(?:[ T]\d{1,2}:\d{2}(?::\d{2})?)?$"
+)
 
 
 @dataclass(frozen=True)
@@ -283,6 +299,7 @@ def is_percentage_column(
     """
     return calculate_percentage_score(profile) >= PERCENTAGE_SCORE_THRESHOLD
 
+
 def calculate_currency_score(
     profile: ColumnProfile,
 ) -> float:
@@ -297,9 +314,7 @@ def calculate_currency_score(
 
     score = 0.0
 
-    name_tokens = set(
-        profile.normalized_name.split("_")
-    )
+    name_tokens = set(profile.normalized_name.split("_"))
 
     if name_tokens & CURRENCY_STRONG_NAME_TOKENS:
         score += 0.45
@@ -311,36 +326,20 @@ def calculate_currency_score(
         r"(?:,\d{1,2})?$"
     )
 
-    sample_values = [
-        value
-        for value in profile.sample_values
-        if str(value).strip()
-    ]
+    sample_values = [value for value in profile.sample_values if str(value).strip()]
 
     if sample_values:
         explicit_currency_matches = sum(
-            str(value).strip().startswith("R$")
-            for value in sample_values
+            str(value).strip().startswith("R$") for value in sample_values
         )
 
         monetary_pattern_matches = sum(
-            bool(
-                currency_pattern.match(
-                    str(value).strip()
-                )
-            )
-            for value in sample_values
+            bool(currency_pattern.match(str(value).strip())) for value in sample_values
         )
 
-        explicit_currency_ratio = (
-            explicit_currency_matches
-            / len(sample_values)
-        )
+        explicit_currency_ratio = explicit_currency_matches / len(sample_values)
 
-        monetary_pattern_ratio = (
-            monetary_pattern_matches
-            / len(sample_values)
-        )
+        monetary_pattern_ratio = monetary_pattern_matches / len(sample_values)
 
         if explicit_currency_ratio >= 0.80:
             score += 0.60
@@ -348,20 +347,14 @@ def calculate_currency_score(
             score += 0.40
 
         elif (
-            monetary_pattern_ratio >= 0.80
-            and name_tokens
-            & CURRENCY_STRONG_NAME_TOKENS
+            monetary_pattern_ratio >= 0.80 and name_tokens & CURRENCY_STRONG_NAME_TOKENS
         ):
             score += 0.30
 
     dtype = profile.pandas_dtype.lower()
 
-    if (
-        "float" in dtype
-        or "int" in dtype
-    ) and (
-        name_tokens
-        & CURRENCY_STRONG_NAME_TOKENS
+    if ("float" in dtype or "int" in dtype) and (
+        name_tokens & CURRENCY_STRONG_NAME_TOKENS
     ):
         score += 0.20
 
@@ -377,7 +370,91 @@ def is_currency_column(
     """
     Return whether the column has enough evidence to be monetary.
     """
-    return (
-        calculate_currency_score(profile)
-        >= CURRENCY_SCORE_THRESHOLD
-    )
+    return calculate_currency_score(profile) >= CURRENCY_SCORE_THRESHOLD
+
+
+def _looks_like_date_value(
+    value: Any,
+) -> bool:
+    """
+    Return whether a sampled value resembles a date or datetime.
+
+    Numeric values are deliberately not interpreted as dates because
+    identifiers and codes may also contain only digits.
+    """
+    if isinstance(
+        value,
+        (
+            pd.Timestamp,
+            datetime,
+            date,
+        ),
+    ):
+        return True
+
+    if not isinstance(value, str):
+        return False
+
+    value = value.strip()
+
+    if not value:
+        return False
+
+    return bool(DATE_VALUE_PATTERN.match(value))
+
+
+def calculate_date_score(
+    profile: ColumnProfile,
+) -> float:
+    """
+    Calculate how strongly a column resembles a date.
+
+    The score combines:
+    - semantic evidence from the column name;
+    - Pandas datetime dtype;
+    - date patterns found in sampled values.
+
+    Numeric values alone are never treated as date evidence.
+    """
+    if profile.non_null_count == 0:
+        return 0.0
+
+    score = 0.0
+
+    name_tokens = set(profile.normalized_name.split("_"))
+
+    if name_tokens & DATE_NAME_TOKENS:
+        score += 0.35
+
+    dtype = profile.pandas_dtype.lower()
+
+    if "datetime" in dtype:
+        score += 0.60
+
+    sample_values = [value for value in profile.sample_values if str(value).strip()]
+
+    if sample_values:
+        date_matches = sum(_looks_like_date_value(value) for value in sample_values)
+
+        date_ratio = date_matches / len(sample_values)
+
+        if date_ratio >= 0.80:
+            score += 0.55
+        elif date_ratio >= 0.50:
+            score += 0.40
+        elif date_ratio > 0:
+            score += 0.20
+
+    if profile.null_ratio <= 0.10:
+        score += 0.05
+
+    return min(score, 1.0)
+
+
+def is_date_column(
+    profile: ColumnProfile,
+) -> bool:
+    """
+    Return whether the column has enough evidence to represent dates.
+    """
+    return calculate_date_score(profile) >= DATE_SCORE_THRESHOLD
