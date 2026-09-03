@@ -11,7 +11,7 @@ Responsabilidades:
 """
 
 from dataclasses import asdict, is_dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from io import BytesIO
 from pathlib import Path
 from typing import Any
@@ -34,7 +34,10 @@ from reportlab.platypus import (
 
 import pandas as pd
 from werkzeug.utils import secure_filename
-
+from app.datetime_utils import (
+    format_local_datetime,
+    to_local_datetime,
+)
 
 REPORT_CHART_WIDTH = 15.5 * cm
 REPORT_CHART_HEIGHT = REPORT_CHART_WIDTH * (675 / 1200)
@@ -43,15 +46,16 @@ PREVIEW_MAX_COLUMNS = 6
 PREVIEW_CELL_MAX_LENGTH = 40
 
 
-def _format_datetime(value: datetime | None) -> str:
+def _format_datetime(
+    value: datetime | None,
+) -> str:
     """
-    Formata valores de data e hora para exibição no relatório.
+    Formata valores em horário local da aplicação.
     """
-
-    if value is None:
-        return "Não informado"
-
-    return value.strftime("%d/%m/%Y às %H:%M:%S")
+    return format_local_datetime(
+        value,
+        format_string="%d/%m/%Y às %H:%M:%S",
+    )
 
 
 def _format_number(value: float | int | None) -> str:
@@ -71,12 +75,7 @@ def _format_number(value: float | int | None) -> str:
 
     formatted = f"{number:,.2f}"
 
-    return (
-        formatted
-        .replace(",", "TEMP")
-        .replace(".", ",")
-        .replace("TEMP", ".")
-    )
+    return formatted.replace(",", "TEMP").replace(".", ",").replace("TEMP", ".")
 
 
 def _analysis_to_dict(
@@ -115,14 +114,18 @@ def _build_report_filename(
     original_name = Path(upload_record.file_name).stem
     safe_name = secure_filename(original_name) or "upload"
 
-    timestamp = generated_at.strftime("%Y%m%d_%H%M%S")
-
-    return (
-        f"relatorio_"
-        f"{upload_record.id}_"
-        f"{safe_name}_"
-        f"{timestamp}.pdf"
+    local_generated_at = to_local_datetime(
+        generated_at
     )
+
+    if local_generated_at is None:
+        local_generated_at = generated_at
+
+    timestamp = local_generated_at.strftime(
+        "%Y%m%d_%H%M%S"
+    )
+
+    return f"relatorio_{upload_record.id}_{safe_name}_{timestamp}.pdf"
 
 
 def _build_analysis_summary(
@@ -195,15 +198,10 @@ def _build_analysis_summary(
     return {
         "numeric_columns": numeric_columns,
         "categorical_columns": categorical_columns,
-        "numeric_columns_count": len(
-            numeric_columns
-        ),
-        "categorical_columns_count": len(
-            categorical_columns
-        ),
+        "numeric_columns_count": len(numeric_columns),
+        "categorical_columns_count": len(categorical_columns),
         "total_missing_values": sum(
-            int(value)
-            for value in missing_values_count.values()
+            int(value) for value in missing_values_count.values()
         ),
         "missing_columns": missing_columns,
     }
@@ -217,9 +215,7 @@ def _build_numeric_statistics(
     para uso no relatório PDF.
     """
 
-    analysis_data = _analysis_to_dict(
-        analysis_result
-    )
+    analysis_data = _analysis_to_dict(analysis_result)
 
     numeric_statistics = (
         analysis_data.get(
@@ -235,18 +231,10 @@ def _build_numeric_statistics(
         formatted_statistics.append(
             {
                 "column": str(column),
-                "mean": _format_number(
-                    statistics.get("mean")
-                ),
-                "median": _format_number(
-                    statistics.get("median")
-                ),
-                "min": _format_number(
-                    statistics.get("min")
-                ),
-                "max": _format_number(
-                    statistics.get("max")
-                ),
+                "mean": _format_number(statistics.get("mean")),
+                "median": _format_number(statistics.get("median")),
+                "min": _format_number(statistics.get("min")),
+                "max": _format_number(statistics.get("max")),
             }
         )
 
@@ -273,6 +261,7 @@ def _format_column_list(
         escape(formatted_columns),
         paragraph_style,
     )
+
 
 def _format_preview_value(
     value: Any,
@@ -309,19 +298,13 @@ def _build_dataframe_preview(
     """
 
     if not isinstance(dataframe, pd.DataFrame):
-        raise TypeError(
-            "O objeto informado deve ser um pandas.DataFrame."
-        )
+        raise TypeError("O objeto informado deve ser um pandas.DataFrame.")
 
     if max_rows < 0:
-        raise ValueError(
-            "max_rows deve ser maior ou igual a zero."
-        )
+        raise ValueError("max_rows deve ser maior ou igual a zero.")
 
     if max_columns < 0:
-        raise ValueError(
-            "max_columns deve ser maior ou igual a zero."
-        )
+        raise ValueError("max_columns deve ser maior ou igual a zero.")
 
     total_rows = len(dataframe)
     total_columns = len(dataframe.columns)
@@ -331,16 +314,10 @@ def _build_dataframe_preview(
         :max_columns,
     ].copy()
 
-    columns = [
-        str(column)
-        for column in preview_dataframe.columns
-    ]
+    columns = [str(column) for column in preview_dataframe.columns]
 
     rows = [
-        [
-            _format_preview_value(value)
-            for value in row
-        ]
+        [_format_preview_value(value) for value in row]
         for row in preview_dataframe.itertuples(
             index=False,
             name=None,
@@ -564,9 +541,7 @@ def _build_chart_elements(
     chart_elements = []
 
     for chart in chart_results:
-        image_stream = BytesIO(
-            chart.image_bytes
-        )
+        image_stream = BytesIO(chart.image_bytes)
 
         chart_image = Image(
             image_stream,
@@ -585,13 +560,9 @@ def _build_chart_elements(
             ]
         )
 
-        chart_elements.append(
-            chart_block
-        )
+        chart_elements.append(chart_block)
 
-        chart_elements.append(
-            Spacer(1, 0.6 * cm)
-        )
+        chart_elements.append(Spacer(1, 0.6 * cm))
 
     return chart_elements
 
@@ -642,38 +613,27 @@ def generate_upload_report(
         exist_ok=True,
     )
 
-    generated_at = datetime.now()
+    generated_at = datetime.now(
+        timezone.utc
+    )
 
     report_filename = _build_report_filename(
         upload_record=upload_record,
         generated_at=generated_at,
     )
 
-    report_path = (
-        reports_path
-        / report_filename
-    )
+    report_path = reports_path / report_filename
 
-    analysis_summary = (
-        _build_analysis_summary(
-            analysis_result
-        )
-    )
+    analysis_summary = _build_analysis_summary(analysis_result)
 
-    numeric_statistics = (
-        _build_numeric_statistics(
-            analysis_result
-        )
-    )
+    numeric_statistics = _build_numeric_statistics(analysis_result)
 
     chart_results = chart_results or []
 
     dataframe_preview = None
 
     if dataframe is not None:
-        dataframe_preview = _build_dataframe_preview(
-            dataframe
-        )
+        dataframe_preview = _build_dataframe_preview(dataframe)
 
     document = SimpleDocTemplate(
         str(report_path),
@@ -682,10 +642,7 @@ def generate_upload_report(
         leftMargin=2 * cm,
         topMargin=2 * cm,
         bottomMargin=2 * cm,
-        title=(
-            "Relatório de Upload - "
-            "DataBoard Reports"
-        ),
+        title=("Relatório de Upload - DataBoard Reports"),
         author="DataBoard Reports",
     )
 
@@ -698,9 +655,7 @@ def generate_upload_report(
         fontName="Helvetica-Bold",
         fontSize=20,
         leading=24,
-        textColor=colors.HexColor(
-            "#0f172a"
-        ),
+        textColor=colors.HexColor("#0f172a"),
         spaceAfter=10,
     )
 
@@ -711,9 +666,7 @@ def generate_upload_report(
         fontName="Helvetica",
         fontSize=10,
         leading=14,
-        textColor=colors.HexColor(
-            "#475569"
-        ),
+        textColor=colors.HexColor("#475569"),
         spaceAfter=20,
     )
 
@@ -723,9 +676,7 @@ def generate_upload_report(
         fontName="Helvetica-Bold",
         fontSize=14,
         leading=18,
-        textColor=colors.HexColor(
-            "#0f172a"
-        ),
+        textColor=colors.HexColor("#0f172a"),
         spaceBefore=8,
         spaceAfter=10,
     )
@@ -737,9 +688,7 @@ def generate_upload_report(
         fontSize=11,
         leading=14,
         alignment=TA_CENTER,
-        textColor=colors.HexColor(
-            "#1e293b"
-        ),
+        textColor=colors.HexColor("#1e293b"),
         spaceAfter=4,
     )
 
@@ -749,9 +698,7 @@ def generate_upload_report(
         fontName="Helvetica",
         fontSize=9,
         leading=12,
-        textColor=colors.HexColor(
-            "#1e293b"
-        ),
+        textColor=colors.HexColor("#1e293b"),
         wordWrap="CJK",
     )
 
@@ -761,9 +708,7 @@ def generate_upload_report(
         fontName="Helvetica",
         fontSize=9,
         leading=13,
-        textColor=colors.HexColor(
-            "#475569"
-        ),
+        textColor=colors.HexColor("#475569"),
         spaceAfter=6,
     )
 
@@ -773,10 +718,7 @@ def generate_upload_report(
             title_style,
         ),
         Paragraph(
-            (
-                "Relatório de processamento e "
-                "análise automática de planilha"
-            ),
+            ("Relatório de processamento e análise automática de planilha"),
             subtitle_style,
         ),
         Spacer(
@@ -801,43 +743,29 @@ def generate_upload_report(
         [
             "Nome do arquivo",
             Paragraph(
-                escape(
-                    str(
-                        upload_record.file_name
-                    )
-                ),
+                escape(str(upload_record.file_name)),
                 cell_value_style,
             ),
         ],
         [
             "Extensão",
-            str(
-                upload_record.file_extension
-            ),
+            str(upload_record.file_extension),
         ],
         [
             "Quantidade de linhas",
-            str(
-                upload_record.row_count
-            ),
+            str(upload_record.row_count),
         ],
         [
             "Quantidade de colunas",
-            str(
-                upload_record.column_count
-            ),
+            str(upload_record.column_count),
         ],
         [
             "Data do upload",
-            _format_datetime(
-                upload_record.created_at
-            ),
+            _format_datetime(upload_record.created_at),
         ],
         [
             "Data de geração",
-            _format_datetime(
-                generated_at
-            ),
+            _format_datetime(generated_at),
         ],
     ]
 
@@ -850,9 +778,7 @@ def generate_upload_report(
         repeatRows=1,
     )
 
-    _apply_information_table_style(
-        upload_table
-    )
+    _apply_information_table_style(upload_table)
 
     elements.extend(
         [
@@ -875,46 +801,27 @@ def generate_upload_report(
         ],
         [
             "Colunas numéricas",
-            str(
-                analysis_summary[
-                    "numeric_columns_count"
-                ]
-            ),
+            str(analysis_summary["numeric_columns_count"]),
         ],
         [
             "Colunas categóricas/texto",
-            str(
-                analysis_summary[
-                    "categorical_columns_count"
-                ]
-            ),
+            str(analysis_summary["categorical_columns_count"]),
         ],
         [
             "Total de valores ausentes",
-            str(
-                analysis_summary[
-                    "total_missing_values"
-                ]
-            ),
+            str(analysis_summary["total_missing_values"]),
         ],
         [
             "Nomes das colunas numéricas",
             _format_column_list(
-                analysis_summary[
-                    "numeric_columns"
-                ],
+                analysis_summary["numeric_columns"],
                 cell_value_style,
             ),
         ],
         [
-            (
-                "Nomes das colunas "
-                "categóricas/texto"
-            ),
+            ("Nomes das colunas categóricas/texto"),
             _format_column_list(
-                analysis_summary[
-                    "categorical_columns"
-                ],
+                analysis_summary["categorical_columns"],
                 cell_value_style,
             ),
         ],
@@ -929,9 +836,7 @@ def generate_upload_report(
         repeatRows=1,
     )
 
-    _apply_information_table_style(
-        analysis_table
-    )
+    _apply_information_table_style(analysis_table)
 
     elements.extend(
         [
@@ -947,19 +852,12 @@ def generate_upload_report(
         ]
     )
 
-    missing_columns = (
-        analysis_summary[
-            "missing_columns"
-        ]
-    )
+    missing_columns = analysis_summary["missing_columns"]
 
     if not missing_columns:
         elements.append(
             Paragraph(
-                (
-                    "Nenhum valor ausente foi "
-                    "identificado na planilha."
-                ),
+                ("Nenhum valor ausente foi identificado na planilha."),
                 note_style,
             )
         )
@@ -977,17 +875,11 @@ def generate_upload_report(
             missing_data.append(
                 [
                     Paragraph(
-                        escape(
-                            item["column"]
-                        ),
+                        escape(item["column"]),
                         cell_value_style,
                     ),
-                    str(
-                        item["count"]
-                    ),
-                    (
-                        f'{item["percent"]:.2f}%'
-                    ),
+                    str(item["count"]),
+                    (f"{item['percent']:.2f}%"),
                 ]
             )
 
@@ -1001,13 +893,9 @@ def generate_upload_report(
             repeatRows=1,
         )
 
-        _apply_data_table_style(
-            missing_table
-        )
+        _apply_data_table_style(missing_table)
 
-        elements.append(
-            missing_table
-        )
+        elements.append(missing_table)
 
     elements.extend(
         [
@@ -1016,10 +904,7 @@ def generate_upload_report(
                 0.7 * cm,
             ),
             Paragraph(
-                (
-                    "Estatísticas das "
-                    "colunas numéricas"
-                ),
+                ("Estatísticas das colunas numéricas"),
                 section_title_style,
             ),
         ]
@@ -1028,10 +913,7 @@ def generate_upload_report(
     if not numeric_statistics:
         elements.append(
             Paragraph(
-                (
-                    "Nenhuma coluna numérica "
-                    "foi identificada na planilha."
-                ),
+                ("Nenhuma coluna numérica foi identificada na planilha."),
                 note_style,
             )
         )
@@ -1051,9 +933,7 @@ def generate_upload_report(
             statistics_data.append(
                 [
                     Paragraph(
-                        escape(
-                            item["column"]
-                        ),
+                        escape(item["column"]),
                         cell_value_style,
                     ),
                     item["mean"],
@@ -1075,13 +955,9 @@ def generate_upload_report(
             repeatRows=1,
         )
 
-        _apply_data_table_style(
-            statistics_table
-        )
+        _apply_data_table_style(statistics_table)
 
-        elements.append(
-            statistics_table
-        )
+        elements.append(statistics_table)
 
     elements.extend(
         [
@@ -1099,10 +975,7 @@ def generate_upload_report(
     if dataframe_preview is None:
         elements.append(
             Paragraph(
-                (
-                    "Nenhuma prévia de dados foi "
-                    "disponibilizada para este relatório."
-                ),
+                ("Nenhuma prévia de dados foi disponibilizada para este relatório."),
                 note_style,
             )
         )
@@ -1110,10 +983,7 @@ def generate_upload_report(
     elif not dataframe_preview["columns"]:
         elements.append(
             Paragraph(
-                (
-                    "A planilha não possui colunas "
-                    "disponíveis para exibição."
-                ),
+                ("A planilha não possui colunas disponíveis para exibição."),
                 note_style,
             )
         )
@@ -1121,10 +991,7 @@ def generate_upload_report(
     elif not dataframe_preview["rows"]:
         elements.append(
             Paragraph(
-                (
-                    "A planilha possui colunas, mas "
-                    "não contém linhas de dados."
-                ),
+                ("A planilha possui colunas, mas não contém linhas de dados."),
                 note_style,
             )
         )
@@ -1136,9 +1003,7 @@ def generate_upload_report(
                     escape(column),
                     cell_value_style,
                 )
-                for column in dataframe_preview[
-                    "columns"
-                ]
+                for column in dataframe_preview["columns"]
             ]
         ]
 
@@ -1155,43 +1020,29 @@ def generate_upload_report(
 
         available_width = 15.5 * cm
 
-        column_width = (
-            available_width
-            / dataframe_preview[
-                "displayed_columns"
-            ]
-        )
+        column_width = available_width / dataframe_preview["displayed_columns"]
 
         preview_table = Table(
             preview_table_data,
-            colWidths=[
-                column_width
-                for _ in dataframe_preview[
-                    "columns"
-                ]
-            ],
+            colWidths=[column_width for _ in dataframe_preview["columns"]],
             repeatRows=1,
         )
 
-        _apply_data_table_style(
-            preview_table
-        )
+        _apply_data_table_style(preview_table)
 
-        elements.append(
-            preview_table
-        )
+        elements.append(preview_table)
 
         preview_note_parts = [
             (
-                f'Exibindo '
-                f'{dataframe_preview["displayed_rows"]} '
-                f'de {dataframe_preview["total_rows"]} '
-                f'linhas'
+                f"Exibindo "
+                f"{dataframe_preview['displayed_rows']} "
+                f"de {dataframe_preview['total_rows']} "
+                f"linhas"
             ),
             (
-                f'{dataframe_preview["displayed_columns"]} '
-                f'de {dataframe_preview["total_columns"]} '
-                f'colunas'
+                f"{dataframe_preview['displayed_columns']} "
+                f"de {dataframe_preview['total_columns']} "
+                f"colunas"
             ),
         ]
 
@@ -1204,9 +1055,7 @@ def generate_upload_report(
 
         elements.append(
             Paragraph(
-                " — ".join(
-                    preview_note_parts
-                ),
+                " — ".join(preview_note_parts),
                 note_style,
             )
         )
@@ -1241,10 +1090,7 @@ def generate_upload_report(
     if not chart_results:
         elements.append(
             Paragraph(
-                (
-                    "Nenhum gráfico compatível "
-                    "foi gerado para esta planilha."
-                ),
+                ("Nenhum gráfico compatível foi gerado para esta planilha."),
                 note_style,
             )
         )
@@ -1253,14 +1099,10 @@ def generate_upload_report(
         elements.extend(
             _build_chart_elements(
                 chart_results=chart_results,
-                chart_title_style=(
-                    chart_title_style
-                ),
+                chart_title_style=(chart_title_style),
             )
         )
 
-    document.build(
-        elements
-    )
+    document.build(elements)
 
     return report_path

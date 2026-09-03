@@ -13,7 +13,10 @@ from app.config import (
     TestingConfig,
 )
 from app.extensions import csrf, db
-
+from app.datetime_utils import (
+    format_local_datetime,
+    get_timezone,
+)
 
 CONFIG_BY_ENV = {
     "development": DevelopmentConfig,
@@ -65,6 +68,21 @@ def create_app(test_config=None):
         parents=True,
         exist_ok=True,
     )
+
+    def local_datetime_filter(
+        value,
+        format_string="%d/%m/%Y %H:%M",
+    ):
+        return format_local_datetime(
+            value,
+            format_string=format_string,
+            timezone_name=app.config["APP_TIMEZONE"],
+        )
+
+
+    app.jinja_env.filters[
+        "local_datetime"
+    ] = local_datetime_filter
 
     db.init_app(app)
     csrf.init_app(app)

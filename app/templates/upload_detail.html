@@ -90,7 +90,7 @@
         <div class="detail-item">
             <span>Criado em</span>
             <strong>
-                {{ record.created_at.strftime("%d/%m/%Y %H:%M") }}
+                {{ record.created_at|local_datetime }}
             </strong>
         </div>
 

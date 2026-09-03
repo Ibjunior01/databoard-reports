@@ -51,11 +51,7 @@
                             </td>
 
                             <td>
-                                {{
-                                    report.created_at.strftime(
-                                        "%d/%m/%Y %H:%M"
-                                    )
-                                }}
+                                {{ report.created_at|local_datetime }}
                             </td>
 
                             <td>

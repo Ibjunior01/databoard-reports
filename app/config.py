@@ -15,6 +15,10 @@ class Config:
     """
 
     APP_NAME = "DataBoard Reports"
+    APP_TIMEZONE = os.getenv(
+        "APP_TIMEZONE",
+        "America/Fortaleza",
+    )
 
     SECRET_KEY = os.getenv("SECRET_KEY")
 
