@@ -683,3 +683,76 @@ def test_semantic_classifier_returns_unknown_without_evidence():
 
     assert result.semantic_type is SemanticType.UNKNOWN
     assert result.confidence == 0.0
+
+def test_benchmark_unified_semantic_classification():
+    base_dataframe = load_spreadsheet(
+        BENCHMARK_PATH,
+        sheet_name="01_Base_Realista",
+    )
+
+    challenging_dataframe = load_spreadsheet(
+        BENCHMARK_PATH,
+        sheet_name="03_Tipos_Desafiadores",
+    )
+
+    base_classifications = {
+        profile.normalized_name: classify_column_semantics(profile)
+        for profile in build_column_profiles(base_dataframe)
+    }
+
+    challenging_classifications = {
+        profile.normalized_name: classify_column_semantics(profile)
+        for profile in build_column_profiles(
+            challenging_dataframe
+        )
+    }
+
+    assert (
+        base_classifications["CLIENTE_ID"].semantic_type
+        is SemanticType.IDENTIFIER
+    )
+
+    assert (
+        base_classifications["PEDIDO_ID"].semantic_type
+        is SemanticType.IDENTIFIER
+    )
+
+    assert (
+        base_classifications["DATA_VENDA"].semantic_type
+        is SemanticType.DATE
+    )
+
+    assert (
+        base_classifications["MARGEM_PCT"].semantic_type
+        is SemanticType.PERCENTAGE
+    )
+
+    assert (
+        base_classifications["VALOR_TOTAL"].semantic_type
+        is SemanticType.CURRENCY
+    )
+
+    assert (
+        challenging_classifications["CODIGO_CLIENTE"].semantic_type
+        is SemanticType.IDENTIFIER
+    )
+
+    assert (
+        challenging_classifications["CEP"].semantic_type
+        is SemanticType.IDENTIFIER
+    )
+
+    assert (
+        challenging_classifications["DATA"].semantic_type
+        is SemanticType.DATE
+    )
+
+    assert (
+        challenging_classifications["DESCONTO"].semantic_type
+        is SemanticType.PERCENTAGE
+    )
+
+    assert (
+        challenging_classifications["FATURAMENTO"].semantic_type
+        is SemanticType.CURRENCY
+    )
