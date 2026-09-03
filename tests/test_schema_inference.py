@@ -1,5 +1,6 @@
 import pandas as pd
 import pytest
+from pathlib import Path
 
 from app.services.schema_inference import (
     build_column_profiles,
@@ -7,6 +8,12 @@ from app.services.schema_inference import (
     is_identifier_column,
     normalize_column_name,
     profile_column,
+)
+
+from app.services.data_loader import load_spreadsheet
+
+BENCHMARK_PATH = (
+    Path(__file__).parent / "fixtures" / "databoard_autodetect_benchmark.xlsx"
 )
 
 
@@ -164,3 +171,41 @@ def test_valor_total_is_not_detected_as_identifier():
     profile = profile_column(series)
 
     assert not is_identifier_column(profile)
+
+
+def test_benchmark_base_detects_expected_identifiers():
+    dataframe = load_spreadsheet(
+        BENCHMARK_PATH,
+        sheet_name="01_Base_Realista",
+    )
+
+    profiles = {
+        profile.normalized_name: profile for profile in build_column_profiles(dataframe)
+    }
+
+    assert is_identifier_column(profiles["CLIENTE_ID"])
+
+    assert is_identifier_column(profiles["PEDIDO_ID"])
+
+    assert not is_identifier_column(profiles["QUANTIDADE"])
+
+    assert not is_identifier_column(profiles["VALOR_TOTAL"])
+
+
+def test_benchmark_challenging_types_detects_codigo_cliente():
+    dataframe = load_spreadsheet(
+        BENCHMARK_PATH,
+        sheet_name="03_Tipos_Desafiadores",
+    )
+
+    profiles = {
+        profile.normalized_name: profile for profile in build_column_profiles(dataframe)
+    }
+
+    assert is_identifier_column(profiles["CODIGO_CLIENTE"])
+
+    assert is_identifier_column(profiles["CEP"])
+
+    assert not is_identifier_column(profiles["FATURAMENTO"])
+
+    assert not is_identifier_column(profiles["DESCONTO"])
