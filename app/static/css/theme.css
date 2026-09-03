@@ -1,0 +1,445 @@
+/* =========================================================
+   DataBoard Reports — light/dark theme layer
+   Loaded after style.css so it can normalize legacy colors.
+   ========================================================= */
+
+:root,
+[data-theme="dark"] {
+    color-scheme: dark;
+
+    --color-bg: #020617;
+    --color-surface: #0f172a;
+    --color-surface-soft: #111827;
+    --color-surface-elevated: #1e293b;
+    --color-border: #1e293b;
+    --color-border-light: #334155;
+
+    --color-text: #f8fafc;
+    --color-text-soft: #cbd5e1;
+    --color-text-muted: #94a3b8;
+
+    --color-primary: #38bdf8;
+    --color-primary-hover: #0ea5e9;
+    --color-primary-soft: rgba(56, 189, 248, 0.12);
+
+    --color-navbar-bg: rgba(2, 6, 23, 0.9);
+    --color-input-bg: #020617;
+    --color-table-head: #020617;
+    --color-row-hover: rgba(56, 189, 248, 0.06);
+
+    --color-danger-bg: rgba(239, 68, 68, 0.12);
+    --color-danger-bg-hover: rgba(239, 68, 68, 0.22);
+    --color-danger-border: rgba(239, 68, 68, 0.55);
+    --color-danger-text: #fca5a5;
+
+    --color-chart-grid: rgba(148, 163, 184, 0.18);
+    --color-chart-hover-bg: #0f172a;
+    --color-chart-hover-text: #f8fafc;
+
+    --color-glow-left: rgba(56, 189, 248, 0.16);
+    --color-glow-right: rgba(59, 130, 246, 0.12);
+
+    --shadow-card: 0 20px 45px rgba(0, 0, 0, 0.28);
+    --shadow-soft: 0 12px 28px rgba(0, 0, 0, 0.18);
+}
+
+[data-theme="light"] {
+    color-scheme: light;
+
+    --color-bg: #f8fafc;
+    --color-surface: #ffffff;
+    --color-surface-soft: #f1f5f9;
+    --color-surface-elevated: #e2e8f0;
+    --color-border: #e2e8f0;
+    --color-border-light: #cbd5e1;
+
+    --color-text: #0f172a;
+    --color-text-soft: #334155;
+    --color-text-muted: #64748b;
+
+    --color-primary: #0369a1;
+    --color-primary-hover: #075985;
+    --color-primary-soft: rgba(3, 105, 161, 0.1);
+
+    --color-navbar-bg: rgba(255, 255, 255, 0.94);
+    --color-input-bg: #ffffff;
+    --color-table-head: #f1f5f9;
+    --color-row-hover: rgba(3, 105, 161, 0.06);
+
+    --color-danger-bg: #fff1f2;
+    --color-danger-bg-hover: #ffe4e6;
+    --color-danger-border: #fda4af;
+    --color-danger-text: #be123c;
+
+    --color-chart-grid: rgba(100, 116, 139, 0.2);
+    --color-chart-hover-bg: #ffffff;
+    --color-chart-hover-text: #0f172a;
+
+    --color-glow-left: rgba(14, 165, 233, 0.09);
+    --color-glow-right: rgba(59, 130, 246, 0.07);
+
+    --shadow-card: 0 18px 38px rgba(15, 23, 42, 0.08);
+    --shadow-soft: 0 10px 24px rgba(15, 23, 42, 0.07);
+}
+
+html {
+    background: var(--color-bg);
+}
+
+body {
+    background:
+        radial-gradient(
+            circle at top left,
+            var(--color-glow-left),
+            transparent 32rem
+        ),
+        radial-gradient(
+            circle at top right,
+            var(--color-glow-right),
+            transparent 28rem
+        ),
+        var(--color-bg);
+    color: var(--color-text);
+}
+
+body,
+.app-navbar,
+.app-footer,
+.card,
+.feature-card,
+.metadata-card,
+.columns-card,
+.preview-card,
+.empty-dashboard,
+.chart-card,
+.detail-card,
+.detail-item,
+.history-table-wrapper,
+.empty-state,
+input,
+select,
+textarea {
+    transition:
+        background-color 180ms ease,
+        border-color 180ms ease,
+        color 180ms ease,
+        box-shadow 180ms ease;
+}
+
+.app-navbar,
+header,
+.navbar {
+    background: var(--color-navbar-bg);
+    border-color: var(--color-border);
+}
+
+.app-navbar {
+    --bs-navbar-color: var(--color-text-muted);
+    --bs-navbar-hover-color: var(--color-primary);
+    --bs-navbar-active-color: var(--color-text);
+    --bs-navbar-brand-color: var(--color-text);
+    --bs-navbar-brand-hover-color: var(--color-primary);
+    --bs-navbar-toggler-border-color: var(--color-border-light);
+}
+
+.app-navbar .navbar-brand,
+.app-navbar .nav-link.active {
+    color: var(--color-text);
+}
+
+.app-navbar .nav-link {
+    color: var(--color-text-muted);
+}
+
+.app-navbar .nav-link:hover,
+.app-navbar .nav-link:focus-visible {
+    color: var(--color-primary);
+}
+
+.app-navbar .nav-link.disabled {
+    color: var(--color-text-muted);
+    opacity: 0.5;
+}
+
+.navbar-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-left: auto;
+    order: 3;
+}
+
+.navbar-collapse {
+    order: 2;
+}
+
+.theme-toggle {
+    display: inline-grid;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    place-items: center;
+    padding: 0;
+    border: 1px solid var(--color-border-light) !important;
+    border-radius: 0.75rem;
+    background: transparent !important;
+    color: var(--color-text) !important;
+    line-height: 1;
+    box-shadow: none;
+}
+
+.theme-toggle:hover {
+    border-color: var(--color-primary) !important;
+    background: var(--color-primary-soft) !important;
+    color: var(--color-primary) !important;
+}
+
+.theme-toggle:focus-visible,
+.navbar-toggler:focus-visible,
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+    outline: 3px solid color-mix(
+        in srgb,
+        var(--color-primary) 55%,
+        transparent
+    );
+    outline-offset: 3px;
+}
+
+.theme-toggle-icon {
+    font-size: 1.15rem;
+    transform: translateY(-1px);
+}
+
+[data-theme="light"] .app-navbar .navbar-toggler-icon {
+    filter: invert(1);
+}
+
+.card,
+.feature-card,
+.metadata-card,
+.columns-card,
+.preview-card,
+.empty-dashboard,
+.empty-state {
+    background: linear-gradient(
+        180deg,
+        var(--color-surface),
+        var(--color-surface-soft)
+    );
+    border-color: var(--color-border);
+    box-shadow: var(--shadow-card);
+}
+
+.chart-card,
+.history-table-wrapper,
+.detail-card {
+    background: var(--color-surface);
+    border-color: var(--color-border);
+    box-shadow: var(--shadow-card);
+}
+
+.detail-item {
+    background: var(--color-surface-soft);
+    border-color: var(--color-border);
+}
+
+.metadata-card span,
+.detail-item span,
+.preview-header p,
+.chart-card-header p,
+.section-description,
+.empty-message,
+.empty-state p {
+    color: var(--color-text-muted);
+}
+
+.metadata-card strong,
+.detail-item strong,
+.columns-card h2,
+.columns-card h3,
+.preview-card h2,
+.empty-dashboard h2,
+.detail-card h2,
+.chart-card-header h3 {
+    color: var(--color-text);
+}
+
+.columns-list span {
+    background: var(--color-surface-soft);
+    color: var(--color-text-soft);
+    border-color: var(--color-border-light);
+}
+
+.preview-table th,
+.history-table th {
+    background: var(--color-table-head);
+    color: var(--color-text);
+    border-color: var(--color-border);
+}
+
+.preview-table td,
+.history-table td {
+    color: var(--color-text-soft);
+    border-color: var(--color-border);
+}
+
+.history-table tbody tr:hover {
+    background: var(--color-row-hover);
+}
+
+input,
+select,
+textarea {
+    background: var(--color-input-bg);
+    color: var(--color-text);
+    border-color: var(--color-border-light);
+}
+
+input::placeholder,
+textarea::placeholder {
+    color: var(--color-text-muted);
+    opacity: 1;
+}
+
+.table-wrapper::-webkit-scrollbar-track {
+    background: var(--color-surface-soft);
+}
+
+.table-wrapper::-webkit-scrollbar-thumb {
+    background: var(--color-border-light);
+}
+
+.table-wrapper::-webkit-scrollbar-thumb:hover {
+    background: var(--color-text-muted);
+}
+
+.chart-badge {
+    background: var(--color-primary-soft);
+    color: var(--color-primary);
+    border-color: color-mix(
+        in srgb,
+        var(--color-primary) 35%,
+        transparent
+    );
+}
+
+.chart-card {
+    overflow: hidden;
+}
+
+.secondary-button {
+    background: var(--color-surface);
+    color: var(--color-text-soft);
+    border-color: var(--color-border-light);
+}
+
+.secondary-button:hover {
+    background: var(--color-primary-soft);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+
+.danger-button {
+    background: var(--color-danger-bg);
+    color: var(--color-danger-text);
+    border-color: var(--color-danger-border);
+}
+
+.danger-button:hover {
+    background: var(--color-danger-bg-hover);
+    color: var(--color-danger-text);
+    border-color: var(--color-danger-text);
+}
+
+[data-theme="light"] .btn-outline-light {
+    color: var(--color-primary);
+    border-color: var(--color-primary);
+}
+
+[data-theme="light"] .btn-outline-light:hover,
+[data-theme="light"] .btn-outline-light:focus-visible {
+    background: var(--color-primary);
+    color: #ffffff;
+    border-color: var(--color-primary);
+}
+
+[data-theme="light"] .btn-close {
+    filter: none;
+}
+
+[data-theme="dark"] .btn-close {
+    filter: invert(1) grayscale(100%) brightness(180%);
+}
+
+.app-footer,
+footer {
+    color: var(--color-text-muted);
+    border-color: var(--color-border);
+}
+
+.skip-link {
+    position: fixed;
+    top: 0.75rem;
+    left: 0.75rem;
+    z-index: 2000;
+    padding: 0.65rem 0.9rem;
+    border-radius: 0.65rem;
+    background: var(--color-primary);
+    color: #ffffff;
+    font-weight: 700;
+    text-decoration: none;
+    transform: translateY(-150%);
+    transition: transform 150ms ease;
+}
+
+.skip-link:focus {
+    transform: translateY(0);
+}
+
+@media (max-width: 991.98px) {
+    .navbar-collapse {
+        order: 4;
+        width: 100%;
+        padding-top: 0.75rem;
+    }
+
+    .navbar-controls {
+        order: 3;
+    }
+
+    .app-navbar .navbar-nav {
+        gap: 0.2rem;
+        padding-bottom: 0.75rem;
+    }
+
+    .app-navbar .nav-link {
+        padding: 0.65rem 0;
+    }
+}
+
+@media (max-width: 768px) {
+    .history-table tbody tr {
+        background: var(--color-surface);
+        border-color: var(--color-border);
+        box-shadow: var(--shadow-soft);
+    }
+
+    .history-table td {
+        border-color: var(--color-border);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+    }
+}

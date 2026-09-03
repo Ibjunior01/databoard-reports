@@ -748,7 +748,7 @@ textarea:focus {
     overflow-wrap: anywhere;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1199.98px) {
     .history-table-wrapper {
         overflow: visible;
         border: 0;
@@ -795,12 +795,14 @@ textarea:focus {
 
     .history-table td {
         display: grid;
-        grid-template-columns: minmax(90px, 0.8fr) minmax(0, 1.7fr);
+        grid-template-columns: minmax(120px, 0.8fr) minmax(0, 1.7fr);
         gap: 1rem;
         align-items: center;
         padding: 0.85rem 1rem;
         border-bottom: 1px solid var(--color-border);
         text-align: right;
+        overflow-wrap: anywhere;
+        min-width: 0;
     }
 
     .history-table td::before {
@@ -818,9 +820,11 @@ textarea:focus {
         border-bottom: 0;
     }
 
-    .history-file-name {
+    .history-file-name,
+    .report-name-cell {
         max-width: none;
         overflow-wrap: anywhere;
+        word-break: break-word;
     }
 
     .history-actions-cell {
