@@ -1,5 +1,6 @@
 import pandas as pd
 import pytest
+from pathlib import Path
 
 from app.services.data_loader import (
     InvalidSpreadsheetError,
@@ -234,3 +235,174 @@ def test_detect_header_row_keeps_first_row_for_standard_table():
     detected_row = detect_header_row(dataframe)
 
     assert detected_row == 0
+
+
+def test_load_spreadsheet_detects_excel_header_on_third_row(
+    tmp_path,
+):
+    excel_path = tmp_path / "header_linha_3.xlsx"
+
+    raw_dataframe = pd.DataFrame(
+        [
+            [
+                "RELATÓRIO COMERCIAL — TESTE",
+                None,
+                None,
+                None,
+                None,
+                None,
+            ],
+            [
+                "Período: janeiro a agosto de 2026",
+                None,
+                None,
+                None,
+                None,
+                None,
+            ],
+            [
+                "DATA",
+                "UNIDADE",
+                "SERVICO",
+                "QTD",
+                "RECEITA",
+                "STATUS",
+            ],
+            [
+                "01/01/2026",
+                "Aldeota",
+                "Consultoria",
+                2,
+                1000,
+                "Concluído",
+            ],
+            [
+                "02/01/2026",
+                "Eusébio",
+                "Suporte",
+                1,
+                800,
+                "Pendente",
+            ],
+        ]
+    )
+
+    raw_dataframe.to_excel(
+        excel_path,
+        index=False,
+        header=False,
+    )
+
+    dataframe = load_spreadsheet(excel_path)
+
+    assert list(dataframe.columns) == [
+        "DATA",
+        "UNIDADE",
+        "SERVICO",
+        "QTD",
+        "RECEITA",
+        "STATUS",
+    ]
+
+    assert len(dataframe) == 2
+
+
+BENCHMARK_PATH = (
+    Path(__file__).parent / "fixtures" / "databoard_autodetect_benchmark.xlsx"
+)
+
+
+@pytest.mark.parametrize(
+    (
+        "sheet_name",
+        "expected_rows",
+        "expected_columns",
+    ),
+    [
+        (
+            "01_Base_Realista",
+            240,
+            [
+                "VENDEDOR",
+                "CLIENTE_ID",
+                "DATA_VENDA",
+                "REGIAO",
+                "VALOR_TOTAL",
+                "PEDIDO_ID",
+                "QUANTIDADE",
+                "PRODUTO",
+                "MARGEM_PCT",
+                "ATIVO",
+            ],
+        ),
+        (
+            "02_Colunas_Reordenadas",
+            120,
+            [
+                "PRODUTO",
+                "ATIVO",
+                "PEDIDO_ID",
+                "MARGEM_PCT",
+                "QUANTIDADE",
+                "REGIAO",
+                "CLIENTE_ID",
+                "VALOR_TOTAL",
+                "VENDEDOR",
+                "DATA_VENDA",
+            ],
+        ),
+        (
+            "03_Tipos_Desafiadores",
+            80,
+            [
+                "CODIGO_CLIENTE",
+                "DATA",
+                "FATURAMENTO",
+                "DESCONTO",
+                "CATEGORIA",
+                "CEP",
+                "OBSERVACAO",
+            ],
+        ),
+        (
+            "04_Cabecalho_Linha3",
+            100,
+            [
+                "DATA",
+                "UNIDADE",
+                "SERVICO",
+                "QTD",
+                "RECEITA",
+                "STATUS",
+            ],
+        ),
+    ],
+)
+def test_benchmark_sheets_load_with_expected_structure(
+    sheet_name,
+    expected_rows,
+    expected_columns,
+):
+    dataframe = load_spreadsheet(
+        BENCHMARK_PATH,
+        sheet_name=sheet_name,
+    )
+
+    assert len(dataframe) == expected_rows
+    assert list(dataframe.columns) == expected_columns
+
+
+def test_benchmark_reordered_columns_preserve_same_schema():
+    base_dataframe = load_spreadsheet(
+        BENCHMARK_PATH,
+        sheet_name="01_Base_Realista",
+    )
+
+    reordered_dataframe = load_spreadsheet(
+        BENCHMARK_PATH,
+        sheet_name="02_Colunas_Reordenadas",
+    )
+
+    assert set(base_dataframe.columns) == set(reordered_dataframe.columns)
+
+    assert list(base_dataframe.columns) != list(reordered_dataframe.columns)

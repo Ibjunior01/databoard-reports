@@ -186,7 +186,40 @@ def detect_header_row(
     return best_row
 
 
-def load_spreadsheet(file_path: str | Path) -> pd.DataFrame:
+def load_excel_with_detected_header(
+    file_path: Path,
+    engine: str,
+    sheet_name: int | str = 0,
+) -> pd.DataFrame:
+    """
+    Load an Excel worksheet using automatic header-row detection.
+
+    A small raw preview is first read with header=None so the most
+    likely table header can be identified. The worksheet is then
+    loaded again using the detected row as its actual header.
+    """
+    preview = pd.read_excel(
+        file_path,
+        engine=engine,
+        sheet_name=sheet_name,
+        header=None,
+        nrows=HEADER_SCAN_ROWS + 1,
+    )
+
+    header_row = detect_header_row(preview)
+
+    return pd.read_excel(
+        file_path,
+        engine=engine,
+        sheet_name=sheet_name,
+        header=header_row,
+    )
+
+
+def load_spreadsheet(
+    file_path: str | Path,
+    sheet_name: int | str = 0,
+) -> pd.DataFrame:
     """
     Load a CSV or Excel file into a Pandas DataFrame.
 
@@ -208,15 +241,17 @@ def load_spreadsheet(file_path: str | Path) -> pd.DataFrame:
             return pd.read_csv(path)
 
         if extension == ".xlsx":
-            return pd.read_excel(
+            return load_excel_with_detected_header(
                 path,
                 engine="openpyxl",
+                sheet_name=sheet_name,
             )
 
         if extension == ".xls":
-            return pd.read_excel(
+            return load_excel_with_detected_header(
                 path,
                 engine="xlrd",
+                sheet_name=sheet_name,
             )
 
     except (
