@@ -11,6 +11,7 @@ from app.services.report_history import (
     create_report_record,
 )
 
+
 def test_create_upload_record_persists_data(app):
     with app.app_context():
         record = create_upload_record(
@@ -57,7 +58,7 @@ def test_history_page_loads_successfully(client):
     response = client.get("/history")
 
     assert response.status_code == 200
-    assert "Histórico de uploads".encode("utf-8") in response.data
+    assert "Histórico de uploads".encode() in response.data
 
 
 def test_upload_creates_history_record(client, app):
@@ -158,7 +159,7 @@ def test_upload_detail_page_contains_reprocess_button(client, app):
     response = client.get(f"/history/{record_id}")
 
     assert response.status_code == 200
-    assert "Reprocessar upload".encode("utf-8") in response.data
+    assert b"Reprocessar upload" in response.data
     assert f"/history/{record_id}/reprocess".encode() in response.data
 
 
@@ -221,7 +222,7 @@ def test_reprocess_upload_missing_physical_file(client, app, tmp_path):
 
     assert response.status_code == 200
     assert (
-        "O arquivo físico deste upload não foi encontrado no servidor.".encode("utf-8")
+        "O arquivo físico deste upload não foi encontrado no servidor.".encode()
         in response.data
     )
 
@@ -332,9 +333,7 @@ def test_download_upload_report_missing_physical_file(
     assert response.status_code == 200
 
     assert (
-        "O arquivo físico deste upload não foi encontrado no servidor.".encode(
-            "utf-8"
-        )
+        "O arquivo físico deste upload não foi encontrado no servidor.".encode()
         in response.data
     )
 
@@ -402,9 +401,7 @@ def test_upload_detail_displays_empty_report_state(
     assert response.status_code == 200
 
     assert (
-        "Nenhum relatório PDF foi gerado para este upload.".encode(
-            "utf-8"
-        )
+        "Nenhum relatório PDF foi gerado para este upload.".encode()
         in response.data
     )
 
@@ -497,9 +494,7 @@ def test_download_existing_report_handles_missing_file(
     assert response.status_code == 200
 
     assert (
-        "O arquivo físico deste relatório não foi encontrado no servidor.".encode(
-            "utf-8"
-        )
+        "O arquivo físico deste relatório não foi encontrado no servidor.".encode()
         in response.data
     )
 
@@ -590,9 +585,7 @@ def test_delete_report_redirects_to_upload_detail(
     assert f"Upload #{upload_id}".encode() in response.data
 
     assert (
-        "Nenhum relatório PDF foi gerado para este upload.".encode(
-            "utf-8"
-        )
+        "Nenhum relatório PDF foi gerado para este upload.".encode()
         in response.data
     )
 
@@ -910,9 +903,7 @@ def test_delete_upload_route_removes_upload_and_related_files(
     assert response.status_code == 200
 
     assert (
-        "Upload e arquivos associados excluídos com sucesso.".encode(
-            "utf-8"
-        )
+        "Upload e arquivos associados excluídos com sucesso.".encode()
         in response.data
     )
 

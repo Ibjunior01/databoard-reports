@@ -16,7 +16,6 @@ from app.services.schema_inference import (
     classify_dataframe_schema,
 )
 
-
 METRIC_SEMANTIC_TYPES = {
     SemanticType.CURRENCY,
     SemanticType.PERCENTAGE,

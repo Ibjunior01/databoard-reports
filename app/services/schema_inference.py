@@ -13,7 +13,6 @@ from typing import Any
 
 import pandas as pd
 
-
 DEFAULT_SAMPLE_SIZE = 5
 
 IDENTIFIER_NAME_TOKENS = {
@@ -660,9 +659,7 @@ def calculate_datetime_score(
     score = 0.0
     name_tokens = _name_tokens(profile)
 
-    if "DATETIME" in name_tokens or "TIMESTAMP" in name_tokens:
-        score += 0.50
-    elif "DATA" in name_tokens and "HORA" in name_tokens:
+    if "DATETIME" in name_tokens or "TIMESTAMP" in name_tokens or "DATA" in name_tokens and "HORA" in name_tokens:
         score += 0.50
 
     dtype = profile.pandas_dtype.lower()

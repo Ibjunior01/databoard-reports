@@ -28,7 +28,7 @@ def test_to_local_datetime_converts_utc_to_fortaleza():
 
 
 def test_to_local_datetime_treats_naive_datetime_as_utc():
-    value = datetime(
+    value = datetime( #noqa: DTZ001
         2026,
         9,
         3,

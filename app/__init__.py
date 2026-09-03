@@ -4,6 +4,7 @@ Application Factory do DataBoard Reports.
 
 import os
 from pathlib import Path
+
 from flask import Flask, flash, redirect, url_for
 from werkzeug.exceptions import RequestEntityTooLarge
 
@@ -12,11 +13,11 @@ from app.config import (
     ProductionConfig,
     TestingConfig,
 )
-from app.extensions import csrf, db
 from app.datetime_utils import (
     format_local_datetime,
     get_timezone,
 )
+from app.extensions import csrf, db
 
 CONFIG_BY_ENV = {
     "development": DevelopmentConfig,
@@ -64,6 +65,8 @@ def create_app(test_config=None):
     if test_config:
         app.config.update(test_config)
 
+    get_timezone(app.config["APP_TIMEZONE"])
+
     Path(app.instance_path).mkdir(
         parents=True,
         exist_ok=True,
@@ -79,10 +82,7 @@ def create_app(test_config=None):
             timezone_name=app.config["APP_TIMEZONE"],
         )
 
-
-    app.jinja_env.filters[
-        "local_datetime"
-    ] = local_datetime_filter
+    app.jinja_env.filters["local_datetime"] = local_datetime_filter
 
     db.init_app(app)
     csrf.init_app(app)

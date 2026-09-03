@@ -8,7 +8,6 @@ from app.services.analyzer import (
     analyze_dataframe,
 )
 
-
 BENCHMARK_PATH = (
     Path(__file__).parent
     / "fixtures"

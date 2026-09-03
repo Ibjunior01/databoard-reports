@@ -207,9 +207,7 @@ def test_reports_history_page_loads_successfully(
     assert response.status_code == 200
 
     assert (
-        "Histórico de relatórios".encode(
-            "utf-8"
-        )
+        "Histórico de relatórios".encode()
         in response.data
     )
 
@@ -264,9 +262,7 @@ def test_reports_history_page_displays_empty_state(
     assert response.status_code == 200
 
     assert (
-        "Nenhum relatório gerado".encode(
-            "utf-8"
-        )
+        "Nenhum relatório gerado".encode()
         in response.data
     )
 
@@ -280,7 +276,7 @@ def test_navigation_contains_reports_link(
     assert b'href="/reports"' in response.data
 
     assert (
-        "Relatórios".encode("utf-8")
+        "Relatórios".encode()
         in response.data
     )
 
@@ -434,9 +430,7 @@ def test_delete_report_route_removes_file_and_record(
     assert response.status_code == 200
 
     assert (
-        "Relatório excluído com sucesso.".encode(
-            "utf-8"
-        )
+        "Relatório excluído com sucesso.".encode()
         in response.data
     )
 

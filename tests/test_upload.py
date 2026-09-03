@@ -1,4 +1,5 @@
 from io import BytesIO
+
 from app.services.data_loader import InvalidSpreadsheetError
 
 
@@ -18,7 +19,7 @@ def test_upload_displays_automatic_charts(client):
     )
 
     assert response.status_code == 200
-    assert "Gráficos automáticos".encode("utf-8") in response.data
+    assert "Gráficos automáticos".encode() in response.data
     assert b"plotly" in response.data.lower()
 
 

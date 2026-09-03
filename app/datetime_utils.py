@@ -7,7 +7,6 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from flask import current_app, has_app_context
 
-
 DEFAULT_TIMEZONE = "America/Fortaleza"
 
 

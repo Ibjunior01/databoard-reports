@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Any
 from xml.sax.saxutils import escape
 
+import pandas as pd
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER
 from reportlab.lib.pagesizes import A4
@@ -31,9 +32,8 @@ from reportlab.platypus import (
     Table,
     TableStyle,
 )
-
-import pandas as pd
 from werkzeug.utils import secure_filename
+
 from app.datetime_utils import (
     format_local_datetime,
     to_local_datetime,
@@ -58,7 +58,7 @@ def _format_datetime(
     )
 
 
-def _format_number(value: float | int | None) -> str:
+def _format_number(value: float | None) -> str:
     """
     Formata valores numéricos para exibição no relatório.
 

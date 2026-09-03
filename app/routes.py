@@ -33,7 +33,6 @@ from app.services.history import (
     get_upload_record,
     list_upload_records,
 )
-
 from app.services.report_history import (
     create_report_record,
     delete_report_record,
@@ -42,7 +41,6 @@ from app.services.report_history import (
     list_report_records_by_upload,
 )
 from app.services.reports import generate_upload_report
-
 
 main_bp = Blueprint("main", __name__)
 

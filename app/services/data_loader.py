@@ -17,7 +17,6 @@ import pandas as pd
 from openpyxl.utils.exceptions import InvalidFileException
 from xlrd.biffh import XLRDError
 
-
 SUPPORTED_EXTENSIONS = {".csv", ".xlsx", ".xls"}
 DEFAULT_PREVIEW_ROWS = 5
 HEADER_SCAN_ROWS = 15

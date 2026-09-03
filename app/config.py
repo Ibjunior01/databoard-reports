@@ -4,7 +4,7 @@ Configurações da aplicação DataBoard Reports.
 
 import os
 from pathlib import Path
-
+from typing import ClassVar
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -31,7 +31,11 @@ class Config:
 
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024
 
-    ALLOWED_EXTENSIONS = {"csv", "xlsx", "xls"}
+    ALLOWED_EXTENSIONS: ClassVar[set[str]] = {
+        "csv",
+        "xlsx",
+        "xls",
+    }
 
     SQLALCHEMY_DATABASE_URI = "sqlite:///databoard.sqlite3"
     SQLALCHEMY_TRACK_MODIFICATIONS = False

@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any
 
 import pandas as pd
 import plotly.express as px
@@ -20,7 +20,6 @@ from app.services.schema_inference import (
     SemanticType,
     classify_dataframe_schema,
 )
-
 
 METRIC_SEMANTIC_TYPES = {
     SemanticType.CURRENCY,
@@ -102,7 +101,7 @@ def _apply_dark_layout(figure: Any) -> Any:
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         font_color="#f8fafc",
-        margin=dict(l=32, r=24, t=56, b=40),
+        margin={"l": 32, "r": 24, "t": 56, "b": 40},
         height=360,
     )
     figure.update_traces(marker_color="#38bdf8")
@@ -117,7 +116,7 @@ def _apply_report_layout(figure: Any) -> Any:
         plot_bgcolor="#f8fafc",
         font_color="#1e293b",
         title_font_color="#0f172a",
-        margin=dict(l=70, r=40, t=90, b=70),
+        margin={"l": 70, "r": 40, "t": 90, "b": 70},
         width=STATIC_IMAGE_WIDTH,
         height=STATIC_IMAGE_HEIGHT,
     )
@@ -141,8 +140,7 @@ def _columns_of_types(
         for column in dataframe.columns
         if (
             str(column) in classifications
-            and classifications[str(column)].semantic_type
-            in semantic_types
+            and classifications[str(column)].semantic_type in semantic_types
         )
     ]
 
@@ -226,9 +224,8 @@ def _parse_metric_value(
             text = text.replace(",", "")
     elif "," in text:
         text = text.replace(",", ".")
-    elif (
-        semantic_type is SemanticType.CURRENCY
-        and re.fullmatch(r"[+-]?\d{1,3}(?:\.\d{3})+", text)
+    elif semantic_type is SemanticType.CURRENCY and re.fullmatch(
+        r"[+-]?\d{1,3}(?:\.\d{3})+", text
     ):
         text = text.replace(".", "")
 
@@ -246,9 +243,7 @@ def _coerce_metric_series(
         return pd.to_numeric(series, errors="coerce")
 
     return pd.to_numeric(
-        series.map(
-            lambda value: _parse_metric_value(value, semantic_type)
-        ),
+        series.map(lambda value: _parse_metric_value(value, semantic_type)),
         errors="coerce",
     )
 
@@ -269,7 +264,7 @@ def _prepare_metric_dataframe(
 def _build_categorical_bar_figure(
     dataframe: pd.DataFrame,
     max_categories: int = DEFAULT_MAX_CATEGORIES,
-) -> Optional[tuple[Any, str]]:
+) -> tuple[Any, str] | None:
     if dataframe.empty:
         return None
 
@@ -305,7 +300,7 @@ def _build_categorical_bar_figure(
 def _build_numeric_histogram_figure(
     dataframe: pd.DataFrame,
     nbins: int = 20,
-) -> Optional[tuple[Any, str]]:
+) -> tuple[Any, str] | None:
     if dataframe.empty:
         return None
 
@@ -337,7 +332,7 @@ def _build_numeric_histogram_figure(
 def _build_category_metric_bar_figure(
     dataframe: pd.DataFrame,
     max_categories: int = DEFAULT_MAX_CATEGORIES,
-) -> Optional[tuple[Any, str, str]]:
+) -> tuple[Any, str, str] | None:
     if dataframe.empty:
         return None
 
@@ -386,7 +381,7 @@ def _build_category_metric_bar_figure(
 
 def _build_time_series_figure(
     dataframe: pd.DataFrame,
-) -> Optional[tuple[Any, str, str]]:
+) -> tuple[Any, str, str] | None:
     if dataframe.empty:
         return None
 
@@ -435,7 +430,7 @@ def _build_time_series_figure(
 
 def _build_scatter_figure(
     dataframe: pd.DataFrame,
-) -> Optional[tuple[Any, str, str]]:
+) -> tuple[Any, str, str] | None:
     if dataframe.empty:
         return None
 
@@ -473,7 +468,7 @@ def _build_scatter_figure(
 def generate_categorical_bar_chart(
     dataframe: pd.DataFrame,
     max_categories: int = DEFAULT_MAX_CATEGORIES,
-) -> Optional[ChartResult]:
+) -> ChartResult | None:
     _validate_dataframe(dataframe)
     result = _build_categorical_bar_figure(dataframe, max_categories)
     if result is None:
@@ -492,7 +487,7 @@ def generate_categorical_bar_chart(
 def generate_numeric_histogram(
     dataframe: pd.DataFrame,
     nbins: int = 20,
-) -> Optional[ChartResult]:
+) -> ChartResult | None:
     _validate_dataframe(dataframe)
     result = _build_numeric_histogram_figure(dataframe, nbins)
     if result is None:
@@ -512,7 +507,7 @@ def generate_numeric_histogram(
 def generate_category_metric_bar_chart(
     dataframe: pd.DataFrame,
     max_categories: int = DEFAULT_MAX_CATEGORIES,
-) -> Optional[ChartResult]:
+) -> ChartResult | None:
     _validate_dataframe(dataframe)
     result = _build_category_metric_bar_figure(dataframe, max_categories)
     if result is None:
@@ -531,7 +526,7 @@ def generate_category_metric_bar_chart(
 
 def generate_time_series_chart(
     dataframe: pd.DataFrame,
-) -> Optional[ChartResult]:
+) -> ChartResult | None:
     _validate_dataframe(dataframe)
     result = _build_time_series_figure(dataframe)
     if result is None:
@@ -550,7 +545,7 @@ def generate_time_series_chart(
 
 def generate_scatter_chart(
     dataframe: pd.DataFrame,
-) -> Optional[ChartResult]:
+) -> ChartResult | None:
     _validate_dataframe(dataframe)
     result = _build_scatter_figure(dataframe)
     if result is None:
@@ -570,7 +565,7 @@ def generate_scatter_chart(
 def generate_categorical_bar_chart_image(
     dataframe: pd.DataFrame,
     max_categories: int = DEFAULT_MAX_CATEGORIES,
-) -> Optional[StaticChartResult]:
+) -> StaticChartResult | None:
     _validate_dataframe(dataframe)
     result = _build_categorical_bar_figure(dataframe, max_categories)
     if result is None:
@@ -589,7 +584,7 @@ def generate_categorical_bar_chart_image(
 def generate_numeric_histogram_image(
     dataframe: pd.DataFrame,
     nbins: int = 20,
-) -> Optional[StaticChartResult]:
+) -> StaticChartResult | None:
     _validate_dataframe(dataframe)
     result = _build_numeric_histogram_figure(dataframe, nbins)
     if result is None:
@@ -631,7 +626,7 @@ def _static_from_builder_result(
 def generate_category_metric_bar_chart_image(
     dataframe: pd.DataFrame,
     max_categories: int = DEFAULT_MAX_CATEGORIES,
-) -> Optional[StaticChartResult]:
+) -> StaticChartResult | None:
     _validate_dataframe(dataframe)
     return _static_from_builder_result(
         _build_category_metric_bar_figure(dataframe, max_categories),
@@ -642,7 +637,7 @@ def generate_category_metric_bar_chart_image(
 
 def generate_time_series_chart_image(
     dataframe: pd.DataFrame,
-) -> Optional[StaticChartResult]:
+) -> StaticChartResult | None:
     _validate_dataframe(dataframe)
     return _static_from_builder_result(
         _build_time_series_figure(dataframe),
@@ -653,7 +648,7 @@ def generate_time_series_chart_image(
 
 def generate_scatter_chart_image(
     dataframe: pd.DataFrame,
-) -> Optional[StaticChartResult]:
+) -> StaticChartResult | None:
     _validate_dataframe(dataframe)
     return _static_from_builder_result(
         _build_scatter_figure(dataframe),

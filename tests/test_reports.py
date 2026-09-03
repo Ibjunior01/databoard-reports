@@ -1,5 +1,5 @@
 import base64
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -44,6 +44,7 @@ def _create_upload_record(
             10,
             30,
             0,
+            tzinfo=timezone.utc,
         ),
     )
 
@@ -148,6 +149,7 @@ def test_generate_upload_report_creates_valid_pdf_header(
             11,
             0,
             0,
+            tzinfo=timezone.utc,
         ),
     )
 

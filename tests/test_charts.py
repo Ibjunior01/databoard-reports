@@ -18,7 +18,6 @@ from app.services.charts import (
 )
 from app.services.data_loader import load_spreadsheet
 
-
 BENCHMARK_PATH = (
     Path(__file__).parent / "fixtures" / "databoard_autodetect_benchmark.xlsx"
 )

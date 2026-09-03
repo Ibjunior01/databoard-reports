@@ -1,7 +1,9 @@
-import pandas as pd
-import pytest
 from pathlib import Path
 
+import pandas as pd
+import pytest
+
+from app.services.data_loader import load_spreadsheet
 from app.services.schema_inference import (
     SemanticType,
     build_column_profiles,
@@ -30,8 +32,6 @@ from app.services.schema_inference import (
     normalize_column_name,
     profile_column,
 )
-
-from app.services.data_loader import load_spreadsheet
 
 BENCHMARK_PATH = (
     Path(__file__).parent / "fixtures" / "databoard_autodetect_benchmark.xlsx"
