@@ -5,7 +5,9 @@ from pathlib import Path
 from app.services.schema_inference import (
     build_column_profiles,
     calculate_identifier_score,
+    calculate_percentage_score,
     is_identifier_column,
+    is_percentage_column,
     normalize_column_name,
     profile_column,
 )
@@ -209,3 +211,63 @@ def test_benchmark_challenging_types_detects_codigo_cliente():
     assert not is_identifier_column(profiles["FATURAMENTO"])
 
     assert not is_identifier_column(profiles["DESCONTO"])
+
+
+def test_margem_pct_is_detected_as_percentage():
+    series = pd.Series(
+        [10.5, 12.0, 8.7],
+        name="MARGEM_PCT",
+    )
+
+    profile = profile_column(series)
+
+    assert is_percentage_column(profile)
+    assert calculate_percentage_score(profile) >= 0.60
+
+
+def test_percentage_strings_are_detected():
+    series = pd.Series(
+        ["10%", "15%", "7,5%", "20%"],
+        name="DESCONTO",
+    )
+
+    profile = profile_column(series)
+
+    assert is_percentage_column(profile)
+
+
+def test_valor_total_is_not_percentage():
+    series = pd.Series(
+        [100.50, 200.75, 350.00],
+        name="VALOR_TOTAL",
+    )
+
+    profile = profile_column(series)
+
+    assert not is_percentage_column(profile)
+
+
+def test_faturamento_currency_strings_are_not_percentage():
+    series = pd.Series(
+        [
+            "R$ 1.250,00",
+            "R$ 980,50",
+            "R$ 2.100,75",
+        ],
+        name="FATURAMENTO",
+    )
+
+    profile = profile_column(series)
+
+    assert not is_percentage_column(profile)
+
+
+def test_quantidade_is_not_percentage():
+    series = pd.Series(
+        [1, 2, 3, 4],
+        name="QUANTIDADE",
+    )
+
+    profile = profile_column(series)
+
+    assert not is_percentage_column(profile)

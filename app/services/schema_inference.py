@@ -24,6 +24,21 @@ IDENTIFIER_NAME_TOKENS = {
 
 IDENTIFIER_SCORE_THRESHOLD = 0.60
 
+PERCENTAGE_STRONG_NAME_TOKENS = {
+    "PCT",
+    "PERCENTUAL",
+    "PERCENT",
+    "PORCENTAGEM",
+}
+
+PERCENTAGE_CONTEXT_NAME_TOKENS = {
+    "MARGEM",
+    "TAXA",
+    "DESCONTO",
+}
+
+PERCENTAGE_SCORE_THRESHOLD = 0.60
+
 
 @dataclass(frozen=True)
 class ColumnProfile:
@@ -201,3 +216,58 @@ def is_identifier_column(
     Return whether the column has enough evidence to be an identifier.
     """
     return calculate_identifier_score(profile) >= IDENTIFIER_SCORE_THRESHOLD
+
+
+def calculate_percentage_score(
+    profile: ColumnProfile,
+) -> float:
+    """
+    Calculate how strongly a column resembles a percentage.
+
+    The score combines semantic signals from the column name
+    with percentage patterns found in sampled values.
+    """
+    if profile.non_null_count == 0:
+        return 0.0
+
+    score = 0.0
+
+    name_tokens = set(profile.normalized_name.split("_"))
+
+    if name_tokens & PERCENTAGE_STRONG_NAME_TOKENS:
+        score += 0.65
+    elif name_tokens & PERCENTAGE_CONTEXT_NAME_TOKENS:
+        score += 0.30
+
+    percentage_pattern = re.compile(r"^[+-]?\d+(?:[.,]\d+)?\s*%$")
+
+    sample_values = [value for value in profile.sample_values if str(value).strip()]
+
+    if sample_values:
+        percentage_matches = sum(
+            bool(percentage_pattern.match(str(value).strip()))
+            for value in sample_values
+        )
+
+        percentage_ratio = percentage_matches / len(sample_values)
+
+        if percentage_ratio >= 0.80:
+            score += 0.60
+        elif percentage_ratio >= 0.50:
+            score += 0.45
+        elif percentage_ratio > 0:
+            score += 0.25
+
+    if profile.null_ratio <= 0.10:
+        score += 0.05
+
+    return min(score, 1.0)
+
+
+def is_percentage_column(
+    profile: ColumnProfile,
+) -> bool:
+    """
+    Return whether the column has enough evidence to be a percentage.
+    """
+    return calculate_percentage_score(profile) >= PERCENTAGE_SCORE_THRESHOLD
