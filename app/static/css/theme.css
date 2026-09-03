@@ -443,3 +443,20 @@ footer {
         animation-iteration-count: 1 !important;
     }
 }
+
+.chart-card {
+    min-width: 0;
+}
+
+.chart-container {
+    width: 100%;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.chart-container .plotly-graph-div,
+.chart-container .js-plotly-plot,
+.chart-container .plot-container,
+.chart-container .svg-container {
+    max-width: 100%;
+}

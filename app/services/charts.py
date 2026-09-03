@@ -95,16 +95,35 @@ def _to_plotly_image_bytes(figure: Any) -> bytes:
 
 
 def _apply_dark_layout(figure: Any) -> Any:
-    """Aplica o layout atual do dashboard interativo."""
+    """Aplica o layout base dos gráficos interativos do dashboard."""
     figure.update_layout(
         template="plotly_dark",
+        title_text=None,
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         font_color="#f8fafc",
-        margin={"l": 32, "r": 24, "t": 56, "b": 40},
-        height=360,
+        margin={
+            "l": 48,
+            "r": 16,
+            "t": 16,
+            "b": 56,
+        },
+        height=340,
+        autosize=True,
     )
-    figure.update_traces(marker_color="#38bdf8")
+
+    figure.update_xaxes(
+        automargin=True,
+    )
+
+    figure.update_yaxes(
+        automargin=True,
+    )
+
+    figure.update_traces(
+        marker_color="#38bdf8",
+    )
+
     return figure
 
 
