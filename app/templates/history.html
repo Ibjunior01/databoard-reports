@@ -5,89 +5,129 @@
 {% block content %}
 <section class="dashboard-section">
     <div class="section-header">
-        <p class="section-eyebrow">Uploads Registrados</p>
-        <h1>Histórico de uploads</h1>
+        <p class="section-eyebrow">
+            Uploads Registrados
+        </p>
+
+        <h1>
+            Histórico de uploads
+        </h1>
+
         <p>
-            Consulte os arquivos enviados anteriormente e acompanhe os principais
-            metadados registrados pelo sistema.
+            Consulte os arquivos enviados anteriormente e acompanhe
+            os principais metadados registrados pelo sistema.
         </p>
     </div>
 
     {% if records %}
-    <div class="history-table-wrapper">
-        <table class="history-table">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Arquivo</th>
-                    <th>Extensão</th>
-                    <th>Linhas</th>
-                    <th>Colunas</th>
-                    <th>Criado em</th>
-                    <th>Ações</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for record in records %}
-                <tr>
-                    <td>{{ record.id }}</td>
-                    <td>{{ record.file_name }}</td>
-                    <td>{{ record.file_extension }}</td>
-                    <td>{{ record.row_count }}</td>
-                    <td>{{ record.column_count }}</td>
-                    <td>{{ record.created_at|local_datetime }}</td>
-                    <td>
-                        <div class="report-actions">
-                            <a
-                                href="{{ url_for(
-                                    'main.upload_detail',
-                                    record_id=record.id
-                                ) }}"
-                                class="table-action-link"
-                            >
-                                Ver detalhes
-                            </a>
+        <div class="history-table-wrapper">
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th scope="col">ID</th>
+                        <th scope="col">Arquivo</th>
+                        <th scope="col">Extensão</th>
+                        <th scope="col">Linhas</th>
+                        <th scope="col">Colunas</th>
+                        <th scope="col">Criado em</th>
+                        <th scope="col">Ações</th>
+                    </tr>
+                </thead>
 
-                            <form
-                                method="post"
-                                action="{{ url_for(
-                                    'main.delete_upload',
-                                    record_id=record.id
-                                ) }}"
-                                class="inline-form"
-                                onsubmit="return confirm(
-                                    'Excluir este upload, o arquivo original e todos os relatórios relacionados?'
-                                );"
+                <tbody>
+                    {% for record in records %}
+                        <tr>
+                            <td data-label="ID">
+                                {{ record.id }}
+                            </td>
+
+                            <td
+                                data-label="Arquivo"
+                                class="history-file-name"
                             >
-                                <input
-                                    type="hidden"
-                                    name="csrf_token"
-                                    value="{{ csrf_token() }}"
-                                >
-                                <button
-                                    type="submit"
-                                    class="danger-button"
-                                >
-                                    Excluir
-                                </button>
-                            </form>
-                        </div>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+                                {{ record.file_name }}
+                            </td>
+
+                            <td data-label="Extensão">
+                                {{ record.file_extension }}
+                            </td>
+
+                            <td data-label="Linhas">
+                                {{ record.row_count }}
+                            </td>
+
+                            <td data-label="Colunas">
+                                {{ record.column_count }}
+                            </td>
+
+                            <td data-label="Criado em">
+                                {{ record.created_at|local_datetime }}
+                            </td>
+
+                            <td
+                                data-label="Ações"
+                                class="history-actions-cell"
+                            >
+                                <div class="report-actions">
+                                    <a
+                                        href="{{ url_for(
+                                            'main.upload_detail',
+                                            record_id=record.id
+                                        ) }}"
+                                        class="table-action-link"
+                                    >
+                                        Ver detalhes
+                                    </a>
+
+                                    <form
+                                        method="post"
+                                        action="{{ url_for(
+                                            'main.delete_upload',
+                                            record_id=record.id
+                                        ) }}"
+                                        class="inline-form"
+                                        onsubmit="return confirm(
+                                            'Excluir este upload, o arquivo original e todos os relatórios relacionados?'
+                                        );"
+                                    >
+                                        <input
+                                            type="hidden"
+                                            name="csrf_token"
+                                            value="{{ csrf_token() }}"
+                                        >
+
+                                        <button
+                                            type="submit"
+                                            class="danger-button"
+                                        >
+                                            Excluir
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     {% else %}
-    <div class="empty-state">
-        <h2>Nenhum upload registrado</h2>
-        <p>
-            Quando uma planilha for enviada, o registro aparecerá automaticamente aqui.
-        </p>
-        <a class="button-primary" href="{{ url_for('main.upload_file') }}">
-            Enviar primeira planilha
-        </a>
-    </div>
+        <div class="empty-state">
+            <h2>
+                Nenhum upload registrado
+            </h2>
+
+            <p>
+                Quando uma planilha for enviada, o registro aparecerá
+                automaticamente aqui.
+            </p>
+
+            <a
+                class="button-primary"
+                href="{{ url_for('main.upload_file') }}"
+            >
+                Enviar primeira planilha
+            </a>
+        </div>
     {% endif %}
 </section>
 {% endblock %}
