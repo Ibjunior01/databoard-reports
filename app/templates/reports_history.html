@@ -20,29 +20,32 @@
 
     {% if reports %}
         <div class="history-table-wrapper">
-            <table class="history-table">
+            <table class="reports-table history-table">
                 <thead>
                     <tr>
-                        <th>ID</th>
-                        <th>Relatório</th>
-                        <th>Upload de origem</th>
-                        <th>Gerado em</th>
-                        <th>Ações</th>
+                        <th scope="col">ID</th>
+                        <th scope="col">Relatório</th>
+                        <th scope="col">Upload de origem</th>
+                        <th scope="col">Gerado em</th>
+                        <th scope="col">Ações</th>
                     </tr>
                 </thead>
 
                 <tbody>
                     {% for report in reports %}
                         <tr>
-                            <td>
+                            <td data-label="ID">
                                 #{{ report.id }}
                             </td>
 
-                            <td class="report-name-cell">
+                            <td
+                                data-label="Relatório"
+                                class="history-file-name"
+                            >
                                 {{ report.file_name }}
                             </td>
 
-                            <td>
+                            <td data-label="Upload de origem">
                                 {% if report.upload %}
                                     {{ report.upload.file_name }}
                                 {% else %}
@@ -50,11 +53,14 @@
                                 {% endif %}
                             </td>
 
-                            <td>
+                            <td data-label="Gerado em">
                                 {{ report.created_at|local_datetime }}
                             </td>
 
-                            <td>
+                            <td
+                                data-label="Ações"
+                                class="history-actions-cell"
+                            >
                                 <div class="report-actions">
                                     {% if report.upload %}
                                         <a
@@ -77,7 +83,7 @@
                                     >
                                         Baixar PDF
                                     </a>
-                                    
+
                                     <form
                                         method="post"
                                         action="{{ url_for(
@@ -100,11 +106,6 @@
                                             name="redirect_to"
                                             value="reports"
                                         >
-                                        <input
-                                            type="hidden"
-                                            name="redirect_to"
-                                            value="reports"
-                                        >
 
                                         <button
                                             type="submit"
@@ -113,7 +114,6 @@
                                             Excluir
                                         </button>
                                     </form>
-
                                 </div>
                             </td>
                         </tr>
@@ -121,6 +121,7 @@
                 </tbody>
             </table>
         </div>
+
     {% else %}
         <div class="empty-state">
             <h2>Nenhum relatório gerado</h2>
