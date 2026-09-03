@@ -1,6 +1,11 @@
+import pandas as pd
 import pytest
 
-from app.services.schema_inference import normalize_column_name
+from app.services.schema_inference import (
+    build_column_profiles,
+    normalize_column_name,
+    profile_column,
+)
 
 
 @pytest.mark.parametrize(
@@ -24,3 +29,80 @@ def test_normalize_column_name(
     expected,
 ):
     assert normalize_column_name(original) == expected
+
+
+def test_profile_column_calculates_structural_metrics():
+    series = pd.Series(
+        [10, 20, 20, None],
+        name="Valor Total",
+    )
+
+    profile = profile_column(series)
+
+    assert profile.original_name == "Valor Total"
+    assert profile.normalized_name == "VALOR_TOTAL"
+    assert profile.total_count == 4
+    assert profile.non_null_count == 3
+    assert profile.null_count == 1
+    assert profile.null_ratio == 0.25
+    assert profile.unique_count == 2
+    assert profile.unique_ratio == pytest.approx(2 / 3)
+    assert profile.sample_values == [10.0, 20.0]
+
+
+def test_profile_column_handles_all_null_values():
+    series = pd.Series(
+        [None, None, None],
+        name="Campo Vazio",
+    )
+
+    profile = profile_column(series)
+
+    assert profile.total_count == 3
+    assert profile.non_null_count == 0
+    assert profile.null_count == 3
+    assert profile.null_ratio == 1.0
+    assert profile.unique_count == 0
+    assert profile.unique_ratio == 0.0
+    assert profile.sample_values == []
+
+
+def test_profile_column_limits_distinct_sample_values():
+    series = pd.Series(
+        ["A", "A", "B", "C", "D"],
+        name="Categoria",
+    )
+
+    profile = profile_column(
+        series,
+        sample_size=2,
+    )
+
+    assert profile.sample_values == [
+        "A",
+        "B",
+    ]
+
+
+def test_build_column_profiles_preserves_dataframe_columns():
+    dataframe = pd.DataFrame(
+        {
+            "Cliente ID": [101, 102],
+            "Valor Total": [100.0, 200.0],
+            "Região": ["Norte", "Sul"],
+        }
+    )
+
+    profiles = build_column_profiles(dataframe)
+
+    assert [profile.original_name for profile in profiles] == [
+        "Cliente ID",
+        "Valor Total",
+        "Região",
+    ]
+
+    assert [profile.normalized_name for profile in profiles] == [
+        "CLIENTE_ID",
+        "VALOR_TOTAL",
+        "REGIAO",
+    ]
