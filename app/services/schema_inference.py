@@ -39,6 +39,17 @@ PERCENTAGE_CONTEXT_NAME_TOKENS = {
 
 PERCENTAGE_SCORE_THRESHOLD = 0.60
 
+CURRENCY_STRONG_NAME_TOKENS = {
+    "VALOR",
+    "PRECO",
+    "RECEITA",
+    "FATURAMENTO",
+    "CUSTO",
+    "TOTAL",
+}
+
+CURRENCY_SCORE_THRESHOLD = 0.60
+
 
 @dataclass(frozen=True)
 class ColumnProfile:
@@ -271,3 +282,102 @@ def is_percentage_column(
     Return whether the column has enough evidence to be a percentage.
     """
     return calculate_percentage_score(profile) >= PERCENTAGE_SCORE_THRESHOLD
+
+def calculate_currency_score(
+    profile: ColumnProfile,
+) -> float:
+    """
+    Calculate how strongly a column resembles a monetary value.
+
+    The score combines semantic signals from the column name
+    with monetary patterns found in sampled values.
+    """
+    if profile.non_null_count == 0:
+        return 0.0
+
+    score = 0.0
+
+    name_tokens = set(
+        profile.normalized_name.split("_")
+    )
+
+    if name_tokens & CURRENCY_STRONG_NAME_TOKENS:
+        score += 0.45
+
+    currency_pattern = re.compile(
+        r"^(?:R\$\s*)?"
+        r"[+-]?"
+        r"(?:\d{1,3}(?:\.\d{3})*|\d+)"
+        r"(?:,\d{1,2})?$"
+    )
+
+    sample_values = [
+        value
+        for value in profile.sample_values
+        if str(value).strip()
+    ]
+
+    if sample_values:
+        explicit_currency_matches = sum(
+            str(value).strip().startswith("R$")
+            for value in sample_values
+        )
+
+        monetary_pattern_matches = sum(
+            bool(
+                currency_pattern.match(
+                    str(value).strip()
+                )
+            )
+            for value in sample_values
+        )
+
+        explicit_currency_ratio = (
+            explicit_currency_matches
+            / len(sample_values)
+        )
+
+        monetary_pattern_ratio = (
+            monetary_pattern_matches
+            / len(sample_values)
+        )
+
+        if explicit_currency_ratio >= 0.80:
+            score += 0.60
+        elif explicit_currency_ratio > 0:
+            score += 0.40
+
+        elif (
+            monetary_pattern_ratio >= 0.80
+            and name_tokens
+            & CURRENCY_STRONG_NAME_TOKENS
+        ):
+            score += 0.30
+
+    dtype = profile.pandas_dtype.lower()
+
+    if (
+        "float" in dtype
+        or "int" in dtype
+    ) and (
+        name_tokens
+        & CURRENCY_STRONG_NAME_TOKENS
+    ):
+        score += 0.20
+
+    if profile.null_ratio <= 0.10:
+        score += 0.05
+
+    return min(score, 1.0)
+
+
+def is_currency_column(
+    profile: ColumnProfile,
+) -> bool:
+    """
+    Return whether the column has enough evidence to be monetary.
+    """
+    return (
+        calculate_currency_score(profile)
+        >= CURRENCY_SCORE_THRESHOLD
+    )

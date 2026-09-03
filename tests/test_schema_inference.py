@@ -10,6 +10,8 @@ from app.services.schema_inference import (
     is_percentage_column,
     normalize_column_name,
     profile_column,
+    calculate_currency_score,
+    is_currency_column,
 )
 
 from app.services.data_loader import load_spreadsheet
@@ -271,3 +273,135 @@ def test_quantidade_is_not_percentage():
     profile = profile_column(series)
 
     assert not is_percentage_column(profile)
+
+
+def test_benchmark_detects_percentage_columns():
+    base_dataframe = load_spreadsheet(
+        BENCHMARK_PATH,
+        sheet_name="01_Base_Realista",
+    )
+
+    challenging_dataframe = load_spreadsheet(
+        BENCHMARK_PATH,
+        sheet_name="03_Tipos_Desafiadores",
+    )
+
+    base_profiles = {
+        profile.normalized_name: profile
+        for profile in build_column_profiles(base_dataframe)
+    }
+
+    challenging_profiles = {
+        profile.normalized_name: profile
+        for profile in build_column_profiles(challenging_dataframe)
+    }
+
+    assert is_percentage_column(base_profiles["MARGEM_PCT"])
+
+    assert is_percentage_column(challenging_profiles["DESCONTO"])
+
+    assert not is_percentage_column(base_profiles["VALOR_TOTAL"])
+
+    assert not is_percentage_column(challenging_profiles["FATURAMENTO"])
+
+
+def test_valor_total_is_detected_as_currency():
+    series = pd.Series(
+        [100.50, 250.75, 399.90],
+        name="VALOR_TOTAL",
+    )
+
+    profile = profile_column(series)
+
+    assert is_currency_column(profile)
+    assert calculate_currency_score(profile) >= 0.60
+
+
+def test_receita_is_detected_as_currency():
+    series = pd.Series(
+        [1000.0, 800.0, 1250.0],
+        name="RECEITA",
+    )
+
+    profile = profile_column(series)
+
+    assert is_currency_column(profile)
+
+
+def test_currency_strings_are_detected():
+    series = pd.Series(
+        [
+            "R$ 6.925,94",
+            "R$ 1.250,00",
+            "R$ 980,50",
+        ],
+        name="FATURAMENTO",
+    )
+
+    profile = profile_column(series)
+
+    assert is_currency_column(profile)
+
+
+def test_quantidade_is_not_currency():
+    series = pd.Series(
+        [1, 2, 3, 4],
+        name="QUANTIDADE",
+    )
+
+    profile = profile_column(series)
+
+    assert not is_currency_column(profile)
+
+
+def test_cliente_id_is_not_currency():
+    series = pd.Series(
+        [1001, 1002, 1003],
+        name="CLIENTE_ID",
+    )
+
+    profile = profile_column(series)
+
+    assert not is_currency_column(profile)
+
+
+def test_benchmark_detects_currency_columns():
+    base_dataframe = load_spreadsheet(
+        BENCHMARK_PATH,
+        sheet_name="01_Base_Realista",
+    )
+
+    challenging_dataframe = load_spreadsheet(
+        BENCHMARK_PATH,
+        sheet_name="03_Tipos_Desafiadores",
+    )
+
+    header_dataframe = load_spreadsheet(
+        BENCHMARK_PATH,
+        sheet_name="04_Cabecalho_Linha3",
+    )
+
+    base_profiles = {
+        profile.normalized_name: profile
+        for profile in build_column_profiles(base_dataframe)
+    }
+
+    challenging_profiles = {
+        profile.normalized_name: profile
+        for profile in build_column_profiles(challenging_dataframe)
+    }
+
+    header_profiles = {
+        profile.normalized_name: profile
+        for profile in build_column_profiles(header_dataframe)
+    }
+
+    assert is_currency_column(base_profiles["VALOR_TOTAL"])
+
+    assert is_currency_column(challenging_profiles["FATURAMENTO"])
+
+    assert is_currency_column(header_profiles["RECEITA"])
+
+    assert not is_currency_column(base_profiles["QUANTIDADE"])
+
+    assert not is_currency_column(base_profiles["CLIENTE_ID"])
