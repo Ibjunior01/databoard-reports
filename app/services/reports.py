@@ -114,16 +114,12 @@ def _build_report_filename(
     original_name = Path(upload_record.file_name).stem
     safe_name = secure_filename(original_name) or "upload"
 
-    local_generated_at = to_local_datetime(
-        generated_at
-    )
+    local_generated_at = to_local_datetime(generated_at)
 
     if local_generated_at is None:
         local_generated_at = generated_at
 
-    timestamp = local_generated_at.strftime(
-        "%Y%m%d_%H%M%S"
-    )
+    timestamp = local_generated_at.strftime("%Y%m%d_%H%M%S")
 
     return f"relatorio_{upload_record.id}_{safe_name}_{timestamp}.pdf"
 
@@ -493,6 +489,12 @@ def _apply_data_table_style(
                 ),
                 (
                     "ALIGN",
+                    (0, 0),
+                    (-1, 0),
+                    "CENTER",
+                ),
+                (
+                    "ALIGN",
                     (1, 1),
                     (-1, -1),
                     "CENTER",
@@ -613,9 +615,7 @@ def generate_upload_report(
         exist_ok=True,
     )
 
-    generated_at = datetime.now(
-        timezone.utc
-    )
+    generated_at = datetime.now(timezone.utc)
 
     report_filename = _build_report_filename(
         upload_record=upload_record,
@@ -700,6 +700,25 @@ def generate_upload_report(
         leading=12,
         textColor=colors.HexColor("#1e293b"),
         wordWrap="CJK",
+    )
+
+    table_label_style = ParagraphStyle(
+        name="TableLabel",
+        parent=styles["Normal"],
+        fontName="Helvetica-Bold",
+        fontSize=8.5,
+        leading=11,
+        textColor=colors.HexColor("#1e293b"),
+    )
+
+    preview_header_style = ParagraphStyle(
+        name="PreviewHeader",
+        parent=styles["Normal"],
+        fontName="Helvetica-Bold",
+        fontSize=7,
+        leading=9,
+        alignment=TA_CENTER,
+        textColor=colors.white,
     )
 
     note_style = ParagraphStyle(
@@ -812,14 +831,20 @@ def generate_upload_report(
             str(analysis_summary["total_missing_values"]),
         ],
         [
-            "Nomes das colunas numéricas",
+            Paragraph(
+                "Nomes das colunas numéricas",
+                table_label_style,
+            ),
             _format_column_list(
                 analysis_summary["numeric_columns"],
                 cell_value_style,
             ),
         ],
         [
-            ("Nomes das colunas categóricas/texto"),
+            Paragraph(
+                "Nomes das colunas categóricas/texto",
+                table_label_style,
+            ),
             _format_column_list(
                 analysis_summary["categorical_columns"],
                 cell_value_style,
@@ -998,14 +1023,14 @@ def generate_upload_report(
 
     else:
         preview_table_data = [
-            [
-                Paragraph(
-                    escape(column),
-                    cell_value_style,
-                )
-                for column in dataframe_preview["columns"]
-            ]
+        [
+            Paragraph(
+                escape(column),
+                preview_header_style,
+            )
+            for column in dataframe_preview["columns"]
         ]
+    ]
 
         for row in dataframe_preview["rows"]:
             preview_table_data.append(
