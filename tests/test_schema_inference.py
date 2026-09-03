@@ -14,6 +14,8 @@ from app.services.schema_inference import (
     is_currency_column,
     calculate_date_score,
     is_date_column,
+    calculate_datetime_score,
+    is_datetime_column,
 )
 
 from app.services.data_loader import load_spreadsheet
@@ -482,6 +484,7 @@ def test_regular_text_is_not_detected_as_date():
 
     assert not is_date_column(profile)
 
+
 def test_benchmark_detects_date_columns():
     base_dataframe = load_spreadsheet(
         BENCHMARK_PATH,
@@ -505,34 +508,97 @@ def test_benchmark_detects_date_columns():
 
     challenging_profiles = {
         profile.normalized_name: profile
-        for profile in build_column_profiles(
-            challenging_dataframe
-        )
+        for profile in build_column_profiles(challenging_dataframe)
     }
 
     header_profiles = {
         profile.normalized_name: profile
-        for profile in build_column_profiles(
-            header_dataframe
-        )
+        for profile in build_column_profiles(header_dataframe)
     }
 
-    assert is_date_column(
-        base_profiles["DATA_VENDA"]
+    assert is_date_column(base_profiles["DATA_VENDA"])
+
+    assert is_date_column(challenging_profiles["DATA"])
+
+    assert is_date_column(header_profiles["DATA"])
+
+    assert not is_date_column(challenging_profiles["CODIGO_CLIENTE"])
+
+    assert not is_date_column(challenging_profiles["CEP"])
+
+
+def test_datetime_values_are_detected():
+    series = pd.Series(
+        [
+            "01/01/2026 14:35",
+            "02/01/2026 09:10",
+            "03/01/2026 18:45",
+        ],
+        name="DATA_HORA",
     )
 
-    assert is_date_column(
-        challenging_profiles["DATA"]
+    profile = profile_column(series)
+
+    assert is_datetime_column(profile)
+    assert calculate_datetime_score(profile) >= 0.60
+
+
+def test_iso_datetime_values_are_detected():
+    series = pd.Series(
+        [
+            "2026-01-01 14:35:00",
+            "2026-01-02 09:10:00",
+            "2026-01-03 18:45:00",
+        ],
+        name="CRIADO_EM",
     )
 
-    assert is_date_column(
-        header_profiles["DATA"]
+    profile = profile_column(series)
+
+    assert is_datetime_column(profile)
+
+
+def test_pandas_timestamp_with_time_is_detected_as_datetime():
+    series = pd.Series(
+        pd.to_datetime(
+            [
+                "2026-01-01 14:35",
+                "2026-01-02 09:10",
+                "2026-01-03 18:45",
+            ]
+        ),
+        name="TIMESTAMP",
     )
 
-    assert not is_date_column(
-        challenging_profiles["CODIGO_CLIENTE"]
+    profile = profile_column(series)
+
+    assert is_datetime_column(profile)
+
+
+def test_plain_dates_are_not_detected_as_datetime():
+    series = pd.Series(
+        pd.to_datetime(
+            [
+                "2026-01-01",
+                "2026-01-02",
+                "2026-01-03",
+            ]
+        ),
+        name="DATA",
     )
 
-    assert not is_date_column(
-        challenging_profiles["CEP"]
+    profile = profile_column(series)
+
+    assert is_date_column(profile)
+    assert not is_datetime_column(profile)
+
+
+def test_numeric_identifier_is_not_datetime():
+    series = pd.Series(
+        [100001, 100002, 100003],
+        name="PEDIDO_ID",
     )
+
+    profile = profile_column(series)
+
+    assert not is_datetime_column(profile)

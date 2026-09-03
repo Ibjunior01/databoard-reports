@@ -66,6 +66,8 @@ DATE_VALUE_PATTERN = re.compile(
     r"(?:[ T]\d{1,2}:\d{2}(?::\d{2})?)?$"
 )
 
+DATETIME_SCORE_THRESHOLD = 0.60
+
 
 @dataclass(frozen=True)
 class ColumnProfile:
@@ -458,3 +460,99 @@ def is_date_column(
     Return whether the column has enough evidence to represent dates.
     """
     return calculate_date_score(profile) >= DATE_SCORE_THRESHOLD
+
+
+def _looks_like_datetime_value(
+    value: Any,
+) -> bool:
+    """
+    Return whether a sampled value contains an actual time component.
+    """
+    if isinstance(
+        value,
+        (
+            pd.Timestamp,
+            datetime,
+        ),
+    ):
+        return any(
+            (
+                value.hour,
+                value.minute,
+                value.second,
+                value.microsecond,
+            )
+        )
+
+    if not isinstance(value, str):
+        return False
+
+    value = value.strip()
+
+    if not value:
+        return False
+
+    return bool(
+        re.search(
+            r"[ T]\d{1,2}:\d{2}(?::\d{2})?$",
+            value,
+        )
+    )
+
+
+def calculate_datetime_score(
+    profile: ColumnProfile,
+) -> float:
+    """
+    Calculate how strongly a column resembles a datetime.
+
+    A plain date loaded by Pandas as datetime64 is not automatically
+    considered datetime unless there is evidence of a time component.
+    """
+    if profile.non_null_count == 0:
+        return 0.0
+
+    score = 0.0
+
+    name_tokens = set(profile.normalized_name.split("_"))
+
+    if "DATETIME" in name_tokens or "TIMESTAMP" in name_tokens:
+        score += 0.50
+
+    elif "DATA" in name_tokens and "HORA" in name_tokens:
+        score += 0.50
+
+    dtype = profile.pandas_dtype.lower()
+
+    if "datetime" in dtype:
+        score += 0.30
+
+    sample_values = [value for value in profile.sample_values if str(value).strip()]
+
+    if sample_values:
+        datetime_matches = sum(
+            _looks_like_datetime_value(value) for value in sample_values
+        )
+
+        datetime_ratio = datetime_matches / len(sample_values)
+
+        if datetime_ratio >= 0.80:
+            score += 0.65
+        elif datetime_ratio >= 0.50:
+            score += 0.45
+        elif datetime_ratio > 0:
+            score += 0.25
+
+    if profile.null_ratio <= 0.10:
+        score += 0.05
+
+    return min(score, 1.0)
+
+
+def is_datetime_column(
+    profile: ColumnProfile,
+) -> bool:
+    """
+    Return whether the column represents date and time values.
+    """
+    return calculate_datetime_score(profile) >= DATETIME_SCORE_THRESHOLD
