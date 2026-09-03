@@ -12,6 +12,18 @@ import pandas as pd
 
 DEFAULT_SAMPLE_SIZE = 5
 
+IDENTIFIER_NAME_TOKENS = {
+    "ID",
+    "IDENTIFICADOR",
+    "CODIGO",
+    "MATRICULA",
+    "CPF",
+    "CNPJ",
+    "CEP",
+}
+
+IDENTIFIER_SCORE_THRESHOLD = 0.60
+
 
 @dataclass(frozen=True)
 class ColumnProfile:
@@ -133,3 +145,59 @@ def build_column_profiles(
         )
         for column in dataframe.columns
     ]
+
+
+def calculate_identifier_score(
+    profile: ColumnProfile,
+) -> float:
+    """
+    Calculate how strongly a column resembles an identifier.
+
+    The score combines:
+    - semantic signals from the normalized name;
+    - uniqueness/cardinality;
+    - dtype compatibility;
+    - presence of usable values.
+
+    The returned value is always between 0.0 and 1.0.
+    """
+    if profile.non_null_count == 0:
+        return 0.0
+
+    score = 0.0
+
+    name_tokens = set(profile.normalized_name.split("_"))
+
+    if (
+        profile.normalized_name == "ID"
+        or profile.normalized_name.endswith("_ID")
+        or profile.normalized_name.startswith("ID_")
+    ):
+        score += 0.65
+
+    elif name_tokens & IDENTIFIER_NAME_TOKENS:
+        score += 0.55
+
+    if profile.unique_ratio >= 0.90:
+        score += 0.20
+    elif profile.unique_ratio >= 0.50:
+        score += 0.10
+
+    dtype = profile.pandas_dtype.lower()
+
+    if "int" in dtype or "object" in dtype or "string" in dtype:
+        score += 0.10
+
+    if profile.null_ratio <= 0.10:
+        score += 0.05
+
+    return min(score, 1.0)
+
+
+def is_identifier_column(
+    profile: ColumnProfile,
+) -> bool:
+    """
+    Return whether the column has enough evidence to be an identifier.
+    """
+    return calculate_identifier_score(profile) >= IDENTIFIER_SCORE_THRESHOLD

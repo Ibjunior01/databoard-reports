@@ -3,6 +3,8 @@ import pytest
 
 from app.services.schema_inference import (
     build_column_profiles,
+    calculate_identifier_score,
+    is_identifier_column,
     normalize_column_name,
     profile_column,
 )
@@ -106,3 +108,59 @@ def test_build_column_profiles_preserves_dataframe_columns():
         "VALOR_TOTAL",
         "REGIAO",
     ]
+
+
+def test_cliente_id_is_detected_as_identifier():
+    series = pd.Series(
+        [1001, 1002, 1003, 1004],
+        name="CLIENTE_ID",
+    )
+
+    profile = profile_column(series)
+
+    assert is_identifier_column(profile)
+    assert calculate_identifier_score(profile) >= 0.60
+
+
+def test_pedido_id_is_detected_as_identifier():
+    series = pd.Series(
+        ["PED-001", "PED-002", "PED-003"],
+        name="PEDIDO_ID",
+    )
+
+    profile = profile_column(series)
+
+    assert is_identifier_column(profile)
+
+
+def test_codigo_cliente_is_detected_as_identifier():
+    series = pd.Series(
+        [500001, 500002, 500003],
+        name="CODIGO_CLIENTE",
+    )
+
+    profile = profile_column(series)
+
+    assert is_identifier_column(profile)
+
+
+def test_quantidade_is_not_detected_as_identifier():
+    series = pd.Series(
+        [1, 2, 3, 4],
+        name="QUANTIDADE",
+    )
+
+    profile = profile_column(series)
+
+    assert not is_identifier_column(profile)
+
+
+def test_valor_total_is_not_detected_as_identifier():
+    series = pd.Series(
+        [100.50, 250.75, 399.90],
+        name="VALOR_TOTAL",
+    )
+
+    profile = profile_column(series)
+
+    assert not is_identifier_column(profile)
