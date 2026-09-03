@@ -256,7 +256,6 @@ def upload_file():
         metadata=metadata,
         analysis=analysis,
         charts=charts,
-        success_message="Arquivo carregado com sucesso",
     )
 
 
