@@ -16,6 +16,8 @@ from app.services.schema_inference import (
     is_date_column,
     calculate_datetime_score,
     is_datetime_column,
+    SemanticType,
+    classify_column_semantics,
 )
 
 from app.services.data_loader import load_spreadsheet
@@ -602,3 +604,82 @@ def test_numeric_identifier_is_not_datetime():
     profile = profile_column(series)
 
     assert not is_datetime_column(profile)
+
+
+def test_semantic_classifier_returns_identifier():
+    profile = profile_column(
+        pd.Series(
+            [1001, 1002, 1003],
+            name="CLIENTE_ID",
+        )
+    )
+
+    result = classify_column_semantics(profile)
+
+    assert result.semantic_type is SemanticType.IDENTIFIER
+    assert result.confidence >= 0.60
+
+
+def test_semantic_classifier_returns_datetime_before_date():
+    profile = profile_column(
+        pd.Series(
+            [
+                "01/01/2026 14:35",
+                "02/01/2026 09:10",
+                "03/01/2026 18:45",
+            ],
+            name="DATA_HORA",
+        )
+    )
+
+    result = classify_column_semantics(profile)
+
+    assert result.semantic_type is SemanticType.DATETIME
+
+
+def test_semantic_classifier_returns_percentage():
+    profile = profile_column(
+        pd.Series(
+            ["10%", "15%", "20%"],
+            name="DESCONTO",
+        )
+    )
+
+    result = classify_column_semantics(profile)
+
+    assert result.semantic_type is SemanticType.PERCENTAGE
+
+
+def test_semantic_classifier_returns_currency():
+    profile = profile_column(
+        pd.Series(
+            [
+                "R$ 1.250,00",
+                "R$ 980,50",
+                "R$ 2.100,75",
+            ],
+            name="FATURAMENTO",
+        )
+    )
+
+    result = classify_column_semantics(profile)
+
+    assert result.semantic_type is SemanticType.CURRENCY
+
+
+def test_semantic_classifier_returns_unknown_without_evidence():
+    profile = profile_column(
+        pd.Series(
+            [
+                "texto qualquer",
+                "outra informação",
+                "conteúdo livre",
+            ],
+            name="CAMPO_X",
+        )
+    )
+
+    result = classify_column_semantics(profile)
+
+    assert result.semantic_type is SemanticType.UNKNOWN
+    assert result.confidence == 0.0

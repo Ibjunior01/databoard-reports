@@ -7,6 +7,7 @@ import unicodedata
 import pandas as pd
 from datetime import date, datetime
 from dataclasses import dataclass
+from enum import Enum
 from typing import Any
 
 
@@ -67,6 +68,30 @@ DATE_VALUE_PATTERN = re.compile(
 )
 
 DATETIME_SCORE_THRESHOLD = 0.60
+
+
+class SemanticType(str, Enum):
+    """
+    Semantic types currently supported by schema inference.
+    """
+
+    IDENTIFIER = "identifier"
+    DATETIME = "datetime"
+    DATE = "date"
+    PERCENTAGE = "percentage"
+    CURRENCY = "currency"
+    UNKNOWN = "unknown"
+
+
+@dataclass(frozen=True)
+class SemanticClassification:
+    """
+    Final semantic classification for a spreadsheet column.
+    """
+
+    column_name: str
+    semantic_type: SemanticType
+    confidence: float
 
 
 @dataclass(frozen=True)
@@ -556,3 +581,66 @@ def is_datetime_column(
     Return whether the column represents date and time values.
     """
     return calculate_datetime_score(profile) >= DATETIME_SCORE_THRESHOLD
+
+def classify_column_semantics(
+    profile: ColumnProfile,
+) -> SemanticClassification:
+    """
+    Classify a column using the semantic detectors already available.
+
+    Classification order is intentional because some signals may
+    overlap. More specific semantic types take precedence.
+
+    Current precedence:
+        identifier
+        datetime
+        date
+        percentage
+        currency
+        unknown
+    """
+    candidates = [
+        (
+            SemanticType.IDENTIFIER,
+            calculate_identifier_score(profile),
+            IDENTIFIER_SCORE_THRESHOLD,
+        ),
+        (
+            SemanticType.DATETIME,
+            calculate_datetime_score(profile),
+            DATETIME_SCORE_THRESHOLD,
+        ),
+        (
+            SemanticType.DATE,
+            calculate_date_score(profile),
+            DATE_SCORE_THRESHOLD,
+        ),
+        (
+            SemanticType.PERCENTAGE,
+            calculate_percentage_score(profile),
+            PERCENTAGE_SCORE_THRESHOLD,
+        ),
+        (
+            SemanticType.CURRENCY,
+            calculate_currency_score(profile),
+            CURRENCY_SCORE_THRESHOLD,
+        ),
+    ]
+
+    for (
+        semantic_type,
+        score,
+        threshold,
+    ) in candidates:
+        if score >= threshold:
+            return SemanticClassification(
+                column_name=profile.original_name,
+                semantic_type=semantic_type,
+                confidence=round(score, 4),
+            )
+
+    return SemanticClassification(
+        column_name=profile.original_name,
+        semantic_type=SemanticType.UNKNOWN,
+        confidence=0.0,
+    )
