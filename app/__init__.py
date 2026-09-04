@@ -111,4 +111,17 @@ def create_app(test_config=None):
     with app.app_context():
         db.create_all()
 
+    @app.after_request
+    def add_security_headers(response):
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+
+        response.headers["Permissions-Policy"] = (
+            "camera=(), microphone=(), geolocation=()"
+        )
+
+        return response
+
     return app
