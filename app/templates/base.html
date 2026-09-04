@@ -109,10 +109,11 @@
 
                     <li class="nav-item">
                         <a
-                            class="nav-link disabled"
-                            href="#"
-                            aria-disabled="true"
-                            tabindex="-1"
+                            class="nav-link
+                            {% if request.endpoint in ['main.dashboard', 'main.reprocess_upload'] %}
+                                active
+                            {% endif %}"
+                            href="{{ url_for('main.dashboard') }}"
                         >
                             Dashboard
                         </a>
