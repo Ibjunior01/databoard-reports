@@ -1,113 +1,156 @@
-````markdown
 # PROJECT_STATE.md
 
 ## Projeto
 
-DataBoard Reports
+**DataBoard Reports**
 
-## Descrição
+---
 
-DataBoard Reports é uma aplicação web desenvolvida em Python com Flask para envio, processamento e análise automática de planilhas CSV, XLSX e XLS.
+## Estado atual
 
-A aplicação utiliza Pandas para leitura e análise dos dados, Plotly para geração de gráficos interativos, SQLite com SQLAlchemy para persistência e ReportLab para criação de relatórios PDF.
+O DataBoard Reports está em uma versão **estável para portfólio**, com o núcleo funcional concluído, testes automatizados, CI, Docker, segurança básica, responsividade, tema claro/escuro e documentação técnica.
 
-O projeto está sendo desenvolvido em entregas pequenas e sequenciais, com foco em:
+Estado validado:
 
-* boas práticas de engenharia de software;
-* separação de responsabilidades;
-* testes automatizados;
-* organização profissional do repositório;
-* evolução incremental;
-* preparação para portfólio no GitHub;
-* futura implantação em ambiente de produção.
+```text
+206 testes aprovados
+Ruff sem erros
+GitHub Actions aprovado
+Docker build aprovado
+Gunicorn validado
+Tema claro/escuro validado
+Responsividade validada
+Accessibility 100
+Best Practices 100
+```
+
+O deploy público foi preparado tecnicamente, mas **não será realizado nesta fase**.
 
 ---
 
 ## Objetivo do projeto
 
-Criar uma plataforma web profissional capaz de:
+Criar uma aplicação web profissional capaz de receber planilhas CSV e Excel, interpretar automaticamente sua estrutura, identificar semanticamente o papel das colunas e transformar os dados em análises, indicadores, gráficos e relatórios PDF.
 
-* receber arquivos CSV, XLSX e XLS;
-* validar os arquivos enviados;
-* armazenar os arquivos no servidor;
-* carregar os dados com Pandas;
-* identificar a estrutura da planilha;
-* exibir uma prévia dos dados;
-* identificar colunas numéricas e categóricas;
-* calcular valores ausentes;
-* gerar estatísticas automáticas;
-* criar gráficos interativos;
-* registrar uploads no banco de dados;
-* consultar o histórico de uploads;
-* reprocessar planilhas já enviadas;
-* gerar relatórios PDF;
-* persistir os relatórios gerados;
-* consultar o histórico de relatórios;
-* baixar novamente relatórios existentes;
-* excluir relatórios com segurança;
-* excluir uploads e arquivos relacionados;
-* evoluir futuramente para autenticação, filtros, paginação e deploy.
+O projeto foi desenvolvido com foco em:
+
+- engenharia de software;
+- separação de responsabilidades;
+- testes automatizados;
+- segurança básica;
+- análise de dados;
+- UX responsiva;
+- acessibilidade;
+- Docker;
+- CI/CD;
+- documentação profissional;
+- preparação para portfólio.
 
 ---
 
-## Entrega atual
+## Diferencial principal
 
-Conversa 20 — Exclusão segura de uploads e arquivos associados
+O DataBoard Reports não depende de uma ordem fixa de colunas.
 
-## Objetivo da entrega atual
+A aplicação utiliza um motor de inferência semântica para identificar o significado provável dos campos com base em:
 
-Permitir a exclusão completa e segura de um upload, removendo:
+- nome da coluna;
+- tipo Pandas;
+- conteúdo;
+- padrões textuais;
+- cardinalidade;
+- valores únicos;
+- proporção de nulos;
+- contexto semântico.
 
-* o arquivo original da planilha;
-* os arquivos PDF relacionados;
-* os registros de relatórios;
-* o registro do upload.
+Tipos semânticos suportados:
 
-A exclusão utiliza requisição `POST`, confirmação na interface e relacionamento em cascata entre uploads e relatórios.
+```text
+IDENTIFIER
+DATETIME
+DATE
+PERCENTAGE
+CURRENCY
+BOOLEAN
+QUANTITY
+NUMERIC
+CATEGORY
+TEXT
+UNKNOWN
+```
+
+Exemplo:
+
+```text
+CLIENTE_ID     → IDENTIFIER
+PEDIDO_ID      → IDENTIFIER
+DATA_VENDA     → DATE
+VALOR_TOTAL    → CURRENCY
+QUANTIDADE     → QUANTITY
+MARGEM_PCT     → PERCENTAGE
+REGIAO         → CATEGORY
+PRODUTO        → CATEGORY
+ATIVO          → BOOLEAN
+OBSERVACAO     → TEXT
+```
+
+Identificadores, CEPs e códigos não são utilizados automaticamente como métricas.
 
 ---
 
 ## Stack atual
 
-* Python
-* Flask
-* Pandas
-* Plotly
-* SQLite
-* Flask-SQLAlchemy
-* SQLAlchemy
-* ReportLab
-* HTML
-* CSS
-* Jinja
-* Bootstrap
-* Pytest
-* Git
-* GitHub
-* Visual Studio Code
+### Backend
+
+- Python 3.12
+- Flask
+- Flask-SQLAlchemy
+- SQLAlchemy
+- Flask-WTF
+- Pandas
+- OpenPyXL
+- xlrd
+
+### Visualização e relatórios
+
+- Plotly
+- Kaleido
+- ReportLab
+
+### Frontend
+
+- HTML5
+- CSS3
+- JavaScript
+- Jinja
+- Bootstrap 5
+
+### Qualidade e infraestrutura
+
+- Pytest
+- Ruff
+- Docker
+- Gunicorn
+- GitHub Actions
+- Git
+- GitHub
+- Visual Studio Code
 
 ---
 
-## Stack planejada
-
-* Docker
-* Flask-Migrate
-* CI/CD
-* Deploy em nuvem
-* Banco PostgreSQL em produção
-* Autenticação e autorização
-* Proteção CSRF
-
----
-
-## Estrutura atual esperada
+## Estrutura principal
 
 ```text
 databoard-reports/
 │
+├── .github/
+│   └── workflows/
+│       └── ci.yml
+│
 ├── app/
 │   ├── __init__.py
 │   ├── config.py
+│   ├── datetime_utils.py
 │   ├── extensions.py
 │   ├── models.py
 │   ├── routes.py
@@ -118,757 +161,961 @@ databoard-reports/
 │   │   ├── data_loader.py
 │   │   ├── history.py
 │   │   ├── report_history.py
-│   │   └── reports.py
+│   │   ├── reports.py
+│   │   └── schema_inference.py
 │   │
 │   ├── static/
-│   │   └── css/
-│   │       └── style.css
+│   │   ├── css/
+│   │   │   ├── style.css
+│   │   │   └── theme.css
+│   │   └── js/
+│   │       ├── theme-init.js
+│   │       └── theme.js
 │   │
 │   ├── templates/
 │   │   ├── base.html
-│   │   ├── index.html
-│   │   ├── upload.html
 │   │   ├── dashboard.html
 │   │   ├── history.html
-│   │   ├── upload_detail.html
-│   │   └── reports_history.html
+│   │   ├── index.html
+│   │   ├── reports_history.html
+│   │   ├── upload.html
+│   │   └── upload_detail.html
 │   │
 │   ├── uploads/
 │   └── reports/
 │
-├── instance/
-│   └── databoard.db
-│
 ├── tests/
+│   ├── fixtures/
+│   │   └── databoard_autodetect_benchmark.xlsx
 │   ├── conftest.py
 │   ├── test_analyzer.py
 │   ├── test_charts.py
+│   ├── test_dashboard.py
 │   ├── test_data_loader.py
+│   ├── test_datetime_utils.py
 │   ├── test_history.py
-│   ├── test_reports.py
 │   ├── test_report_history.py
-│   ├── test_routes.py
+│   ├── test_reports.py
+│   ├── test_schema_inference.py
+│   ├── test_security_headers.py
 │   └── test_upload.py
 │
+├── .dockerignore
+├── Dockerfile
+├── docker-compose.yml
 ├── PROJECT_STATE.md
 ├── README.md
 ├── requirements.txt
-├── run.py
-└── .gitignore
+└── run.py
 ```
 
 ---
 
-## Arquitetura atual
+## Arquitetura
 
-A aplicação utiliza uma organização baseada em camadas.
+A aplicação utiliza uma organização em camadas.
 
-### Camada de apresentação
+### Apresentação
 
-Responsável pela interface da aplicação.
-
-Arquivos principais:
-
-* `app/templates/base.html`
-* `app/templates/index.html`
-* `app/templates/upload.html`
-* `app/templates/dashboard.html`
-* `app/templates/history.html`
-* `app/templates/upload_detail.html`
-* `app/templates/reports_history.html`
-* `app/static/css/style.css`
-
-### Camada de rotas
-
-Responsável por receber as requisições HTTP e coordenar os serviços.
-
-Arquivo principal:
-
-* `app/routes.py`
-
-### Camada de serviços
-
-Responsável pelas regras de negócio e operações específicas.
-
-Arquivos principais:
-
-* `app/services/data_loader.py`
-* `app/services/analyzer.py`
-* `app/services/charts.py`
-* `app/services/history.py`
-* `app/services/report_history.py`
-* `app/services/reports.py`
-
-### Camada de persistência
-
-Responsável pelos modelos e acesso ao banco de dados.
-
-Arquivos principais:
-
-* `app/models.py`
-* `app/extensions.py`
-* `app/config.py`
-
-### Camada de testes
-
-Responsável pela validação automática do comportamento da aplicação.
-
-Arquivos principais:
-
-* `tests/conftest.py`
-* `tests/test_analyzer.py`
-* `tests/test_charts.py`
-* `tests/test_data_loader.py`
-* `tests/test_history.py`
-* `tests/test_reports.py`
-* `tests/test_report_history.py`
-* `tests/test_routes.py`
-* `tests/test_upload.py`
-
----
-
-## Modelos persistentes atuais
-
-### UploadRecord
-
-Representa uma planilha enviada para a aplicação.
-
-Campos:
-
-* `id`
-* `file_name`
-* `file_extension`
-* `file_path`
-* `row_count`
-* `column_count`
-* `created_at`
-
-Relacionamento:
-
-* um upload pode possuir vários relatórios;
-* relacionamento configurado com `cascade="all, delete-orphan"`.
-
-### ReportRecord
-
-Representa um relatório PDF gerado.
-
-Campos:
-
-* `id`
-* `upload_id`
-* `file_name`
-* `file_path`
-* `created_at`
-
-Relacionamento:
-
-* cada relatório pertence a um upload.
-
----
-
-## O que já foi implementado
-
-### Estrutura inicial da aplicação
-
-* Projeto Flask criado.
-* Application factory configurada.
-* Blueprint principal criado.
-* Configuração centralizada criada.
-* Pasta de templates criada.
-* Pasta de arquivos estáticos criada.
-* Estrutura de serviços criada.
-* Ambiente de testes com Pytest configurado.
-* Banco SQLite de testes em memória configurado.
-
-### Upload de planilhas
-
-* Formulário de upload criado.
-* Upload de arquivos CSV implementado.
-* Upload de arquivos XLSX implementado.
-* Upload de arquivos XLS implementado.
-* Validação de extensão implementada.
-* Uso de `secure_filename()` implementado.
-* Criação automática da pasta de uploads implementada.
-* Salvamento do arquivo físico implementado.
-* Mensagens de sucesso e erro adicionadas.
-
-### Carregamento dos dados
-
-* Serviço de carregamento com Pandas criado.
-* Leitura de CSV implementada.
-* Leitura de XLSX implementada.
-* Leitura de XLS implementada.
-* Exceção `UnsupportedFileTypeError` criada.
-* Validação de arquivo inexistente implementada.
-* Extração de metadados implementada.
-
-### Metadados da planilha
-
-* Nome do arquivo extraído.
-* Extensão do arquivo extraída.
-* Quantidade de linhas calculada.
-* Quantidade de colunas calculada.
-* Nomes das colunas extraídos.
-* Prévia das primeiras linhas criada.
-
-### Análise automática
-
-* Serviço `analyzer.py` criado.
-* Identificação de colunas numéricas implementada.
-* Identificação de colunas categóricas implementada.
-* Contagem de valores ausentes implementada.
-* Percentual de valores ausentes implementado.
-* Contagem de valores únicos implementada.
-* Estatísticas numéricas básicas implementadas.
-* Resultado da análise organizado para o dashboard.
-
-### Gráficos automáticos
-
-* Serviço `charts.py` criado.
-* Histogramas para colunas numéricas implementados.
-* Gráficos de barras para colunas categóricas implementados.
-* Gráficos Plotly integrados ao dashboard.
-* Geração de imagens de gráficos para PDF implementada.
-* Tratamento para planilhas sem colunas adequadas implementado.
-
-### Dashboard
-
-* Página de dashboard criada.
-* Metadados exibidos.
-* Colunas da planilha exibidas.
-* Prévia dos dados exibida.
-* Análise automática exibida.
-* Estatísticas numéricas exibidas.
-* Valores ausentes exibidos.
-* Gráficos interativos exibidos.
-* Estado vazio do dashboard implementado.
-* Layout responsivo criado.
-
-### Histórico de uploads
-
-* SQLite integrado à aplicação.
-* Flask-SQLAlchemy configurado.
-* Instância global `db` criada.
-* Modelo `UploadRecord` criado.
-* Registro automático de uploads implementado.
-* Serviço `history.py` criado.
-* Consulta dos uploads mais recentes implementada.
-* Página `/history` criada.
-* Ordenação por data e ID implementada.
-* Página de detalhes do upload criada.
-* Tratamento 404 para upload inexistente implementado.
-
-### Reprocessamento de uploads
-
-* Rota de reprocessamento criada.
-* Arquivo original localizado pelo caminho persistido.
-* Planilha carregada novamente com Pandas.
-* Metadados recalculados.
-* Análise automática recalculada.
-* Gráficos recalculados.
-* Prévia reconstruída.
-* Tratamento de arquivo físico ausente implementado.
-* Tratamento de extensão não suportada implementado.
-
-### Relatórios PDF
-
-* Serviço `reports.py` criado.
-* Geração de PDF com ReportLab implementada.
-* Identificação do upload incluída no PDF.
-* Nome do arquivo incluído.
-* Extensão incluída.
-* Quantidade de linhas incluída.
-* Quantidade de colunas incluída.
-* Data de criação incluída.
-* Análise automática incluída.
-* Colunas numéricas incluídas.
-* Colunas categóricas incluídas.
-* Valores ausentes incluídos.
-* Estatísticas numéricas incluídas.
-* Gráficos incluídos.
-* Prévia limitada dos dados incluída.
-* Pasta de relatórios criada automaticamente.
-* Download do PDF implementado.
-
----
-
-### Conversa 16 — Prévia dos dados no relatório PDF
-
-* Parâmetro opcional `dataframe` adicionado ao gerador de relatórios.
-* Prévia das primeiras linhas e colunas incluída no PDF.
-* Limites de linhas e colunas implementados.
-* Tratamento de DataFrame vazio implementado.
-* Tabela adaptada ao tamanho da página.
-* Testes de prévia adicionados.
-* Todos os testes anteriores permaneceram funcionando.
-* O comando `python -m pytest` retornou `67 passed`.
-
----
-
-### Conversa 17 — Persistência dos relatórios PDF
-
-* Modelo `ReportRecord` criado.
-* Relacionamento entre upload e relatório criado.
-* Serviço `report_history.py` criado.
-* Registro do relatório no banco implementado.
-* Caminho físico do PDF persistido.
-* Nome do relatório persistido.
-* Data de geração persistida.
-* Consulta por upload implementada.
-* Página de detalhes passou a exibir relatórios relacionados.
-* Download de relatório já existente implementado.
-* Tratamento de relatório inexistente implementado.
-* Tratamento de PDF físico ausente implementado.
-* Testes de persistência adicionados.
-* Todos os testes anteriores permaneceram funcionando.
-* O comando `python -m pytest` retornou `76 passed`.
-
----
-
-### Conversa 18 — Histórico geral de relatórios
-
-* Rota `/reports` criada.
-* Página `reports_history.html` criada.
-* Listagem geral de relatórios implementada.
-* Upload de origem exibido.
-* Link para detalhes do upload adicionado.
-* Download do PDF existente adicionado.
-* Estado vazio implementado.
-* Link de navegação para relatórios adicionado.
-* Carregamento antecipado com `joinedload()` implementado.
-* Consultas adicionais desnecessárias evitadas.
-* Testes da página geral adicionados.
-* Todos os testes anteriores permaneceram funcionando.
-* O comando `python -m pytest` retornou `81 passed`.
-
----
-
-### Conversa 19 — Exclusão segura de relatórios persistidos
-
-* Função `delete_report_record()` criada.
-* Exclusão de registros da tabela `report_records` implementada.
-* Remoção do arquivo PDF físico implementada.
-* Registro do banco passou a ser removido mesmo quando o arquivo físico já não existe.
-* Retorno booleano criado para informar se o arquivo físico foi removido.
-* Commit e rollback implementados no serviço de exclusão.
-* Rota POST `/reports/<int:report_id>/delete` criada.
-* Exclusões por requisição GET foram evitadas.
-* Tratamento 404 implementado para relatórios inexistentes.
-* Tratamento de falhas inesperadas com log da aplicação implementado.
-* Mensagens de sucesso e erro adicionadas.
-* Redirecionamento após exclusão implementado.
-* Usuário pode retornar ao histórico geral de relatórios.
-* Usuário pode retornar à página de detalhes do upload.
-* Botão “Excluir” adicionado ao histórico geral de relatórios.
-* Botão “Excluir” adicionado à lista de relatórios de cada upload.
-* Confirmação JavaScript adicionada antes da exclusão.
-* Campo oculto `redirect_to` criado para controlar o redirecionamento.
-* Estilo visual de ação destrutiva adicionado ao `style.css`.
-* Teste de exclusão do arquivo físico e registro criado.
-* Teste de exclusão quando o arquivo físico não existe criado.
-* Teste de exibição do formulário de exclusão criado.
-* Teste da rota de exclusão criado.
-* Teste de erro 404 criado.
-* Teste do formulário na página de detalhes do upload criado.
-* Teste do redirecionamento para os detalhes do upload criado.
-* Todos os testes anteriores permaneceram funcionando.
-* O comando `python -m pytest` retornou `88 passed`.
-
----
-
-### Conversa 20 — Exclusão segura de uploads e arquivos associados
-
-* Estrutura `UploadDeletionResult` criada para representar o resultado da exclusão.
-* Função `delete_upload_record()` criada no serviço de histórico.
-* Função auxiliar `_delete_physical_file()` criada.
-* Exclusão do arquivo CSV, XLSX ou XLS original implementada.
-* Exclusão dos arquivos PDF relacionados ao upload implementada.
-* Exclusão do registro do upload implementada.
-* Exclusão em cascata dos registros de relatórios utilizada.
-* Relacionamento `cascade="all, delete-orphan"` mantido no modelo.
-* Exclusão completa realizada em uma única transação de banco.
-* Commit e rollback implementados.
-* Arquivos físicos ausentes passaram a ser tratados sem impedir a exclusão dos registros.
-* Contagem de arquivos físicos ausentes implementada.
-* Contagem de relatórios excluídos implementada.
-* Preservação de uploads não relacionados validada.
-* Rota POST `/history/<int:record_id>/delete` criada.
-* Tratamento 404 implementado para uploads inexistentes.
-* Tratamento de erros inesperados com log da aplicação implementado.
-* Mensagens de sucesso adicionadas.
-* Mensagem específica adicionada quando algum arquivo físico já não existe.
-* Redirecionamento para o histórico de uploads implementado.
-* Botão “Excluir upload” adicionado à página de detalhes.
-* Botão “Excluir” adicionado ao histórico de uploads.
-* Confirmação JavaScript adicionada antes da exclusão.
-* Teste de exclusão do upload e de todos os arquivos relacionados criado.
-* Teste de exclusão com arquivos físicos ausentes criado.
-* Teste de preservação de outros uploads criado.
-* Teste do formulário na página de detalhes criado.
-* Teste do formulário no histórico de uploads criado.
-* Teste da rota de exclusão completa criado.
-* Teste de erro 404 criado.
-* Todos os testes anteriores permaneceram funcionando.
-* O comando `python -m pytest` retornou `95 passed`.
-
----
-
-## Arquivos modificados na Conversa 19
+Responsável pela interface:
 
 ```text
-app/services/report_history.py
+app/templates/
+app/static/
+```
+
+### Rotas
+
+Responsável por receber requisições HTTP e coordenar os serviços:
+
+```text
 app/routes.py
-app/templates/reports_history.html
-app/templates/upload_detail.html
-app/static/css/style.css
-tests/test_report_history.py
-tests/test_history.py
-PROJECT_STATE.md
 ```
 
----
+### Serviços
 
-## Arquivos modificados na Conversa 20
+Responsáveis pelas regras de negócio:
 
 ```text
+app/services/data_loader.py
+app/services/schema_inference.py
+app/services/analyzer.py
+app/services/charts.py
 app/services/history.py
-app/routes.py
-app/templates/upload_detail.html
-app/templates/history.html
-tests/test_history.py
-PROJECT_STATE.md
+app/services/report_history.py
+app/services/reports.py
 ```
 
----
+### Persistência
 
-## Arquivos analisados sem necessidade de alteração na Conversa 20
+Responsável por banco e modelos:
 
 ```text
 app/models.py
-app/services/report_history.py
-app/static/css/style.css
-tests/test_report_history.py
+app/extensions.py
+app/config.py
+```
+
+### Testes
+
+Responsáveis pela validação automatizada:
+
+```text
+tests/
 ```
 
 ---
 
-## Rotas atuais
+## Application Factory
 
-### Página inicial
+A aplicação utiliza Application Factory por meio de:
 
-```text
-GET /
+```python
+create_app()
 ```
 
-### Upload
+Configurações separadas:
 
 ```text
-GET /upload
-POST /upload
+Config
+DevelopmentConfig
+TestingConfig
+ProductionConfig
 ```
 
-### Dashboard
+`APP_ENV` determina o ambiente.
+
+Produção exige uma `SECRET_KEY` válida.
+
+---
+
+## Upload de arquivos
+
+Formatos permitidos:
+
+```text
+.csv
+.xlsx
+.xls
+```
+
+Recursos implementados:
+
+- `secure_filename()`;
+- nomes físicos únicos com UUID;
+- limite máximo de upload;
+- validação de extensão;
+- tratamento de arquivo inexistente;
+- tratamento de planilhas corrompidas;
+- remoção automática de upload inválido;
+- mensagem amigável para erro de processamento;
+- tratamento HTTP 413.
+
+Os nomes exibidos ao usuário permanecem os nomes originais.
+
+---
+
+## Detecção automática de cabeçalho
+
+O carregador procura o cabeçalho nas primeiras linhas da planilha.
+
+O benchmark valida:
+
+```text
+01_Base_Realista
+→ cabeçalho na primeira linha
+
+02_Colunas_Reordenadas
+→ cabeçalho na primeira linha
+
+03_Tipos_Desafiadores
+→ cabeçalho na primeira linha
+
+04_Cabecalho_Linha3
+→ cabeçalho na terceira linha
+```
+
+A planilha de benchmark não foi alterada para fazer os testes passarem.
+
+---
+
+## Benchmark oficial
+
+Arquivo:
+
+```text
+tests/fixtures/databoard_autodetect_benchmark.xlsx
+```
+
+Cenários:
+
+### 01_Base_Realista
+
+```text
+VENDEDOR       → CATEGORY
+CLIENTE_ID     → IDENTIFIER
+DATA_VENDA     → DATE
+REGIAO         → CATEGORY
+VALOR_TOTAL    → CURRENCY
+PEDIDO_ID      → IDENTIFIER
+QUANTIDADE     → QUANTITY
+PRODUTO        → CATEGORY
+MARGEM_PCT     → PERCENTAGE
+ATIVO          → BOOLEAN
+```
+
+### 02_Colunas_Reordenadas
+
+Mesma semântica da primeira aba, independentemente da ordem física.
+
+### 03_Tipos_Desafiadores
+
+```text
+CODIGO_CLIENTE → IDENTIFIER
+DATA           → DATE
+FATURAMENTO    → CURRENCY
+DESCONTO       → PERCENTAGE
+CATEGORIA      → CATEGORY
+CEP            → IDENTIFIER
+OBSERVACAO     → TEXT
+```
+
+### 04_Cabecalho_Linha3
+
+```text
+DATA       → DATE
+UNIDADE    → CATEGORY
+SERVICO    → CATEGORY
+QTD        → QUANTITY
+RECEITA    → CURRENCY
+STATUS     → CATEGORY
+```
+
+---
+
+## Inferência semântica
+
+Arquivo:
+
+```text
+app/services/schema_inference.py
+```
+
+Principais responsabilidades:
+
+- normalização de nomes;
+- criação de perfil de coluna;
+- amostragem;
+- score por tipo;
+- classificação final;
+- classificação do DataFrame inteiro.
+
+Princípio fundamental:
+
+```text
+posição da coluna ≠ significado da coluna
+```
+
+---
+
+## Analyzer
+
+Arquivo:
+
+```text
+app/services/analyzer.py
+```
+
+O analyzer utiliza o motor semântico.
+
+Mantém compatibilidade com campos históricos da aplicação, mas separa:
+
+```text
+identifier_columns
+datetime_columns
+date_columns
+percentage_columns
+currency_columns
+boolean_columns
+quantity_columns
+metric_columns
+category_columns
+text_columns
+unknown_columns
+```
+
+Também calcula:
+
+- valores ausentes;
+- percentual de ausentes;
+- valores únicos;
+- estatísticas numéricas;
+- métricas semanticamente válidas.
+
+Conversões analíticas são não destrutivas.
+
+Exemplos:
+
+```text
+"R$ 1.250,00" → 1250.00 para cálculo
+"13%"         → 13.0 para cálculo
+```
+
+O DataFrame original não é alterado.
+
+---
+
+## Gráficos automáticos
+
+Arquivo:
+
+```text
+app/services/charts.py
+```
+
+Seleção semântica:
+
+```text
+DATE/DATETIME + métrica
+→ série temporal
+
+CATEGORY + métrica
+→ barras agregadas
+
+1 métrica
+→ histograma
+
+2 métricas
+→ dispersão quando aplicável
+
+CATEGORY sem métrica
+→ distribuição por barras
+```
+
+Regras:
+
+- identificadores não viram métricas;
+- texto livre não é plotado automaticamente;
+- categorias de cardinalidade excessiva são evitadas;
+- limite de gráficos automáticos preserva clareza da interface.
+
+Plotly acompanha o tema claro/escuro.
+
+---
+
+## Dashboard
+
+O Dashboard foi transformado em central de análise.
+
+Rota:
 
 ```text
 GET /dashboard
+GET /dashboard?upload_id=<id>
 ```
 
-### Histórico de uploads
+Comportamento:
 
 ```text
-GET /history
+sem uploads
+→ estado vazio
+
+com uploads
+→ abre o mais recente
+
+upload_id informado
+→ abre o upload selecionado
 ```
 
-### Detalhes do upload
+Recursos:
+
+- seletor de upload;
+- arquivo atual;
+- KPIs;
+- registros;
+- colunas;
+- métricas;
+- categorias;
+- valores ausentes;
+- completude;
+- colunas afetadas;
+- estrutura semântica;
+- gráficos;
+- prévia;
+- ações rápidas.
+
+Ações rápidas:
 
 ```text
-GET /history/<record_id>
-```
-
-### Reprocessamento
-
-```text
-GET /history/<record_id>/reprocess
-```
-
-### Geração de relatório
-
-```text
-GET /history/<record_id>/report
-```
-
-### Exclusão do upload
-
-```text
-POST /history/<record_id>/delete
-```
-
-### Histórico geral de relatórios
-
-```text
-GET /reports
-```
-
-### Download de relatório existente
-
-```text
-GET /reports/<report_id>/download
-```
-
-### Exclusão de relatório
-
-```text
-POST /reports/<report_id>/delete
+Gerar PDF
+Ver detalhes
+Histórico
+Novo upload
 ```
 
 ---
 
-## Estado funcional atual
+## Qualidade dos dados
 
-O DataBoard Reports atualmente permite:
+O Dashboard apresenta:
 
-* enviar arquivos CSV, XLSX e XLS;
-* validar os tipos de arquivos permitidos;
-* salvar os arquivos enviados no servidor;
-* carregar planilhas com Pandas;
-* extrair metadados da planilha;
-* exibir uma prévia dos dados;
-* identificar colunas numéricas e categóricas;
-* calcular valores ausentes e percentuais;
-* gerar estatísticas numéricas;
-* gerar gráficos automáticos com Plotly;
-* registrar uploads em banco SQLite;
-* consultar o histórico de uploads;
-* visualizar os detalhes de cada upload;
-* reprocessar arquivos já enviados;
-* gerar relatórios PDF com ReportLab;
-* incluir análise, estatísticas, gráficos e prévia no PDF;
-* persistir os relatórios gerados;
-* listar relatórios por upload;
-* consultar o histórico geral de relatórios;
-* baixar novamente relatórios existentes;
-* excluir relatórios individualmente;
-* remover o arquivo PDF ao excluir um relatório;
-* excluir uploads completos;
-* remover o arquivo original da planilha;
-* remover os PDFs relacionados ao upload;
-* excluir registros de relatórios em cascata;
-* tratar arquivos físicos ausentes durante a exclusão;
-* preservar registros e arquivos não relacionados;
-* executar ações destrutivas somente por requisições `POST`;
-* validar o comportamento da aplicação com 95 testes automatizados.
+```text
+completude
+total de valores ausentes
+quantidade de colunas afetadas
+```
+
+Exemplo validado com benchmark:
+
+```text
+240 registros
+10 colunas
+3 métricas
+13 valores ausentes
+```
 
 ---
 
-## Resultado atual dos testes
+## Histórico de uploads
 
-Comando executado:
+Implementado:
+
+- persistência com SQLAlchemy;
+- ordenação por data/ID;
+- detalhes;
+- reprocessamento;
+- exclusão;
+- remoção do arquivo físico;
+- remoção de relatórios vinculados;
+- cascata;
+- confirmação na interface;
+- CSRF;
+- tratamento de arquivos ausentes.
+
+No mobile/tablet, registros são exibidos em cards responsivos.
+
+---
+
+## Relatórios
+
+Modelo:
+
+```text
+ReportRecord
+```
+
+Recursos:
+
+- geração de PDF;
+- histórico de relatórios;
+- associação ao upload;
+- download posterior;
+- exclusão individual;
+- exclusão física;
+- tratamento de arquivo ausente;
+- CSRF.
+
+---
+
+## PDF
+
+Arquivo:
+
+```text
+app/services/reports.py
+```
+
+Conteúdo:
+
+- dados do upload;
+- data do upload;
+- data de geração;
+- resumo;
+- valores ausentes;
+- estatísticas;
+- prévia;
+- gráficos.
+
+Melhorias realizadas:
+
+- quebra correta de textos longos;
+- cabeçalhos legíveis;
+- prévia limitada para A4;
+- gráficos estáticos;
+- timezone consistente.
+
+---
+
+## Modelos persistentes
+
+### UploadRecord
+
+Campos principais:
+
+```text
+id
+file_name
+file_extension
+file_path
+row_count
+column_count
+created_at
+```
+
+Relacionamento:
+
+```text
+UploadRecord 1 ─── N ReportRecord
+```
+
+### ReportRecord
+
+Campos principais:
+
+```text
+id
+upload_id
+file_name
+file_path
+created_at
+```
+
+Relacionamento configurado com exclusão em cascata.
+
+---
+
+## Timezone
+
+Timestamps são armazenados em UTC.
+
+Na apresentação são convertidos para:
+
+```text
+APP_TIMEZONE
+```
+
+Padrão:
+
+```text
+America/Fortaleza
+```
+
+Utilitário:
+
+```text
+app/datetime_utils.py
+```
+
+---
+
+## Tema claro/escuro
+
+Arquivos:
+
+```text
+app/static/css/theme.css
+app/static/js/theme-init.js
+app/static/js/theme.js
+```
+
+Recursos:
+
+- tema claro;
+- tema escuro;
+- persistência via `localStorage`;
+- `prefers-color-scheme`;
+- redução de flash de tema;
+- sincronização com Plotly;
+- suporte a `prefers-reduced-motion`.
+
+---
+
+## Responsividade
+
+Validada em:
+
+- desktop;
+- tablet;
+- mobile;
+- viewport de 375 × 667.
+
+Históricos mudam de tabela para cards abaixo de `1199.98px`.
+
+A prévia permite scroll horizontal apenas dentro da tabela, sem gerar scroll lateral da página.
+
+---
+
+## Acessibilidade
+
+Implementado:
+
+- navegação por teclado;
+- foco visível;
+- skip link;
+- labels;
+- `scope` em cabeçalhos;
+- alvos de toque;
+- `prefers-reduced-motion`;
+- estrutura semântica;
+- botão de tema acessível;
+- menu mobile acessível.
+
+Lighthouse local:
+
+```text
+Desktop
+Accessibility: 100
+Best Practices: 100
+
+Mobile
+Accessibility: 100
+Best Practices: 100
+```
+
+---
+
+## Segurança
+
+Implementado:
+
+- configuração por ambiente;
+- `SECRET_KEY` obrigatória em produção;
+- CSRF;
+- upload validado;
+- UUID para nomes físicos;
+- limite de arquivo;
+- limpeza de inválidos;
+- usuário Docker não-root;
+- ações destrutivas via POST;
+- confirmação de exclusões;
+- logs de falhas;
+- headers HTTP.
+
+Headers:
+
+```text
+X-Content-Type-Options: nosniff
+X-Frame-Options: DENY
+Referrer-Policy: strict-origin-when-cross-origin
+Permissions-Policy: camera=(), microphone=(), geolocation=()
+```
+
+Ainda não implementados:
+
+```text
+Content-Security-Policy
+Strict-Transport-Security
+```
+
+Motivos:
+
+- CSP precisa considerar Bootstrap/Plotly;
+- HSTS depende de HTTPS real em produção.
+
+---
+
+## Docker
+
+Dockerfile normalizado e validado.
+
+Características:
+
+- Python slim;
+- dependências instaladas por `requirements.txt`;
+- usuário não-root;
+- Gunicorn;
+- 2 workers;
+- timeout 120 s;
+- porta dinâmica.
+
+Execução:
+
+```text
+${PORT:-5000}
+```
+
+Build local validado.
+
+Container validado em porta 8080.
+
+---
+
+## Persistência configurável
+
+Variáveis:
+
+```text
+UPLOAD_FOLDER
+REPORTS_FOLDER
+DATABASE_URL
+```
+
+Isso permite mover:
+
+```text
+SQLite
+uploads
+reports
+```
+
+para storage persistente em um ambiente de produção.
+
+---
+
+## CI
+
+Workflow:
+
+```text
+.github/workflows/ci.yml
+```
+
+Executado em:
+
+```text
+push → main
+pull_request → main
+```
+
+Jobs:
+
+```text
+Ruff and Pytest
+Docker build
+```
+
+Ambos foram validados com sucesso no GitHub Actions.
+
+---
+
+## Testes
+
+Comando:
 
 ```bash
 python -m pytest
 ```
 
-Resultado validado na Conversa 20:
+Resultado atual:
 
 ```text
-95 passed in 29.61s
+206 passed
+```
+
+Lint:
+
+```bash
+python -m ruff check .
+```
+
+Resultado:
+
+```text
+All checks passed!
+```
+
+Cobertura funcional inclui:
+
+- upload;
+- CSV/XLS/XLSX;
+- arquivos inválidos;
+- limite de tamanho;
+- cleanup;
+- autodetecção de cabeçalho;
+- benchmark;
+- inferência semântica;
+- analyzer;
+- gráficos;
+- histórico;
+- reprocessamento;
+- exclusão;
+- PDF;
+- persistência de relatório;
+- timezone;
+- CSRF;
+- headers;
+- Dashboard;
+- seletor de uploads.
+
+---
+
+## Rotas principais
+
+```text
+GET  /
+GET  /upload
+POST /upload
+
+GET  /dashboard
+GET  /dashboard?upload_id=<id>
+
+GET  /history
+GET  /history/<record_id>
+GET  /history/<record_id>/reprocess
+GET  /history/<record_id>/report
+POST /history/<record_id>/delete
+
+GET  /reports
+GET  /reports/<report_id>/download
+POST /reports/<report_id>/delete
 ```
 
 ---
 
-## Cobertura funcional dos testes
+## Decisões técnicas
 
-Os testes atuais validam:
+### Manter Flask
 
-* arquivos permitidos;
-* arquivos não permitidos;
-* leitura de CSV;
-* leitura de XLSX;
-* leitura de XLS;
-* arquivo inexistente;
-* metadados da planilha;
-* análise de colunas numéricas;
-* análise de colunas categóricas;
-* valores ausentes;
-* estatísticas numéricas;
-* gráficos automáticos;
-* upload de arquivo;
-* registro no banco;
-* histórico de uploads;
-* detalhes do upload;
-* reprocessamento;
-* arquivo físico ausente;
-* geração de PDF;
-* conteúdo básico do PDF;
-* gráficos no PDF;
-* prévia no PDF;
-* persistência dos relatórios;
-* relacionamento entre upload e relatório;
-* histórico geral de relatórios;
-* download de relatório existente;
-* exclusão individual de relatório;
-* exclusão de upload;
-* exclusão em cascata dos relatórios;
-* remoção dos arquivos físicos;
-* tratamento de arquivos físicos ausentes;
-* preservação de registros não relacionados;
-* respostas 404;
-* formulários de exclusão;
-* redirecionamentos após exclusão.
+O projeto continuará usando Flask.
+
+### Manter Pandas
+
+Pandas permanece responsável pelo carregamento e preparação dos dados.
+
+### Manter SQLAlchemy
+
+SQLite é suficiente para a versão local/portfólio.
+
+### Não realizar deploy nesta fase
+
+A aplicação está preparada para deploy, mas não será hospedada publicamente nesta versão.
+
+### Não migrar agora para PostgreSQL
+
+A migração só é necessária quando houver requisito real de produção multiusuário ou infraestrutura externa.
+
+### Não aumentar escopo do Dashboard
+
+O Dashboard atual atende ao objetivo de portfólio.
+
+Filtros avançados e BI customizável ficam como evolução futura.
 
 ---
 
-## Decisões técnicas atuais
+## Funcionalidades concluídas
 
-* Flask continua sendo utilizado como framework web.
-* Pandas continua responsável pela leitura e análise das planilhas.
-* Plotly continua responsável pelos gráficos interativos.
-* ReportLab continua responsável pelos relatórios PDF.
-* SQLite continua sendo utilizado durante o desenvolvimento.
-* SQLAlchemy continua sendo utilizado como ORM.
-* A application factory continua sendo utilizada.
-* As regras de negócio continuam concentradas em serviços.
-* As rotas permanecem responsáveis pela coordenação das requisições.
-* Os templates continuam utilizando Jinja.
-* As ações destrutivas utilizam requisições `POST`.
-* Os arquivos físicos e os registros do banco são tratados separadamente.
-* A exclusão de upload utiliza uma única transação de banco.
-* O relacionamento em cascata remove os relatórios associados.
-* Os testes utilizam banco SQLite em memória.
-* Cada nova entrega deve manter todos os testes anteriores funcionando.
+```text
+✓ Flask Application Factory
+✓ configuração por ambiente
+✓ CSV/XLS/XLSX
+✓ upload seguro
+✓ cabeçalho automático
+✓ benchmark
+✓ inferência semântica
+✓ analyzer semântico
+✓ gráficos semânticos
+✓ Dashboard
+✓ seletor de uploads
+✓ KPIs
+✓ qualidade dos dados
+✓ histórico
+✓ detalhes
+✓ reprocessamento
+✓ PDF
+✓ histórico de relatórios
+✓ exclusões seguras
+✓ CSRF
+✓ timezone
+✓ tema claro/escuro
+✓ responsividade
+✓ acessibilidade
+✓ headers de segurança
+✓ Docker
+✓ Gunicorn
+✓ Ruff
+✓ Pytest
+✓ GitHub Actions
+✓ 206 testes
+```
+
+---
+
+## Fora do escopo da versão atual
+
+Não são necessários para considerar o projeto concluído:
+
+- autenticação;
+- autorização;
+- multiusuário;
+- paginação;
+- busca avançada;
+- filtros analíticos;
+- upload múltiplo;
+- API REST;
+- PostgreSQL;
+- object storage;
+- observabilidade;
+- monitoramento;
+- backup automatizado;
+- deploy público.
+
+---
+
+## Evoluções futuras possíveis
+
+Se o projeto voltar a evoluir:
+
+1. autenticação;
+2. PostgreSQL;
+3. object storage;
+4. paginação;
+5. filtros;
+6. persistência da análise;
+7. API REST;
+8. CSP;
+9. observabilidade;
+10. deploy público.
 
 ---
 
 ## Regras de continuidade
 
-Nas próximas conversas:
+Caso o desenvolvimento seja retomado:
 
-* realizar alterações pequenas e sequenciais;
-* evitar mudanças fora do escopo da entrega;
-* manter compatibilidade com as funcionalidades existentes;
-* criar testes para cada novo comportamento;
-* executar testes específicos antes da suíte completa;
-* atualizar o `PROJECT_STATE.md` após cada entrega;
-* criar um commit separado para cada conversa;
-* não iniciar uma nova funcionalidade antes de todos os testes passarem;
-* manter as rotas destrutivas utilizando `POST`;
-* manter commit e rollback nas operações de persistência;
-* preservar a separação entre rotas, serviços, modelos e templates.
-
----
-
-## O que ainda não foi implementado
-
-* Persistência completa da análise automática.
-* Persistência dos gráficos gerados.
-* Persistência da prévia da planilha.
-* Confirmação de exclusão sem JavaScript inline.
-* Proteção CSRF nos formulários.
-* Exclusão em massa.
-* Lixeira e restauração de uploads e relatórios.
-* Autenticação.
-* Permissões por usuário.
-* Filtros no histórico.
-* Busca no histórico.
-* Paginação.
-* Ordenação configurável.
-* Dashboards customizáveis.
-* Upload múltiplo.
-* Exportação para outros formatos.
-* API REST.
-* Migrações com Flask-Migrate.
-* Pipeline CI/CD.
-* Dockerização concluída.
-* Deploy.
-* Monitoramento.
-* Logs estruturados.
-* Backup automático.
-* Banco PostgreSQL em produção.
+- preservar os 206 testes;
+- manter Ruff limpo;
+- adicionar testes para novos comportamentos;
+- evitar regressões no benchmark;
+- não usar posição de coluna para inferir significado;
+- não transformar identificadores em métricas;
+- manter ações destrutivas via POST;
+- manter CSRF;
+- preservar Application Factory;
+- manter separação entre rotas, serviços, modelos e templates;
+- executar CI antes de considerar uma entrega concluída.
 
 ---
 
-## Próxima entrega sugerida
+## Status final para portfólio
 
-Conversa 21 — Paginação e busca no histórico de uploads e relatórios
+O projeto está considerado:
 
-## Objetivo provável da Conversa 21
+```text
+ESTÁVEL
+TESTADO
+DOCUMENTADO
+DOCKERIZADO
+RESPONSIVO
+ACESSÍVEL
+PREPARADO PARA DEPLOY
+PRONTO PARA PORTFÓLIO
+```
 
-Melhorar a navegação dos históricos, permitindo localizar uploads e relatórios com facilidade quando houver grande quantidade de registros.
-
----
-
-## Escopo recomendado para a Conversa 21
-
-* Adicionar campo de busca no histórico de uploads.
-* Permitir busca pelo nome do arquivo.
-* Adicionar paginação ao histórico de uploads.
-* Adicionar busca ao histórico de relatórios.
-* Permitir busca pelo nome do relatório.
-* Permitir busca pelo nome do upload de origem.
-* Adicionar paginação ao histórico de relatórios.
-* Preservar a busca ao navegar entre páginas.
-* Exibir quantidade total de resultados.
-* Exibir página atual.
-* Exibir total de páginas.
-* Exibir estado vazio para buscas sem resultado.
-* Organizar as consultas na camada de serviços.
-* Manter compatibilidade com SQLite.
-* Criar testes unitários dos serviços.
-* Criar testes de integração das rotas.
-* Manter os 95 testes anteriores funcionando.
+O deploy público permanece opcional.
 
 ---
 
-## Manter fora do escopo da Conversa 21
+## Próxima etapa do projeto
 
-* Filtros avançados por data.
-* Ordenação configurável pelo usuário.
-* Exclusão em massa.
-* Autenticação.
-* Permissões.
-* Proteção CSRF.
-* Flask-Migrate.
-* Docker.
-* Deploy.
+A próxima etapa não é adicionar funcionalidades.
 
----
+A sequência recomendada é:
 
-## Critérios de conclusão da Conversa 21
-
-A Conversa 21 deverá ser considerada concluída quando:
-
-* a busca de uploads funcionar;
-* a busca de relatórios funcionar;
-* a paginação de uploads funcionar;
-* a paginação de relatórios funcionar;
-* os filtros forem preservados entre páginas;
-* estados vazios forem exibidos corretamente;
-* registros não relacionados não forem afetados;
-* os novos testes forem aprovados;
-* todos os testes anteriores continuarem passando;
-* o `PROJECT_STATE.md` for atualizado;
-* o commit da entrega for criado.
-
----
-
-## Observação de continuidade
-
-A Conversa 20 concluiu o ciclo completo de exclusão dos dados persistidos.
-
-O projeto agora permite:
-
-1. enviar e processar planilhas;
-2. analisar automaticamente os dados;
-3. gerar gráficos interativos;
-4. registrar e reprocessar uploads;
-5. gerar relatórios PDF completos;
-6. persistir e consultar relatórios;
-7. baixar novamente PDFs existentes;
-8. excluir relatórios individualmente;
-9. excluir uploads e todos os arquivos relacionados;
-10. tratar arquivos físicos ausentes;
-11. preservar dados não relacionados;
-12. validar o comportamento com 95 testes automatizados.
-
-A partir da Conversa 21, o projeto deverá evoluir para busca e paginação dos históricos, preparando a aplicação para uma quantidade maior de uploads e relatórios.
-````
+```text
+PROJECT_STATE atualizado
+→ padronização final do repositório
+→ revisão do GitHub
+→ screenshots
+→ vídeo demonstrativo
+→ inclusão no portfólio
+```
