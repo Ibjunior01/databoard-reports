@@ -26,8 +26,25 @@ class Config:
     TESTING = False
     WTF_CSRF_ENABLED = True
 
-    UPLOAD_FOLDER = BASE_DIR / "app" / "uploads"
-    REPORTS_FOLDER = BASE_DIR / "app" / "reports"
+    UPLOAD_FOLDER = Path(
+        os.getenv(
+            "UPLOAD_FOLDER",
+            BASE_DIR / "app" / "uploads",
+        )
+    )
+
+    REPORTS_FOLDER = Path(
+        os.getenv(
+            "REPORTS_FOLDER",
+            BASE_DIR / "app" / "reports",
+        )
+    )
+
+    SQLALCHEMY_DATABASE_URI = os.getenv(
+        "DATABASE_URL",
+        "sqlite:///databoard.sqlite3",
+    )
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024
 
@@ -36,9 +53,6 @@ class Config:
         "xlsx",
         "xls",
     }
-
-    SQLALCHEMY_DATABASE_URI = "sqlite:///databoard.sqlite3"
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 
 class DevelopmentConfig(Config):
