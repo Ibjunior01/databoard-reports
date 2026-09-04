@@ -1023,14 +1023,14 @@ def generate_upload_report(
 
     else:
         preview_table_data = [
-        [
-            Paragraph(
-                escape(column),
-                preview_header_style,
-            )
-            for column in dataframe_preview["columns"]
+            [
+                Paragraph(
+                    escape(column),
+                    preview_header_style,
+                )
+                for column in dataframe_preview["columns"]
+            ]
         ]
-    ]
 
         for row in dataframe_preview["rows"]:
             preview_table_data.append(
