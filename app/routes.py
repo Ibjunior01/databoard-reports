@@ -62,15 +62,89 @@ def build_dashboard_analysis(analysis_result, dataframe):
     missing_values = dataframe.isna().sum().to_dict()
 
     missing_percentage = {
-        column: (missing_count / total_rows * 100) if total_rows > 0 else 0
+        column: (missing_count / total_rows * 100 if total_rows > 0 else 0)
         for column, missing_count in missing_values.items()
     }
 
+    total_cells = total_rows * len(dataframe.columns)
+    total_missing = sum(missing_values.values())
+
+    completeness = (
+        ((total_cells - total_missing) / total_cells) * 100
+        if total_cells > 0
+        else 100.0
+    )
+
+    affected_columns = sum(
+        1 for missing_count in missing_values.values() if missing_count > 0
+    )
+
     return {
-        "numeric_columns": analysis_data.get("numeric_columns", []),
-        "categorical_columns": analysis_data.get("categorical_columns", []),
+        "numeric_columns": analysis_data.get(
+            "numeric_columns",
+            [],
+        ),
+        "categorical_columns": analysis_data.get(
+            "categorical_columns",
+            [],
+        ),
+        "metric_columns": analysis_data.get(
+            "metric_columns",
+            [],
+        ),
+        "identifier_columns": analysis_data.get(
+            "identifier_columns",
+            [],
+        ),
+        "datetime_columns": analysis_data.get(
+            "datetime_columns",
+            [],
+        ),
+        "date_columns": analysis_data.get(
+            "date_columns",
+            [],
+        ),
+        "percentage_columns": analysis_data.get(
+            "percentage_columns",
+            [],
+        ),
+        "currency_columns": analysis_data.get(
+            "currency_columns",
+            [],
+        ),
+        "boolean_columns": analysis_data.get(
+            "boolean_columns",
+            [],
+        ),
+        "quantity_columns": analysis_data.get(
+            "quantity_columns",
+            [],
+        ),
+        "category_columns": analysis_data.get(
+            "category_columns",
+            [],
+        ),
+        "text_columns": analysis_data.get(
+            "text_columns",
+            [],
+        ),
+        "unknown_columns": analysis_data.get(
+            "unknown_columns",
+            [],
+        ),
+        "semantic_types": analysis_data.get(
+            "semantic_types",
+            {},
+        ),
+        "semantic_confidence": analysis_data.get(
+            "semantic_confidence",
+            {},
+        ),
         "missing_values": missing_values,
         "missing_percentage": missing_percentage,
+        "total_missing": total_missing,
+        "affected_columns": affected_columns,
+        "completeness": round(completeness, 2),
         "numeric_statistics": (
             analysis_data.get("numeric_statistics")
             or analysis_data.get("numeric_statistics_by_column")
@@ -186,12 +260,12 @@ def upload_file():
         )
         charts = generate_automatic_charts(dataframe)
 
-        create_upload_record(
+        record = create_upload_record(
             file_name=filename,
             file_extension=file_path.suffix,
+            file_path=str(file_path),
             row_count=len(dataframe),
             column_count=len(dataframe.columns),
-            file_path=str(file_path),
         )
 
     except UnsupportedFileTypeError:
@@ -256,16 +330,105 @@ def upload_file():
         metadata=metadata,
         analysis=analysis,
         charts=charts,
+        uploads=list_upload_records(),
+        current_record=record,
     )
 
 
 @main_bp.route("/dashboard")
 def dashboard():
+    records = list_upload_records()
+
+    if not records:
+        return render_template(
+            "dashboard.html",
+            metadata=None,
+            analysis=None,
+            charts=[],
+            uploads=[],
+            current_record=None,
+        )
+
+    selected_upload_id = request.args.get(
+        "upload_id",
+        type=int,
+    )
+
+    if selected_upload_id is None:
+        record = records[0]
+    else:
+        record = get_upload_record(selected_upload_id)
+
+        if record is None:
+            flash(
+                "O upload selecionado não foi encontrado.",
+                "error",
+            )
+            return redirect(url_for("main.dashboard"))
+
+    file_path = get_existing_upload_file_path(record)
+
+    if file_path is None:
+        flash(
+            ("O arquivo físico do upload selecionado não foi encontrado."),
+            "error",
+        )
+
+        return render_template(
+            "dashboard.html",
+            metadata=None,
+            analysis=None,
+            charts=[],
+            uploads=records,
+            current_record=record,
+        )
+
+    try:
+        dataframe = load_spreadsheet(file_path)
+
+        metadata = load_spreadsheet_metadata(file_path)
+
+        analysis_result = analyze_dataframe(dataframe)
+
+        analysis = build_dashboard_analysis(
+            analysis_result,
+            dataframe,
+        )
+
+        charts = generate_automatic_charts(dataframe)
+
+    except (
+        UnsupportedFileTypeError,
+        InvalidSpreadsheetError,
+        FileNotFoundError,
+    ):
+        current_app.logger.exception(
+            "Falha ao carregar upload %s no dashboard.",
+            record.id,
+        )
+
+        flash(
+            ("Não foi possível carregar a análise deste upload."),
+            "error",
+        )
+
+        return render_template(
+            "dashboard.html",
+            metadata=None,
+            analysis=None,
+            charts=[],
+            uploads=records,
+            current_record=record,
+        )
+
     return render_template(
         "dashboard.html",
-        metadata=None,
-        analysis=None,
-        charts=[],
+        filename=record.file_name,
+        metadata=metadata,
+        analysis=analysis,
+        charts=charts,
+        uploads=records,
+        current_record=record,
     )
 
 
@@ -418,19 +581,14 @@ def reprocess_upload(record_id):
             )
         )
 
-    preview = dataframe.head(10).to_html(
-        classes="data-preview-table",
-        index=False,
-        border=0,
-    )
-
     return render_template(
         "dashboard.html",
         filename=record.file_name,
         metadata=metadata,
-        preview=preview,
         analysis=analysis,
         charts=charts,
+        uploads=list_upload_records(),
+        current_record=record,
     )
 
 

@@ -1,270 +1,392 @@
 {% extends "base.html" %}
 
-{% block title %}Dashboard - DataBoard Reports{% endblock %}
+{% block title %}Dashboard | DataBoard Reports{% endblock %}
 
 {% block content %}
-
 <section class="dashboard-section">
-    <div class="dashboard-header">
+    <div class="dashboard-header dashboard-main-header">
         <div>
-            <p class="section-label">Prévia da Planilha</p>
-            <h1>Dados carregados com sucesso</h1>
+            <p class="section-eyebrow">
+                Central de análise
+            </p>
+
+            <h1>Dashboard</h1>
+
             <p class="section-description">
-                Confira abaixo os metadados básicos, uma amostra das primeiras linhas e a análise automática do arquivo enviado.
+                Explore a estrutura, a qualidade e as visualizações
+                automáticas da planilha selecionada.
             </p>
         </div>
 
-        <a href="{{ url_for('main.upload_file') }}" class="btn-secondary">
-            Enviar outro arquivo
+        <a
+            href="{{ url_for('main.upload_file') }}"
+            class="btn-primary"
+        >
+            Novo upload
         </a>
     </div>
 
-    {% if metadata %}
-        <div class="metadata-grid">
-            <div class="metadata-card">
-                <span>Arquivo</span>
-                <strong>{{ metadata.file_name }}</strong>
+    {% if uploads %}
+        <div class="dashboard-toolbar">
+            <div class="dashboard-file-info">
+                <span>Arquivo analisado</span>
+
+                <strong>
+                    {% if current_record %}
+                        {{ current_record.file_name }}
+                    {% endif %}
+                </strong>
             </div>
 
-            <div class="metadata-card">
-                <span>Extensão</span>
-                <strong>{{ metadata.file_extension }}</strong>
-            </div>
+            <form
+                method="get"
+                action="{{ url_for('main.dashboard') }}"
+                class="dashboard-selector"
+            >
+                <label for="dashboard-upload">
+                    Selecionar outro upload
+                </label>
 
-            <div class="metadata-card">
-                <span>Linhas</span>
+                <select
+                    id="dashboard-upload"
+                    name="upload_id"
+                    onchange="this.form.submit()"
+                >
+                    {% for upload in uploads %}
+                        <option
+                            value="{{ upload.id }}"
+                            {% if current_record
+                                and upload.id == current_record.id %}
+                                selected
+                            {% endif %}
+                        >
+                            #{{ upload.id }} — {{ upload.file_name }}
+                        </option>
+                    {% endfor %}
+                </select>
+
+                <noscript>
+                    <button
+                        type="submit"
+                        class="secondary-button"
+                    >
+                        Abrir
+                    </button>
+                </noscript>
+            </form>
+        </div>
+    {% endif %}
+
+    {% if metadata and analysis %}
+        <div class="dashboard-kpi-grid">
+            <article class="dashboard-kpi-card">
+                <span>Registros</span>
                 <strong>{{ metadata.rows }}</strong>
-            </div>
+                <small>linhas processadas</small>
+            </article>
 
-            <div class="metadata-card">
+            <article class="dashboard-kpi-card">
                 <span>Colunas</span>
                 <strong>{{ metadata.columns }}</strong>
-            </div>
+                <small>campos identificados</small>
+            </article>
+
+            <article class="dashboard-kpi-card">
+                <span>Métricas</span>
+                <strong>
+                    {{ analysis.metric_columns|length }}
+                </strong>
+                <small>campos analíticos</small>
+            </article>
+
+            <article class="dashboard-kpi-card">
+                <span>Categorias</span>
+                <strong>
+                    {{ analysis.category_columns|length }}
+                </strong>
+                <small>dimensões detectadas</small>
+            </article>
+
+            <article class="dashboard-kpi-card">
+                <span>Valores ausentes</span>
+                <strong>{{ analysis.total_missing }}</strong>
+                <small>
+                    em {{ analysis.affected_columns }} coluna(s)
+                </small>
+            </article>
         </div>
 
-        <div class="columns-card">
-            <h2>Colunas identificadas</h2>
+        <div class="dashboard-two-columns">
+            <article class="dashboard-panel">
+                <div class="dashboard-panel-header">
+                    <div>
+                        <p class="section-eyebrow">
+                            Qualidade
+                        </p>
 
-            <div class="columns-list">
-                {% for column in metadata.column_names %}
-                    <span>{{ column }}</span>
-                {% endfor %}
-            </div>
-        </div>
+                        <h2>Qualidade dos dados</h2>
+                    </div>
 
-        <div class="preview-card">
-            <div class="preview-header">
-                <h2>Prévia dos dados</h2>
-                <p>Exibindo as primeiras linhas da planilha.</p>
-            </div>
+                    <span class="quality-score">
+                        {{ "%.2f"|format(analysis.completeness) }}%
+                    </span>
+                </div>
 
-            {% if metadata.preview %}
-                <div class="table-wrapper">
-                    <table class="preview-table">
-                        <thead>
-                            <tr>
-                                {% for column in metadata.column_names %}
-                                    <th>{{ column }}</th>
-                                {% endfor %}
-                            </tr>
-                        </thead>
+                <progress
+                    class="quality-meter"
+                    value="{{ analysis.completeness }}"
+                    max="100"
+                    aria-label="Completude dos dados"
+                >
+                    {{ "%.2f"|format(analysis.completeness) }}%
+                </progress>
 
-                        <tbody>
-                            {% for row in metadata.preview %}
-                                <tr>
-                                    {% for column in metadata.column_names %}
-                                        <td>{{ row.get(column, "") }}</td>
+                <div class="quality-details">
+                    <div>
+                        <span>Completude</span>
+                        <strong>
+                            {{ "%.2f"|format(
+                                analysis.completeness
+                            ) }}%
+                        </strong>
+                    </div>
+
+                    <div>
+                        <span>Ausentes</span>
+                        <strong>
+                            {{ analysis.total_missing }}
+                        </strong>
+                    </div>
+
+                    <div>
+                        <span>Colunas afetadas</span>
+                        <strong>
+                            {{ analysis.affected_columns }}
+                        </strong>
+                    </div>
+                </div>
+            </article>
+
+            <article class="dashboard-panel">
+                <div class="dashboard-panel-header">
+                    <div>
+                        <p class="section-eyebrow">
+                            Inferência semântica
+                        </p>
+
+                        <h2>Estrutura detectada</h2>
+                    </div>
+                </div>
+
+                <div class="semantic-summary">
+                    {% set semantic_groups = [
+                        (
+                            "Métricas",
+                            analysis.metric_columns
+                        ),
+                        (
+                            "Categorias",
+                            analysis.category_columns
+                        ),
+                        (
+                            "Datas",
+                            analysis.date_columns
+                            + analysis.datetime_columns
+                        ),
+                        (
+                            "Identificadores",
+                            analysis.identifier_columns
+                        ),
+                        (
+                            "Booleanos",
+                            analysis.boolean_columns
+                        ),
+                        (
+                            "Texto",
+                            analysis.text_columns
+                        )
+                    ] %}
+
+                    {% for label, columns in semantic_groups %}
+                        {% if columns %}
+                            <div class="semantic-group">
+                                <span class="semantic-group-label">
+                                    {{ label }}
+                                </span>
+
+                                <div class="columns-list">
+                                    {% for column in columns %}
+                                        <span>
+                                            {{ column }}
+                                        </span>
                                     {% endfor %}
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
                 </div>
-            {% else %}
-                <p class="empty-message">
-                    A planilha foi carregada, mas não há linhas disponíveis para prévia.
-                </p>
-            {% endif %}
+            </article>
         </div>
 
-        {% if analysis %}
-            <div class="columns-card">
-                <h2>Análise automática</h2>
+        {% if charts %}
+            <section class="dashboard-content-section">
+                <div class="section-header">
+                    <p class="section-eyebrow">
+                        Visualização automática
+                    </p>
 
-                <div class="metadata-grid">
-                    <div class="metadata-card">
-                        <span>Total de linhas</span>
-                        <strong>{{ metadata.rows }}</strong>
-                    </div>
+                    <h2>Gráficos automáticos</h2>
 
-                    <div class="metadata-card">
-                        <span>Total de colunas</span>
-                        <strong>{{ metadata.columns }}</strong>
-                    </div>
-
-                    <div class="metadata-card">
-                        <span>Colunas numéricas</span>
-                        <strong>{{ analysis.numeric_columns | length }}</strong>
-                    </div>
-
-                    <div class="metadata-card">
-                        <span>Colunas categóricas</span>
-                        <strong>{{ analysis.categorical_columns | length }}</strong>
-                    </div>
+                    <p>
+                        Visualizações escolhidas de acordo com
+                        os tipos de dados identificados.
+                    </p>
                 </div>
-            </div>
 
-            <div class="columns-card">
-                <h2>Tipos de colunas</h2>
+                <script
+                    src="https://cdn.plot.ly/plotly-2.35.2.min.js"
+                ></script>
 
-                <h3>Colunas numéricas</h3>
+                <div class="charts-grid">
+                    {% for chart in charts %}
+                        <article class="chart-card">
+                            <div class="chart-card-header">
+                                <span class="chart-badge">
+                                    {{ chart.chart_type }}
+                                </span>
 
-                {% if analysis.numeric_columns %}
-                    <div class="columns-list">
-                        {% for column in analysis.numeric_columns %}
-                            <span>{{ column }}</span>
-                        {% endfor %}
-                    </div>
-                {% else %}
-                    <p class="empty-message">
-                        Nenhuma coluna numérica identificada.
-                    </p>
-                {% endif %}
+                                <h3>{{ chart.title }}</h3>
 
-                <h3>Colunas categóricas/texto</h3>
+                                <p>
+                                    Coluna analisada:
+                                    {{ chart.column_name }}
+                                </p>
+                            </div>
 
-                {% if analysis.categorical_columns %}
-                    <div class="columns-list">
-                        {% for column in analysis.categorical_columns %}
-                            <span>{{ column }}</span>
-                        {% endfor %}
-                    </div>
-                {% else %}
-                    <p class="empty-message">
-                        Nenhuma coluna categórica identificada.
-                    </p>
-                {% endif %}
-            </div>
+                            <div class="chart-container">
+                                {{ chart.html|safe }}
+                            </div>
+                        </article>
+                    {% endfor %}
+                </div>
+            </section>
+        {% endif %}
 
+        <section class="dashboard-content-section">
             <div class="preview-card">
                 <div class="preview-header">
-                    <h2>Valores ausentes</h2>
-                    <p>Quantidade e percentual de valores vazios por coluna.</p>
+                    <div>
+                        <p class="section-eyebrow">
+                            Amostra
+                        </p>
+
+                        <h2>Prévia dos dados</h2>
+                    </div>
+
+                    <p>
+                        Exibindo as primeiras linhas da planilha.
+                    </p>
                 </div>
 
-                <div class="table-wrapper">
-                    <table class="preview-table">
-                        <thead>
-                            <tr>
-                                <th>Coluna</th>
-                                <th>Quantidade</th>
-                                <th>Percentual</th>
-                            </tr>
-                        </thead>
-
-                        <tbody>
-                            {% for column, missing_count in analysis.missing_values.items() %}
-                                <tr>
-                                    <td>{{ column }}</td>
-                                    <td>{{ missing_count }}</td>
-                                    <td>{{ "%.2f"|format(analysis.missing_percentage.get(column, 0)) }}%</td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div class="preview-card">
-                <div class="preview-header">
-                    <h2>Estatísticas numéricas</h2>
-                    <p>Média, mínimo, máximo e mediana das colunas numéricas.</p>
-                </div>
-
-                {% if analysis.numeric_statistics %}
+                {% if metadata.preview %}
                     <div class="table-wrapper">
                         <table class="preview-table">
                             <thead>
                                 <tr>
-                                    <th>Coluna</th>
-                                    <th>Média</th>
-                                    <th>Mínimo</th>
-                                    <th>Máximo</th>
-                                    <th>Mediana</th>
+                                    {% for column
+                                        in metadata.column_names %}
+                                        <th scope="col">
+                                            {{ column }}
+                                        </th>
+                                    {% endfor %}
                                 </tr>
                             </thead>
 
                             <tbody>
-                                {% for column, stats in analysis.numeric_statistics.items() %}
-                                <tr>
-                                    <td>{{ column }}</td>
-                                    <td>{{ "%.2f"|format(stats.mean | default(0, true)) }}</td>
-                                    <td>{{ "%.2f"|format(stats.min | default(0, true)) }}</td>
-                                    <td>{{ "%.2f"|format(stats.max | default(0, true)) }}</td>
-                                    <td>{{ "%.2f"|format(stats.median | default(0, true)) }}</td>
-                                </tr>
-                            {% endfor %}
+                                {% for row in metadata.preview %}
+                                    <tr>
+                                        {% for column
+                                            in metadata.column_names %}
+                                            <td>
+                                                {{ row.get(
+                                                    column,
+                                                    ""
+                                                ) }}
+                                            </td>
+                                        {% endfor %}
+                                    </tr>
+                                {% endfor %}
                             </tbody>
                         </table>
                     </div>
-                {% else %}
-                    <p class="empty-message">
-                        Nenhuma estatística numérica disponível.
-                    </p>
                 {% endif %}
             </div>
-        {% endif %}
+        </section>
+
+        <section class="dashboard-actions-panel">
+            <div>
+                <p class="section-eyebrow">
+                    Ações rápidas
+                </p>
+
+                <h2>Continuar análise</h2>
+            </div>
+
+            <div class="dashboard-quick-actions">
+                {% if current_record %}
+                    <a
+                        href="{{ url_for(
+                            'main.download_upload_report',
+                            record_id=current_record.id
+                        ) }}"
+                        class="btn-primary"
+                    >
+                        Gerar PDF
+                    </a>
+
+                    <a
+                        href="{{ url_for(
+                            'main.upload_detail',
+                            record_id=current_record.id
+                        ) }}"
+                        class="secondary-button"
+                    >
+                        Ver detalhes
+                    </a>
+                {% endif %}
+
+                <a
+                    href="{{ url_for('main.history') }}"
+                    class="secondary-button"
+                >
+                    Histórico
+                </a>
+
+                <a
+                    href="{{ url_for('main.upload_file') }}"
+                    class="secondary-button"
+                >
+                    Novo upload
+                </a>
+            </div>
+        </section>
+
     {% else %}
         <div class="empty-dashboard">
-            <h2>Nenhum arquivo carregado ainda</h2>
+            <h2>Nenhum dado disponível</h2>
+
             <p>
-                Envie uma planilha CSV ou Excel para visualizar a prévia dos dados.
+                Envie uma planilha para iniciar uma análise
+                automática.
             </p>
-            <a href="{{ url_for('main.upload_file') }}" class="btn-primary">
+
+            <a
+                href="{{ url_for('main.upload_file') }}"
+                class="btn-primary"
+            >
                 Enviar planilha
             </a>
         </div>
     {% endif %}
 </section>
-
-{% if charts %}
-<section class="dashboard-section">
-    <div class="section-header">
-        <p class="section-eyebrow">Visualização automática</p>
-        <h2>Gráficos automáticos</h2>
-        <p>
-            O sistema identificou colunas compatíveis e gerou visualizações iniciais
-            para apoiar a leitura dos dados carregados.
-        </p>
-    </div>
-
-    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
-
-    <div class="charts-grid">
-        {% for chart in charts %}
-        <article class="chart-card">
-            <div class="chart-card-header">
-                <span class="chart-badge">{{ chart.chart_type }}</span>
-                <h3>{{ chart.title }}</h3>
-                <p>Coluna analisada: {{ chart.column_name }}</p>
-            </div>
-
-            <div class="chart-container">
-                {{ chart.html|safe }}
-            </div>
-        </article>
-        {% endfor %}
-    </div>
-</section>
-{% else %}
-<section class="dashboard-section">
-    <div class="empty-state">
-        <h2>Gráficos automáticos indisponíveis</h2>
-        <p>
-            Não foram encontradas colunas numéricas ou categóricas suficientes
-            para gerar gráficos nesta planilha.
-        </p>
-    </div>
-</section>
-{% endif %}
 {% endblock %}
